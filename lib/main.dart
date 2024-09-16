@@ -8,10 +8,12 @@ import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -22,19 +24,19 @@ class MyApp extends StatelessWidget {
       getPages: [
         GetPage(
           name: '/',
-          page: () => SignInPage(),
+          page: () => const SignInPage(),
           binding: AuthBinding(),
         ),
         GetPage(
           name: '/home',
-          page: () => HomePage(),
+          page: () => const HomePage(),
           binding: AuthBinding(),
         ),
       ],
       locale: Get.deviceLocale,
-      fallbackLocale: Locale('en', 'US'),
+      fallbackLocale: const Locale('en', 'US'),
       translations: AppTranslations(),
-      supportedLocales: [
+      supportedLocales: const [
         Locale('en', 'US'),
         Locale('es', 'ES'),
         // Add other supported locales here

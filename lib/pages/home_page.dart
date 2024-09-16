@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
 class HomePage extends GetView<AuthController> {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Use MediaQuery to get screen size
@@ -14,14 +16,14 @@ class HomePage extends GetView<AuthController> {
       ),
       body: Center(
         child: Container(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           width: size.width * 0.9 > 600 ? 600 : size.width * 0.9,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'signed_in'.tr,
-                style: TextStyle(fontSize: 24),
+                style: const TextStyle(fontSize: 24),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),

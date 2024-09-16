@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
 class SignInPage extends GetView<AuthController> {
+  const SignInPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Use MediaQuery to get screen size
@@ -16,7 +18,7 @@ class SignInPage extends GetView<AuthController> {
         return Center(
           child: SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               width: size.width * 0.9 > 400 ? 400 : size.width * 0.9,
               child: controller.isOTPSent.value ? _otpForm() : _emailForm(),
             ),
@@ -33,7 +35,7 @@ class SignInPage extends GetView<AuthController> {
       children: [
         Text(
           'enter_email'.tr,
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
@@ -41,7 +43,7 @@ class SignInPage extends GetView<AuthController> {
           controller: controller.emailController,
           decoration: InputDecoration(
             labelText: 'email'.tr,
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
           keyboardType: TextInputType.emailAddress,
         ),
@@ -65,21 +67,21 @@ class SignInPage extends GetView<AuthController> {
       children: [
         Text(
           'enter_otp'.tr,
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 10),
         Obx(() => Text(
               'otp_expires_in'
                   .trParams({'seconds': controller.otpExpiration.value.toString()}),
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             )),
         const SizedBox(height: 10),
         TextField(
           controller: controller.otpController,
           decoration: InputDecoration(
             labelText: 'otp'.tr,
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
         ),

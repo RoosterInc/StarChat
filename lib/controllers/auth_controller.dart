@@ -34,15 +34,15 @@ class AuthController extends GetxController {
   static const int otpExpirationDuration = 300; // in seconds
 
   // Constants for Appwrite configuration
-  static const String appwriteEndpoint = 'https://cloud.appwrite.io/v1'; // Your Appwrite endpoint
-  static const String appwriteProjectId = '65f5a3e4bd0514b418a4'; // Your Appwrite project ID
+  static const String appwriteEndpoint =
+      'https://cloud.appwrite.io/v1'; // Your Appwrite endpoint
+  static const String appwriteProjectId =
+      '65f5a3e4bd0514b418a4'; // Your Appwrite project ID
 
   @override
   void onInit() {
     super.onInit();
-    client
-        .setEndpoint(appwriteEndpoint)
-        .setProject(appwriteProjectId);
+    client.setEndpoint(appwriteEndpoint).setProject(appwriteProjectId);
 
     account = Account(client);
 
@@ -179,7 +179,7 @@ class AuthController extends GetxController {
     try {
       await account.get();
       Get.offAllNamed('/home');
-    } on AppwriteException catch (e) {
+    } on AppwriteException {
       logger.i('No existing session, verifying OTP...');
       try {
         await account.createSession(
@@ -227,7 +227,7 @@ class AuthController extends GetxController {
   void startResendCooldownTimer() {
     _resendTimer?.cancel();
     resendCooldown.value = resendCooldownDuration;
-    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       resendCooldown.value--;
       if (resendCooldown.value <= 0) {
         timer.cancel();
@@ -239,7 +239,7 @@ class AuthController extends GetxController {
   void startOTPExpirationTimer() {
     _otpTimer?.cancel();
     otpExpiration.value = otpExpirationDuration;
-    _otpTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       otpExpiration.value--;
       if (otpExpiration.value <= 0) {
         timer.cancel();
