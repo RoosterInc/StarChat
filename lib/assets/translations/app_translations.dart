@@ -4,7 +4,6 @@ class AppTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
         'en_US': {
-          // English translations
           'email_sign_in': 'Email OTP Sign-In',
           'enter_email': 'Enter your email to receive an OTP for sign-in.',
           'email': 'Email',
@@ -33,22 +32,18 @@ class AppTranslations extends Translations {
           'home_page': 'Home Page',
           'signed_in': 'You are now signed in!',
           'delete_account': 'Delete Account',
-          'delete_account_confirmation':
-              'Are you sure you want to delete your account?',
+          'delete_account_confirmation': 'Are you sure you want to delete your account?',
           'cancel': 'Cancel',
           'delete': 'Delete',
           'account_deleted': 'Your account has been deleted.',
           'failed_to_delete_account': 'Failed to delete account.',
-          'too_many_requests':
-              'Too many requests. Please try again later.',
+          'too_many_requests': 'Too many requests. Please try again later.',
           'server_error': 'Server error. Please try again later.',
           'unexpected_error': 'An unexpected error occurred.',
           'unauthorized': 'Unauthorized. Please request a new OTP.',
         },
         'es_ES': {
-          // Spanish translations
-          // (Provide translations similar to the English ones)
+          // Add the Spanish translations here...
         },
-        // Add other locales
       };
 }

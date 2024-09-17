@@ -7,7 +7,6 @@ class SignInPage extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    // Use MediaQuery to get screen size
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -29,7 +28,6 @@ class SignInPage extends GetView<AuthController> {
   }
 
   Widget _emailForm() {
-    // Your existing email form code
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
