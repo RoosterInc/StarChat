@@ -70,7 +70,7 @@ flutter:
   generate: true
 # Suggested code may be subject to a license. Learn more: ~LicenseLog:1915755459.
   assets:
-    - assets/translations/
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

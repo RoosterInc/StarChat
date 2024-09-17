@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:logger/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:email_validator/email_validator.dart'; // Added for email validation
+import 'package:email_validator/email_validator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // To load environment variables
 
 class AuthController extends GetxController {
   final Client client = Client();
   late Account account;
+  late Functions functions;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -32,18 +35,15 @@ class AuthController extends GetxController {
   static const int resendCooldownDuration = 60; // in seconds
   static const int otpExpirationDuration = 300; // in seconds
 
-  // Constants for Appwrite configuration
-  static const String appwriteEndpoint =
-      'https://cloud.appwrite.io/v1'; // Your Appwrite endpoint
-  static const String appwriteProjectId =
-      '65f5a3e4bd0514b418a4'; // Your Appwrite project ID
-
   @override
   void onInit() {
     super.onInit();
-    client.setEndpoint(appwriteEndpoint).setProject(appwriteProjectId);
-
+    // Initialize client using .env variables
+    client
+      .setEndpoint(dotenv.env['APPWRITE_ENDPOINT']!) // Load endpoint from .env
+      .setProject(dotenv.env['APPWRITE_PROJECT_ID']!); // Load project ID from .env
     account = Account(client);
+    functions = Functions(client);
 
     checkExistingSession();
   }
@@ -100,7 +100,6 @@ class AuthController extends GetxController {
       return;
     }
 
-    // Check network connectivity
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
@@ -127,11 +126,8 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      // Start cooldown timer after sending OTP
       canResendOTP.value = false;
       startResendCooldownTimer();
-
-      // Start OTP expiration timer
       startOTPExpirationTimer();
     } on AppwriteException catch (e) {
       logger.e('AppwriteException in sendOTP', error: e);
@@ -145,21 +141,18 @@ class AuthController extends GetxController {
         errorMessage = 'server_error'.tr;
       }
 
-      Get.snackbar(
-        'error'.tr,
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('error'.tr, errorMessage, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       logger.e('Unknown error in sendOTP', error: e);
-      Get.snackbar(
-        'error'.tr,
-        'unexpected_error'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('error'.tr, 'unexpected_error'.tr, snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> resendOTP() async {
+    // Resend OTP logic: Simply call the sendOTP method again
+    await sendOTP();
   }
 
   Future<void> verifyOTP() async {
@@ -186,6 +179,9 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
+        // Call the Appwrite function to store user information after OTP verification
+        await executeCloudFunction(emailController.text.trim(), userId!);
+
         Get.offAllNamed('/home');
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
@@ -199,18 +195,10 @@ class AuthController extends GetxController {
           errorMessage = 'server_error'.tr;
         }
 
-        Get.snackbar(
-          'error'.tr,
-          errorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        Get.snackbar('error'.tr, errorMessage, snackPosition: SnackPosition.BOTTOM);
       } catch (e) {
         logger.e('Unknown error in verifyOTP', error: e);
-        Get.snackbar(
-          'error'.tr,
-          'unexpected_error'.tr,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        Get.snackbar('error'.tr, 'unexpected_error'.tr, snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
       logger.e('Error in verifyOTP', error: e);
@@ -219,8 +207,16 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> resendOTP() async {
-    await sendOTP();
+  Future<void> executeCloudFunction(String email, String userId) async {
+    try {
+      final result = await functions.createExecution(
+        functionId: dotenv.env['APPWRITE_FUNCTION_ID_storeUserData']!, // Use function ID from .env
+        body: jsonEncode({'email': email, 'userId': userId}),
+      );
+      logger.i('Function executed successfully: ${result.responseBody}');
+    } catch (e) {
+      logger.e('Error executing function: $e');
+    }
   }
 
   void startResendCooldownTimer() {
@@ -285,18 +281,10 @@ class AuthController extends GetxController {
       );
     } on AppwriteException catch (e) {
       logger.e('Error deleting account', error: e);
-      Get.snackbar(
-        'error'.tr,
-        'failed_to_delete_account'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('error'.tr, 'failed_to_delete_account'.tr, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       logger.e('Unknown error deleting account', error: e);
-      Get.snackbar(
-        'error'.tr,
-        'unexpected_error'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('error'.tr, 'unexpected_error'.tr, snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }

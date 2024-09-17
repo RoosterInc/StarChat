@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
@@ -7,10 +9,23 @@ import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import '../controllers/theme_controller.dart'; // Import the ThemeController
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
+  // Debug: Print loaded environment variables
+  print('Loaded environment variables: ${dotenv.env}');
+
+  runZonedGuarded(() {
+    runApp(const MyApp());
+  }, (error, stackTrace) {
+    print('Uncaught error: $error');
+    print('Stack trace: $stackTrace');
+  });
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
