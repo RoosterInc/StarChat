@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
+  final Client serverClient = Client();
   late Account account;
   late Databases databases;
   late Databases serverDatabases;
@@ -44,6 +45,7 @@ class AuthController extends GetxController {
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
   static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
   static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
+  static const String _apiKeyKey = 'APPWRITE_API_KEY';
 
   @override
   void onInit() {
@@ -51,8 +53,6 @@ class AuthController extends GetxController {
     final endpoint = dotenv.env[_endpointKey] ?? '';
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
-
-    serverDatabases = Databases(client);
 
     emailController = TextEditingController();
     otpController = TextEditingController();
