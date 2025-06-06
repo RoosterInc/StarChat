@@ -12,13 +12,11 @@ class SignInPage extends GetView<AuthController> {
       appBar: AppBar(
         title: Text('email_sign_in'.tr),
       ),
-      body: Obx(() {
-        return ResponsiveLayout(
-          mobile: (_) => _buildForm(context, MediaQuery.of(context).size.width * 0.9),
-          tablet: (_) => _buildForm(context, 500),
-          desktop: (_) => _buildForm(context, 400),
-        );
-      }),
+      body: ResponsiveLayout(
+        mobile: (_) => _buildForm(context, MediaQuery.of(context).size.width * 0.9),
+        tablet: (_) => _buildForm(context, 500),
+        desktop: (_) => _buildForm(context, 400),
+      ),
     );
   }
 
@@ -28,7 +26,9 @@ class SignInPage extends GetView<AuthController> {
         child: Container(
           padding: const EdgeInsets.all(16),
           width: width,
-          child: controller.isOTPSent.value ? _otpForm() : _emailForm(),
+          child: Obx(
+            () => controller.isOTPSent.value ? _otpForm() : _emailForm(),
+          ),
         ),
       ),
     );
