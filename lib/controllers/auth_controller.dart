@@ -20,6 +20,10 @@ class AuthController extends GetxController {
   final isCheckingUsername = false.obs;
   final usernameAvailable = false.obs;
   final username = ''.obs;
+  final isUsernameValid = false.obs;
+  Timer? _usernameDebounce;
+  static const Duration usernameDebounceDuration = Duration(milliseconds: 500);
+  late TextEditingController usernameController;
 
   late TextEditingController emailController;
   late TextEditingController otpController;
@@ -62,6 +66,7 @@ class AuthController extends GetxController {
 
     emailController = TextEditingController();
     otpController = TextEditingController();
+    usernameController = TextEditingController();
 
     account = Account(client);
     databases = Databases(client);
@@ -73,6 +78,7 @@ class AuthController extends GetxController {
   void onClose() {
     emailController.dispose();
     otpController.dispose();
+    usernameController.dispose();
     cancelTimers();
     super.onClose();
   }
@@ -81,9 +87,12 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await account.get();
-      await Get.offAllNamed('/home');
-      await Future.delayed(const Duration(milliseconds: 100));
-      await ensureUsername();
+      bool hasUsername = await ensureUsername();
+      if (hasUsername) {
+        await Get.offAllNamed('/home');
+      } else {
+        await Get.offAllNamed('/set_username');
+      }
     } on AppwriteException catch (e) {
       logger.i('No active session: $e');
     } catch (e) {
@@ -100,6 +109,10 @@ class AuthController extends GetxController {
   bool isValidOTP(String otp) {
     final otpRegex = RegExp(r'^\d{6}$');
     return otpRegex.hasMatch(otp);
+  }
+  bool isValidUsername(String name) {
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,15}\$');
+    return usernameRegex.hasMatch(name);
   }
 
   Future<void> sendOTP() async {
@@ -211,9 +224,12 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
-        await Get.offAllNamed('/home');
-        await Future.delayed(const Duration(milliseconds: 100));
-        await ensureUsername();
+        bool hasUsername = await ensureUsername();
+        if (hasUsername) {
+          await Get.offAllNamed('/home');
+        } else {
+          await Get.offAllNamed('/set_username');
+        }
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
@@ -294,16 +310,18 @@ class AuthController extends GetxController {
   void clearControllers() {
     emailController.dispose();
     otpController.dispose();
+    usernameController.dispose();
+    usernameController = TextEditingController();
     emailController = TextEditingController();
     otpController = TextEditingController();
     cancelTimers();
   }
 
-  Future<void> ensureUsername() async {
+  Future<bool> ensureUsername() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString('username') != null) {
       username.value = prefs.getString('username')!;
-      return;
+      return true;
     }
 
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
@@ -322,14 +340,14 @@ class AuthController extends GetxController {
         if (data['username'] != null && data['username'] != '') {
           username.value = data['username'];
           await prefs.setString('username', username.value);
-          return;
+          return true;
         }
       }
     } catch (e) {
       logger.e('Error fetching username', error: e);
     }
 
-    await _promptForUsername(dbId, collectionId, uid, prefs);
+    return false;
   }
 
   Future<void> _promptForUsername(
@@ -430,6 +448,45 @@ class AuthController extends GetxController {
     } catch (e) {
       logger.e('Error saving username', error: e);
     }
+  }
+
+  void onUsernameChanged(String value) {
+    usernameController.text = value;
+    isUsernameValid.value = isValidUsername(value);
+    if (!isUsernameValid.value) {
+      usernameAvailable.value = false;
+      _usernameDebounce?.cancel();
+      return;
+    }
+    _usernameDebounce?.cancel();
+    _usernameDebounce = Timer(usernameDebounceDuration, () {
+      _checkUsernameAvailability(value);
+    });
+  }
+
+  Future<void> submitUsername() async {
+    final name = usernameController.text.trim();
+    if (!isValidUsername(name)) {
+      Get.snackbar('error'.tr, 'invalid_username_message'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    isLoading.value = true;
+    await _checkUsernameAvailability(name);
+    if (!usernameAvailable.value) {
+      isLoading.value = false;
+      Get.snackbar('error'.tr, 'username_taken'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    final session = await account.get();
+    final uid = session.$id;
+    await _saveUsername(dbId, collectionId, uid, name, prefs);
+    isLoading.value = false;
+    Get.offAllNamed('/home');
   }
 
   Future<void> deleteUsername() async {

@@ -53,6 +53,9 @@ class AppTranslations extends Translations {
         'delete_username': 'Delete Username',
         'username_deleted': 'Username deleted',
         'failed_to_delete_username': 'Failed to delete username',
+        'invalid_username': 'Invalid username',
+        'invalid_username_message':
+            'Usernames must be 3-15 characters and can include letters, numbers, and underscores.',
         },
         'es_ES': {
           'app_name': 'StarChat',
@@ -109,6 +112,9 @@ class AppTranslations extends Translations {
         'delete_username': 'Eliminar nombre de usuario',
         'username_deleted': 'Nombre de usuario eliminado',
         'failed_to_delete_username': 'No se pudo eliminar el nombre de usuario',
+        'invalid_username': 'Nombre de usuario inválido',
+        'invalid_username_message':
+            'Los nombres deben tener entre 3 y 15 caracteres y solo pueden incluir letras, números y guiones bajos.',
         },
       };
 }
