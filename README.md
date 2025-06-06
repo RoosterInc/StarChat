@@ -38,3 +38,4 @@ python update_collection_permissions.py
 ```
 
 Ensure the environment variables above are exported or stored in your `.env` file before running the script.
+

@@ -505,8 +505,6 @@ class AuthController extends GetxController {
           'username': name,
           'firstName': '',
           'lastName': '',
-          'createdAt': DateTime.now().toIso8601String(),
-          'updatedAt': DateTime.now().toIso8601String(),
         },
         permissions: [
           Permission.read(Role.user(uid)),
