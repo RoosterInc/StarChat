@@ -274,7 +274,7 @@ class AuthController extends GetxController {
   Future<void> deleteUserAccount() async {
     isLoading.value = true;
     try {
-      await account.delete();
+      await account.updateStatus();
       logger.i('Account deleted successfully');
       clearControllers();
       isOTPSent.value = false;
