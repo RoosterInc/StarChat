@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
+import 'pages/set_username_page.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -36,6 +37,11 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/',
               page: () => const SignInPage(),
+              binding: AuthBinding(),
+            ),
+            GetPage(
+              name: '/set_username',
+              page: () => const SetUsernamePage(),
               binding: AuthBinding(),
             ),
             GetPage(
