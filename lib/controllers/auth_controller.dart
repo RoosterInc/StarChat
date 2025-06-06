@@ -12,6 +12,7 @@ class AuthController extends GetxController {
   final Client client = Client();
   late Account account;
   late Databases databases;
+  late Databases serverDatabases;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -50,6 +51,8 @@ class AuthController extends GetxController {
     final endpoint = dotenv.env[_endpointKey] ?? '';
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
+
+    serverDatabases = Databases(client);
 
     emailController = TextEditingController();
     otpController = TextEditingController();
@@ -299,7 +302,7 @@ class AuthController extends GetxController {
     final uid = session.$id;
 
     try {
-      final result = await databases.listDocuments(
+      final result = await serverDatabases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('userId', uid)],
@@ -383,7 +386,7 @@ class AuthController extends GetxController {
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
     try {
-      final result = await databases.listDocuments(
+      final result = await serverDatabases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('username', name)],
@@ -399,7 +402,7 @@ class AuthController extends GetxController {
   Future<void> _saveUsername(String dbId, String collectionId, String uid,
       String name, SharedPreferences prefs) async {
     try {
-      await databases.createDocument(
+      await serverDatabases.createDocument(
         databaseId: dbId,
         collectionId: collectionId,
         documentId: ID.unique(),
