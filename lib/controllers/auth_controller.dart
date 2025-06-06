@@ -451,6 +451,7 @@ class AuthController extends GetxController {
   Future<void> _checkUsernameAvailability(String name) async {
     if (name.isEmpty) {
       usernameAvailable.value = false;
+      isCheckingUsername.value = false;
       return;
     }
     isCheckingUsername.value = true;
@@ -496,12 +497,13 @@ class AuthController extends GetxController {
   void onUsernameChanged(String value) {
     usernameText.value = value;
     isUsernameValid.value = isValidUsername(value);
+    _usernameDebounce?.cancel();
     if (!isUsernameValid.value) {
       usernameAvailable.value = false;
-      _usernameDebounce?.cancel();
+      isCheckingUsername.value = false;
       return;
     }
-    _usernameDebounce?.cancel();
+    isCheckingUsername.value = true;
     _usernameDebounce = Timer(usernameDebounceDuration, () {
       _checkUsernameAvailability(value);
     });
@@ -512,6 +514,7 @@ class AuthController extends GetxController {
     isUsernameValid.value = false;
     usernameAvailable.value = false;
     usernameText.value = '';
+    isCheckingUsername.value = false;
     _usernameDebounce?.cancel();
   }
 
