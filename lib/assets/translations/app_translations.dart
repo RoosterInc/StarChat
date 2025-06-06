@@ -35,6 +35,7 @@ class AppTranslations extends Translations {
           'logout': 'Logout',
           'home_page': 'Home Page',
           'signed_in': 'You are now signed in!',
+          'signed_in_as': 'Signed in as @username',
           'delete_account': 'Delete Account',
           'delete_account_confirmation': 'Are you sure you want to delete your account?',
           'cancel': 'Cancel',
@@ -105,6 +106,7 @@ class AppTranslations extends Translations {
           'logout': 'Cerrar sesión',
           'home_page': 'Página de inicio',
           'signed_in': '¡Has iniciado sesión!',
+          'signed_in_as': 'Conectado como @username',
           'delete_account': 'Eliminar cuenta',
           'delete_account_confirmation':
               '¿Está seguro de que desea eliminar su cuenta?',
