@@ -6,13 +6,18 @@ import 'package:logger/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
   late Account account;
+  late Databases databases;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
+  final isCheckingUsername = false.obs;
+  final usernameAvailable = false.obs;
+  final username = ''.obs;
 
   final emailController = TextEditingController();
   final otpController = TextEditingController();
@@ -36,6 +41,8 @@ class AuthController extends GetxController {
   // Environment variable keys
   static const String _endpointKey = 'APPWRITE_ENDPOINT';
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
+  static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
+  static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
 
   @override
   void onInit() {
@@ -45,6 +52,7 @@ class AuthController extends GetxController {
     client.setEndpoint(endpoint).setProject(projectId);
 
     account = Account(client);
+    databases = Databases(client);
 
     checkExistingSession();
   }
@@ -61,6 +69,7 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await account.get();
+      await ensureUsername();
       Get.offAllNamed('/home');
     } on AppwriteException catch (e) {
       logger.i('No active session: $e');
@@ -187,6 +196,7 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
+        await ensureUsername();
         Get.offAllNamed('/home');
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
@@ -269,6 +279,139 @@ class AuthController extends GetxController {
     emailController.clear();
     otpController.clear();
     cancelTimers();
+  }
+
+  Future<void> ensureUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('username') != null) {
+      username.value = prefs.getString('username')!;
+      return;
+    }
+
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    final session = await account.get();
+    final uid = session.$id;
+
+    try {
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [Query.equal('userId', uid)],
+      );
+      if (result.documents.isNotEmpty) {
+        final data = result.documents.first.data;
+        if (data['username'] != null && data['username'] != '') {
+          username.value = data['username'];
+          await prefs.setString('username', username.value);
+          return;
+        }
+      }
+    } catch (e) {
+      logger.e('Error fetching username', error: e);
+    }
+
+    await _promptForUsername(dbId, collectionId, uid, prefs);
+  }
+
+  Future<void> _promptForUsername(
+      String dbId, String collectionId, String uid, SharedPreferences prefs) async {
+    final controller = TextEditingController();
+    usernameAvailable.value = false;
+
+    await Get.dialog(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text('enter_username'.tr),
+            content: Obx(() => TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    labelText: 'username'.tr,
+                    suffixIcon: isCheckingUsername.value
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            usernameAvailable.value ? Icons.check : Icons.close,
+                            color: usernameAvailable.value
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                  ),
+                  onChanged: (value) async {
+                    setState(() {});
+                    await _checkUsernameAvailability(value);
+                  },
+                )),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: Text('cancel'.tr),
+              ),
+              Obx(() => ElevatedButton(
+                    onPressed: usernameAvailable.value
+                        ? () async {
+                            await _saveUsername(
+                                dbId, collectionId, uid, controller.text, prefs);
+                            Get.back();
+                          }
+                        : null,
+                    child: Text('save'.tr),
+                  )),
+            ],
+          );
+        },
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<void> _checkUsernameAvailability(String name) async {
+    if (name.isEmpty) {
+      usernameAvailable.value = false;
+      return;
+    }
+    isCheckingUsername.value = true;
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    try {
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [Query.equal('username', name)],
+      );
+      usernameAvailable.value = result.documents.isEmpty;
+    } catch (e) {
+      usernameAvailable.value = false;
+    } finally {
+      isCheckingUsername.value = false;
+    }
+  }
+
+  Future<void> _saveUsername(String dbId, String collectionId, String uid,
+      String name, SharedPreferences prefs) async {
+    try {
+      await databases.createDocument(
+        databaseId: dbId,
+        collectionId: collectionId,
+        documentId: ID.unique(),
+        data: {
+          'userId': uid,
+          'username': name,
+          'firstName': '',
+          'lastName': '',
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+      );
+      username.value = name;
+      await prefs.setString('username', name);
+    } catch (e) {
+      logger.e('Error saving username', error: e);
+    }
   }
 
   Future<void> deleteUserAccount() async {
