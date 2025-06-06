@@ -26,6 +26,20 @@ class SetUsernamePage extends GetView<AuthController> {
         child: Obx(() => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                FutureBuilder<String?>(
+                  future: controller.fetchCurrentUserId(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    }
+                    final id = snapshot.data;
+                    if (id == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text('user_id_label'.trParams({'id': id}));
+                  },
+                ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: controller.usernameController,
                   decoration: InputDecoration(
@@ -40,8 +54,15 @@ class SetUsernamePage extends GetView<AuthController> {
                   onChanged: controller.onUsernameChanged,
                 ),
                 const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: controller.isCheckingUsername.value
+                      ? null
+                      : controller.checkUsernameAvailability,
+                  child: Text('check_availability'.tr),
+                ),
+                const SizedBox(height: 8),
                 Obx(() {
-                  if (controller.usernameText.value.isEmpty) {
+                  if (!controller.hasCheckedUsername.value) {
                     return const SizedBox.shrink();
                   }
                   if (controller.isCheckingUsername.value) {

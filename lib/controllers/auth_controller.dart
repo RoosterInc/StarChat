@@ -17,6 +17,7 @@ class AuthController extends GetxController {
   final isOTPSent = false.obs;
   final isCheckingUsername = false.obs;
   final usernameAvailable = false.obs;
+  final hasCheckedUsername = false.obs;
   final username = ''.obs;
   final isUsernameValid = false.obs;
   final usernameText = ''.obs;
@@ -448,11 +449,11 @@ class AuthController extends GetxController {
     );
   }
 
-  Future<void> _checkUsernameAvailability(String name) async {
+  Future<bool> _checkUsernameAvailability(String name) async {
     if (name.isEmpty) {
       usernameAvailable.value = false;
       isCheckingUsername.value = false;
-      return;
+      return false;
     }
     isCheckingUsername.value = true;
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
@@ -464,10 +465,22 @@ class AuthController extends GetxController {
         queries: [Query.equal('username', name)],
       );
       usernameAvailable.value = result.documents.isEmpty;
-    } catch (e) {
+      return usernameAvailable.value;
+    } on AppwriteException catch (e) {
+      logger.e('AppwriteException checking username', error: e);
+      Get.snackbar('error'.tr, 'username_check_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
       usernameAvailable.value = false;
+      return false;
+    } catch (e) {
+      logger.e('Unknown error checking username', error: e);
+      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      usernameAvailable.value = false;
+      return false;
     } finally {
       isCheckingUsername.value = false;
+      hasCheckedUsername.value = true;
     }
   }
 
@@ -498,6 +511,7 @@ class AuthController extends GetxController {
     usernameText.value = value;
     isUsernameValid.value = isValidUsername(value);
     _usernameDebounce?.cancel();
+    hasCheckedUsername.value = false;
     if (!isUsernameValid.value) {
       usernameAvailable.value = false;
       isCheckingUsername.value = false;
@@ -518,6 +532,31 @@ class AuthController extends GetxController {
     _usernameDebounce?.cancel();
   }
 
+  Future<void> checkUsernameAvailability() async {
+    final name = usernameController.text.trim();
+    if (name.isEmpty) {
+      Get.snackbar('error'.tr, 'empty_username'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (!isValidUsername(name)) {
+      Get.snackbar('error'.tr, 'invalid_username_message'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    hasCheckedUsername.value = false;
+    await _checkUsernameAvailability(name);
+  }
+
+  Future<String?> fetchCurrentUserId() async {
+    try {
+      final session = await account.get();
+      return session.$id;
+    } catch (e) {
+      logger.e('Error fetching user ID', error: e);
+      return null;
+    }
+  }
   Future<void> submitUsername() async {
     final name = usernameController.text.trim();
     if (!isValidUsername(name)) {
@@ -526,8 +565,8 @@ class AuthController extends GetxController {
       return;
     }
     isLoading.value = true;
-    await _checkUsernameAvailability(name);
-    if (!usernameAvailable.value) {
+    final available = await _checkUsernameAvailability(name);
+    if (!available) {
       isLoading.value = false;
       Get.snackbar('error'.tr, 'username_taken'.tr,
           snackPosition: SnackPosition.BOTTOM);
