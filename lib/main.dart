@@ -7,8 +7,11 @@ import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import '../controllers/theme_controller.dart'; // Import the ThemeController
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   runApp(const MyApp());
 }
 
