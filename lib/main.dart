@@ -1,15 +1,24 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'bindings/auth_binding.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// Import controllers
+import 'controllers/theme_controller.dart';
+
+// Import pages
+import 'pages/splash_screen.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
+
+// Import bindings
+import 'bindings/auth_binding.dart';
+import 'bindings/splash_binding.dart';
+
+// Import themes and translations
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import '../controllers/theme_controller.dart'; // Import the ThemeController
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +35,6 @@ Future<void> main() async {
   });
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -37,14 +45,18 @@ class MyApp extends StatelessWidget {
 
     return Obx(() => GetMaterialApp(
           title: 'Email OTP Sign-In',
-          theme: AppTheme.lightTheme, // Light theme
-          darkTheme: AppTheme.darkTheme, // Dark theme
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           themeMode: themeController.isDarkMode.value
               ? ThemeMode.dark
-              : ThemeMode.light, // Reactive theme
-          initialBinding: AuthBinding(), // Initial Binding for dependencies
-          initialRoute: '/',
+              : ThemeMode.light,
+          initialRoute: '/splash',
           getPages: [
+            GetPage(
+              name: '/splash',
+              page: () => const SplashScreen(),
+              binding: SplashBinding(),
+            ),
             GetPage(
               name: '/',
               page: () => const SignInPage(),
@@ -62,7 +74,6 @@ class MyApp extends StatelessWidget {
           supportedLocales: const [
             Locale('en', 'US'),
             Locale('es', 'ES'),
-            // Add other supported locales here
           ],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
