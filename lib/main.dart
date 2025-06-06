@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
+import 'bindings/splash_binding.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
+import 'pages/splash_screen.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -30,9 +32,14 @@ class MyApp extends StatelessWidget {
           themeMode: themeController.isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light, // Reactive theme
-          initialBinding: AuthBinding(), // Initial Binding for dependencies
-          initialRoute: '/',
+          initialBinding: SplashBinding(), // Initial Binding for dependencies
+          initialRoute: '/splash',
           getPages: [
+            GetPage(
+              name: '/splash',
+              page: () => const SplashScreen(),
+              binding: SplashBinding(),
+            ),
             GetPage(
               name: '/',
               page: () => const SignInPage(),
