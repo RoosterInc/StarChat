@@ -10,10 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
-  final Client serverClient = Client();
   late Account account;
   late Databases databases;
-  late Databases serverDatabases;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -45,7 +43,6 @@ class AuthController extends GetxController {
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
   static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
   static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
-  static const String _apiKeyKey = 'APPWRITE_API_KEY';
 
   @override
   void onInit() {
@@ -53,12 +50,6 @@ class AuthController extends GetxController {
     final endpoint = dotenv.env[_endpointKey] ?? '';
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
-    serverClient
-        .setEndpoint(endpoint)
-        .setProject(projectId)
-        .setKey(dotenv.env[_apiKeyKey] ?? '');
-
-    serverDatabases = Databases(serverClient);
 
     emailController = TextEditingController();
     otpController = TextEditingController();
@@ -312,7 +303,7 @@ class AuthController extends GetxController {
     final uid = session.$id;
 
     try {
-      final result = await serverDatabases.listDocuments(
+      final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('userId', uid)],
@@ -396,7 +387,7 @@ class AuthController extends GetxController {
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
     try {
-      final result = await serverDatabases.listDocuments(
+      final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('username', name)],
@@ -412,7 +403,7 @@ class AuthController extends GetxController {
   Future<void> _saveUsername(String dbId, String collectionId, String uid,
       String name, SharedPreferences prefs) async {
     try {
-      await serverDatabases.createDocument(
+      await databases.createDocument(
         databaseId: dbId,
         collectionId: collectionId,
         documentId: ID.unique(),
@@ -440,14 +431,14 @@ class AuthController extends GetxController {
       final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
       final session = await account.get();
       final uid = session.$id;
-      final result = await serverDatabases.listDocuments(
+      final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('userId', uid)],
       );
       if (result.documents.isNotEmpty) {
         final docId = result.documents.first.$id;
-        await serverDatabases.deleteDocument(
+        await databases.deleteDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: docId,
