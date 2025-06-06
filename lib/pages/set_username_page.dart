@@ -30,33 +30,46 @@ class SetUsernamePage extends GetView<AuthController> {
                   controller: controller.usernameController,
                   decoration: InputDecoration(
                     labelText: 'username'.tr,
-                    suffixIcon: controller.isCheckingUsername.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                    suffixIcon: controller.usernameController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: controller.clearUsernameInput,
                           )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (controller.usernameController.text.isNotEmpty)
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: controller.clearUsernameInput,
-                                ),
-                              Icon(
-                                controller.isUsernameValid.value && controller.usernameAvailable.value
-                                    ? Icons.check
-                                    : Icons.close,
-                                color: controller.isUsernameValid.value && controller.usernameAvailable.value
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                            ],
-                          ),
+                        : null,
                   ),
                   onChanged: controller.onUsernameChanged,
                 ),
+                const SizedBox(height: 8),
+                Obx(() {
+                  if (controller.usernameController.text.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  if (controller.isCheckingUsername.value) {
+                    return const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  }
+                  final available =
+                      controller.isUsernameValid.value && controller.usernameAvailable.value;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        available ? Icons.check : Icons.close,
+                        color: available ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        available ? 'username_available'.tr : 'username_taken'.tr,
+                        style: TextStyle(
+                          color: available ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
