@@ -698,22 +698,21 @@ class AuthController extends GetxController {
     final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
     try {
       final session = await account.get();
-      final uid = session.\$id;
+      final uid = session.$id;
       final upload = await storage.createFile(
         bucketId: bucketId,
         fileId: ID.unique(),
         file: InputFile.fromPath(path: file.path),
       );
-      final url = storage
-          .getFileView(bucketId: bucketId, fileId: upload.\$id)
-          .href;
+      final url =
+          '${client.endPoint}/storage/buckets/$bucketId/files/${upload.$id}/view?project=${client.config['project']}';
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [Query.equal('userId', uid)],
       );
       if (result.documents.isNotEmpty) {
-        final docId = result.documents.first.\$id;
+        final docId = result.documents.first.$id;
         await databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
