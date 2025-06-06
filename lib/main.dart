@@ -4,6 +4,8 @@ import 'bindings/auth_binding.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
+import 'pages/profile_page.dart';
+import 'pages/settings_page.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -47,6 +49,16 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/home',
               page: () => const HomePage(),
+              binding: AuthBinding(),
+            ),
+            GetPage(
+              name: '/profile',
+              page: () => const ProfilePage(),
+              binding: AuthBinding(),
+            ),
+            GetPage(
+              name: '/settings',
+              page: () => const SettingsPage(),
               binding: AuthBinding(),
             ),
           ],
