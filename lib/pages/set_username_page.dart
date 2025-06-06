@@ -36,13 +36,23 @@ class SetUsernamePage extends GetView<AuthController> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Icon(
-                            controller.isUsernameValid.value && controller.usernameAvailable.value
-                                ? Icons.check
-                                : Icons.close,
-                            color: controller.isUsernameValid.value && controller.usernameAvailable.value
-                                ? Colors.green
-                                : Colors.red,
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (controller.usernameController.text.isNotEmpty)
+                                IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: controller.clearUsernameInput,
+                                ),
+                              Icon(
+                                controller.isUsernameValid.value && controller.usernameAvailable.value
+                                    ? Icons.check
+                                    : Icons.close,
+                                color: controller.isUsernameValid.value && controller.usernameAvailable.value
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ],
                           ),
                   ),
                   onChanged: controller.onUsernameChanged,
