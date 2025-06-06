@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart';  // Import the ThemeController
+import '../widgets/responsive_layout.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -24,32 +25,38 @@ class HomePage extends StatelessWidget {
               )),
         ],
       ),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          width: MediaQuery.of(context).size.width * 0.9 > 600
-              ? 600
-              : MediaQuery.of(context).size.width * 0.9,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'signed_in'.tr,
-                style: const TextStyle(fontSize: 24),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
-                  Get.find<AuthController>().clearControllers();
-                  Get.find<AuthController>().isOTPSent.value = false;
-                  Get.offAllNamed('/');
-                },
-                child: Text('logout'.tr),
-              ),
-            ],
-          ),
+      body: ResponsiveLayout(
+        mobile: (_) => _buildContent(context, MediaQuery.of(context).size.width * 0.9),
+        tablet: (_) => _buildContent(context, 500),
+        desktop: (_) => _buildContent(context, 600),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, double width) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        width: width,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'signed_in'.tr,
+              style: const TextStyle(fontSize: 24),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
+                Get.find<AuthController>().clearControllers();
+                Get.find<AuthController>().isOTPSent.value = false;
+                Get.offAllNamed('/');
+              },
+              child: Text('logout'.tr),
+            ),
+          ],
         ),
       ),
     );

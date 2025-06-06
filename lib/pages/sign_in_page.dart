@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/responsive_layout.dart';
 
 class SignInPage extends GetView<AuthController> {
   const SignInPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('email_sign_in'.tr),
       ),
       body: Obx(() {
-        return Center(
-          child: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              width: size.width * 0.9 > 400 ? 400 : size.width * 0.9,
-              child: controller.isOTPSent.value ? _otpForm() : _emailForm(),
-            ),
-          ),
+        return ResponsiveLayout(
+          mobile: (_) => _buildForm(context, MediaQuery.of(context).size.width * 0.9),
+          tablet: (_) => _buildForm(context, 500),
+          desktop: (_) => _buildForm(context, 400),
         );
       }),
+    );
+  }
+
+  Widget _buildForm(BuildContext context, double width) {
+    return Center(
+      child: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          width: width,
+          child: controller.isOTPSent.value ? _otpForm() : _emailForm(),
+        ),
+      ),
     );
   }
 
