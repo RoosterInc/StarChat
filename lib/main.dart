@@ -7,7 +7,7 @@ import 'pages/set_username_page.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import '../controllers/theme_controller.dart'; // Import the ThemeController
+import 'controllers/theme_controller.dart'; // Import the ThemeController
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {

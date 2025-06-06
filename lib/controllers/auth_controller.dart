@@ -80,9 +80,13 @@ class AuthController extends GetxController {
       await account.get();
       bool hasUsername = await ensureUsername();
       if (hasUsername) {
-        await Get.offAllNamed('/home');
+        if (Get.currentRoute != '/home') {
+          await Get.offAllNamed('/home');
+        }
       } else {
-        await Get.offAllNamed('/set_username');
+        if (Get.currentRoute != '/set_username') {
+          await Get.offAllNamed('/set_username');
+        }
       }
     } on AppwriteException catch (e) {
       logger.i('No active session: $e');
