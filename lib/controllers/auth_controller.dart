@@ -330,17 +330,13 @@ class AuthController extends GetxController {
 
   Future<bool> ensureUsername() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('username') != null) {
-      username.value = prefs.getString('username')!;
-      return true;
-    }
-
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
-    final session = await account.get();
-    final uid = session.$id;
 
     try {
+      final session = await account.get();
+      final uid = session.$id;
+
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
@@ -358,7 +354,14 @@ class AuthController extends GetxController {
         }
       }
     } catch (e) {
-      logger.e('Error fetching username', error: e);
+      logger.e('Error fetching username from server', error: e);
+    }
+
+    // Fallback to cached username if available
+    final cachedName = prefs.getString('username');
+    if (cachedName != null) {
+      username.value = cachedName;
+      return true;
     }
 
     return false;
