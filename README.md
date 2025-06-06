@@ -24,6 +24,21 @@ APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 APPWRITE_PROJECT_ID=65f5a3e4bd0514b418a4
 APPWRITE_DATABASE_ID=StarChat_DB
 USER_PROFILES_COLLECTION_ID=user_profiles
+APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 
 The file is referenced in `pubspec.yaml` so it will be bundled automatically when running the application.
+
+## Updating Collection Permissions
+
+To adjust permissions for the user profiles collection, run the helper script using your Appwrite API key:
+
+```bash
+python update_collection_permissions.py
+```
+
+Ensure the environment variables above are exported or stored in your `.env` file before running the script.
+
+### Verify Collection Attributes
+
+If you encounter `document_invalid_structure` errors when creating profile documents, check that the collection includes `userId`, `username`, `firstName`, and `lastName` attributes. The helper script does not modify attributes.
