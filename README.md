@@ -14,3 +14,14 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Environment Configuration
+
+Create a `.env` file in the project root with the following variables:
+
+```
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=65f5a3e4bd0514b418a4
+```
+
+The file is referenced in `pubspec.yaml` so it will be bundled automatically when running the application.

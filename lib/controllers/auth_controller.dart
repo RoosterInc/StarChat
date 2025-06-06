@@ -5,6 +5,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:logger/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
@@ -32,16 +33,16 @@ class AuthController extends GetxController {
   static const int resendCooldownDuration = 60; // in seconds
   static const int otpExpirationDuration = 300; // in seconds
 
-  // Constants for Appwrite configuration
-  static const String appwriteEndpoint =
-      'https://cloud.appwrite.io/v1'; // Your Appwrite endpoint
-  static const String appwriteProjectId =
-      '65f5a3e4bd0514b418a4'; // Your Appwrite project ID
+  // Environment variable keys
+  static const String _endpointKey = 'APPWRITE_ENDPOINT';
+  static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
 
   @override
   void onInit() {
     super.onInit();
-    client.setEndpoint(appwriteEndpoint).setProject(appwriteProjectId);
+    final endpoint = dotenv.env[_endpointKey] ?? '';
+    final projectId = dotenv.env[_projectIdKey] ?? '';
+    client.setEndpoint(endpoint).setProject(projectId);
 
     account = Account(client);
 
