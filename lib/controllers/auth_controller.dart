@@ -102,7 +102,7 @@ class AuthController extends GetxController {
     return otpRegex.hasMatch(otp);
   }
   bool isValidUsername(String name) {
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,15}\$');
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,15}$');
     return usernameRegex.hasMatch(name);
   }
 
