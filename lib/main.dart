@@ -6,7 +6,7 @@ import 'pages/home_page.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import '../controllers/theme_controller.dart'; // Import the ThemeController
+import 'controllers/theme_controller.dart'; // Import the ThemeController
 
 void main() {
   runApp(const MyApp());
