@@ -30,7 +30,7 @@ class SetUsernamePage extends GetView<AuthController> {
                   controller: controller.usernameController,
                   decoration: InputDecoration(
                     labelText: 'username'.tr,
-                    suffixIcon: controller.usernameController.text.isNotEmpty
+                    suffixIcon: controller.usernameText.value.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear),
                             onPressed: controller.clearUsernameInput,
@@ -41,7 +41,7 @@ class SetUsernamePage extends GetView<AuthController> {
                 ),
                 const SizedBox(height: 8),
                 Obx(() {
-                  if (controller.usernameController.text.isEmpty) {
+                  if (controller.usernameText.value.isEmpty) {
                     return const SizedBox.shrink();
                   }
                   if (controller.isCheckingUsername.value) {

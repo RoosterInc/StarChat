@@ -19,6 +19,7 @@ class AuthController extends GetxController {
   final usernameAvailable = false.obs;
   final username = ''.obs;
   final isUsernameValid = false.obs;
+  final usernameText = ''.obs;
   Timer? _usernameDebounce;
   static const Duration usernameDebounceDuration = Duration(milliseconds: 500);
   late TextEditingController usernameController;
@@ -58,6 +59,9 @@ class AuthController extends GetxController {
     emailController = TextEditingController();
     otpController = TextEditingController();
     usernameController = TextEditingController();
+    usernameController.addListener(() {
+      usernameText.value = usernameController.text;
+    });
 
     account = Account(client);
     databases = Databases(client);
@@ -70,6 +74,7 @@ class AuthController extends GetxController {
     emailController.dispose();
     otpController.dispose();
     usernameController.dispose();
+    usernameText.value = '';
     cancelTimers();
     super.onClose();
   }
@@ -307,8 +312,12 @@ class AuthController extends GetxController {
     otpController.dispose();
     usernameController.dispose();
     usernameController = TextEditingController();
+    usernameController.addListener(() {
+      usernameText.value = usernameController.text;
+    });
     emailController = TextEditingController();
     otpController = TextEditingController();
+    usernameText.value = '';
     cancelTimers();
   }
 
@@ -485,6 +494,7 @@ class AuthController extends GetxController {
   }
 
   void onUsernameChanged(String value) {
+    usernameText.value = value;
     isUsernameValid.value = isValidUsername(value);
     if (!isUsernameValid.value) {
       usernameAvailable.value = false;
@@ -501,6 +511,7 @@ class AuthController extends GetxController {
     usernameController.clear();
     isUsernameValid.value = false;
     usernameAvailable.value = false;
+    usernameText.value = '';
     _usernameDebounce?.cancel();
   }
 
