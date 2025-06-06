@@ -50,6 +50,9 @@ class AppTranslations extends Translations {
         'username_taken': 'Username already taken',
         'username_available': 'Username available',
         'save': 'Save',
+        'delete_username': 'Delete Username',
+        'username_deleted': 'Username deleted',
+        'failed_to_delete_username': 'Failed to delete username',
         },
         'es_ES': {
           'app_name': 'StarChat',
@@ -101,8 +104,11 @@ class AppTranslations extends Translations {
           'enter_username': 'Elige un nombre de usuario',
           'username': 'Nombre de usuario',
           'username_taken': 'El nombre ya está en uso',
-          'username_available': 'Nombre disponible',
-          'save': 'Guardar',
+        'username_available': 'Nombre disponible',
+        'save': 'Guardar',
+        'delete_username': 'Eliminar nombre de usuario',
+        'username_deleted': 'Nombre de usuario eliminado',
+        'failed_to_delete_username': 'No se pudo eliminar el nombre de usuario',
         },
       };
 }

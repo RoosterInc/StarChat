@@ -56,6 +56,11 @@ class HomePage extends StatelessWidget {
               },
               child: Text('logout'.tr),
             ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: Get.find<AuthController>().deleteUsername,
+              child: Text('delete_username'.tr),
+            ),
           ],
         ),
       ),
