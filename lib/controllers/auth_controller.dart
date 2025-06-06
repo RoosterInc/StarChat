@@ -442,7 +442,6 @@ class AuthController extends GetxController {
   }
 
   void onUsernameChanged(String value) {
-    usernameController.text = value;
     isUsernameValid.value = isValidUsername(value);
     if (!isUsernameValid.value) {
       usernameAvailable.value = false;
@@ -453,6 +452,13 @@ class AuthController extends GetxController {
     _usernameDebounce = Timer(usernameDebounceDuration, () {
       _checkUsernameAvailability(value);
     });
+  }
+
+  void clearUsernameInput() {
+    usernameController.clear();
+    isUsernameValid.value = false;
+    usernameAvailable.value = false;
+    _usernameDebounce?.cancel();
   }
 
   Future<void> submitUsername() async {
