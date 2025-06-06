@@ -70,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               );
               if (confirm ?? false) {
+                Get.closeAllSnackbars();
                 await Get.find<AuthController>()
                     .account
                     .deleteSession(sessionId: 'current');

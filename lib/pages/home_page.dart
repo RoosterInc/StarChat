@@ -55,6 +55,7 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 20),
           ElevatedButton(
               onPressed: () async {
+                Get.closeAllSnackbars();
                 await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
                 Get.find<AuthController>().clearControllers();
                 Get.find<AuthController>().isOTPSent.value = false;
