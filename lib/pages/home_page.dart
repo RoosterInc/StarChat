@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/theme_controller.dart';
+import '../controllers/theme_controller.dart';  // Import the ThemeController
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -41,15 +41,49 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  final authController = Get.find<AuthController>();
-                  await authController.logout();
+                  await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
+                  Get.find<AuthController>().clearControllers();
+                  Get.find<AuthController>().isOTPSent.value = false;
+                  Get.offAllNamed('/');
                 },
                 child: Text('logout'.tr),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  _showDeleteAccountDialog(context);
+                },
+                child: Text('delete_account'.tr),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('delete_account'.tr),
+          content: Text('delete_account_confirmation'.tr),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text('cancel'.tr),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                Get.find<AuthController>().deleteUserAccount();
+              },
+              child: Text('delete'.tr),
+            ),
+          ],
+        );
+      },
     );
   }
 }
