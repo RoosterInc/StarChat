@@ -181,7 +181,7 @@ class AuthController extends GetxController {
     } on AppwriteException {
       logger.i('No existing session, verifying OTP...');
       try {
-        await account.createSession(
+        await account.updateMagicURLSession(
           userId: userId!,
           secret: otp,
         );
@@ -273,7 +273,7 @@ class AuthController extends GetxController {
   Future<void> deleteUserAccount() async {
     isLoading.value = true;
     try {
-      await account.deleteIdentity(identityId: userId!);
+      await account.delete();
       logger.i('Account deleted successfully');
       clearControllers();
       isOTPSent.value = false;
