@@ -53,6 +53,12 @@ class AuthController extends GetxController {
     final endpoint = dotenv.env[_endpointKey] ?? '';
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
+    serverClient
+        .setEndpoint(endpoint)
+        .setProject(projectId)
+        .setKey(dotenv.env[_apiKeyKey] ?? '');
+
+    serverDatabases = Databases(serverClient);
 
     emailController = TextEditingController();
     otpController = TextEditingController();
@@ -75,8 +81,9 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await account.get();
+      await Get.offAllNamed('/home');
+      await Future.delayed(const Duration(milliseconds: 100));
       await ensureUsername();
-      Get.offAllNamed('/home');
     } on AppwriteException catch (e) {
       logger.i('No active session: $e');
     } catch (e) {
@@ -193,7 +200,9 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await account.get();
-      Get.offAllNamed('/home');
+      await Get.offAllNamed('/home');
+      await Future.delayed(const Duration(milliseconds: 100));
+      await ensureUsername();
     } on AppwriteException {
       logger.i('No existing session, verifying OTP...');
       try {
@@ -202,8 +211,9 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
+        await Get.offAllNamed('/home');
+        await Future.delayed(const Duration(milliseconds: 100));
         await ensureUsername();
-        Get.offAllNamed('/home');
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
@@ -422,6 +432,44 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> deleteUsername() async {
+    isLoading.value = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+      final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+      final session = await account.get();
+      final uid = session.$id;
+      final result = await serverDatabases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [Query.equal('userId', uid)],
+      );
+      if (result.documents.isNotEmpty) {
+        final docId = result.documents.first.$id;
+        await serverDatabases.deleteDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: docId,
+        );
+      }
+      username.value = "";
+      await prefs.remove("username");
+      await ensureUsername();
+      Get.snackbar('success'.tr, 'username_deleted'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+    } on AppwriteException catch (e) {
+      logger.e('Error deleting username', error: e);
+      Get.snackbar('error'.tr, 'failed_to_delete_username'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      logger.e('Unknown error deleting username', error: e);
+      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
   Future<void> deleteUserAccount() async {
     isLoading.value = true;
     try {
