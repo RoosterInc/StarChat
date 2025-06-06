@@ -91,7 +91,8 @@ class AuthController extends GetxController {
       await account.get();
       bool hasUsername = await ensureUsername();
       if (hasUsername) {
-        if (Get.currentRoute != '/home') {
+        // Only redirect to home when coming from unauthenticated routes
+        if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
           await Get.offAllNamed('/home');
         }
       } else {
