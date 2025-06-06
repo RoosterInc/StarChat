@@ -355,18 +355,24 @@ class AuthController extends GetxController {
           return true;
         }
       }
+
+      // If no username found on server, clear any cached value
+      await prefs.remove('username');
+      username.value = '';
+      profilePictureUrl.value = '';
+      return false;
     } catch (e) {
       logger.e('Error fetching username from server', error: e);
-    }
 
-    // Fallback to cached username if available
-    final cachedName = prefs.getString('username');
-    if (cachedName != null) {
-      username.value = cachedName;
-      return true;
-    }
+      // Fallback to cached username only when the server cannot be reached
+      final cachedName = prefs.getString('username');
+      if (cachedName != null) {
+        username.value = cachedName;
+        return true;
+      }
 
-    return false;
+      return false;
+    }
   }
 
   Future<void> _promptForUsername(
