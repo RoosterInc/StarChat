@@ -43,8 +43,13 @@ class AppTranslations extends Translations {
           'failed_to_delete_account': 'Failed to delete account.',
           'too_many_requests': 'Too many requests. Please try again later.',
           'server_error': 'Server error. Please try again later.',
-          'unexpected_error': 'An unexpected error occurred.',
-          'unauthorized': 'Unauthorized. Please request a new OTP.',
+        'unexpected_error': 'An unexpected error occurred.',
+        'unauthorized': 'Unauthorized. Please request a new OTP.',
+        'enter_username': 'Choose a username',
+        'username': 'Username',
+        'username_taken': 'Username already taken',
+        'username_available': 'Username available',
+        'save': 'Save',
         },
         'es_ES': {
           'app_name': 'StarChat',
@@ -93,6 +98,11 @@ class AppTranslations extends Translations {
           'server_error': 'Error del servidor. Por favor intente más tarde.',
           'unexpected_error': 'Ocurrió un error inesperado.',
           'unauthorized': 'No autorizado. Por favor solicite un nuevo OTP.',
+          'enter_username': 'Elige un nombre de usuario',
+          'username': 'Nombre de usuario',
+          'username_taken': 'El nombre ya está en uso',
+          'username_available': 'Nombre disponible',
+          'save': 'Guardar',
         },
       };
 }
