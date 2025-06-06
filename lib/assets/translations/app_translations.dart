@@ -4,6 +4,10 @@ class AppTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
         'en_US': {
+          'app_name': 'StarChat',
+          'app_subtitle': 'Secure email OTP login',
+          'checking_session': 'Checking session...',
+          'change_email': 'Change Email',
           'email_sign_in': 'Email OTP Sign-In',
           'enter_email': 'Enter your email to receive an OTP for sign-in.',
           'email': 'Email',
@@ -43,7 +47,52 @@ class AppTranslations extends Translations {
           'unauthorized': 'Unauthorized. Please request a new OTP.',
         },
         'es_ES': {
-          // Add the Spanish translations here...
+          'app_name': 'StarChat',
+          'app_subtitle': 'Inicio de sesión seguro con OTP',
+          'checking_session': 'Comprobando sesión...',
+          'change_email': 'Cambiar correo electrónico',
+          'email_sign_in': 'Inicio de sesión con OTP de correo electrónico',
+          'enter_email':
+              'Ingrese su correo electrónico para recibir un OTP para iniciar sesión.',
+          'email': 'Correo electrónico',
+          'send_otp': 'Enviar OTP',
+          'enter_otp': 'Ingrese el OTP enviado a su correo electrónico.',
+          'otp_expires_in': 'El OTP expira en @seconds segundos.',
+          'otp': 'OTP',
+          'verify_otp': 'Verificar OTP',
+          'resend_otp': 'Reenviar OTP',
+          'resend_otp_in': 'Reenviar OTP en @seconds segundos',
+          'success': 'Éxito',
+          'error': 'Error',
+          'otp_sent': 'OTP enviado a su correo electrónico',
+          'failed_to_send_otp': 'No se pudo enviar el OTP',
+          'failed_to_verify_otp': 'No se pudo verificar el OTP',
+          'invalid_email': 'Correo electrónico inválido',
+          'invalid_email_message':
+              'Por favor, introduzca una dirección de correo electrónico válida.',
+          'invalid_otp': 'OTP inválido',
+          'invalid_otp_message':
+              'Por favor, introduzca un OTP de 6 dígitos válido.',
+          'wait': 'Espere',
+          'no_internet': 'Sin internet',
+          'check_internet': 'Por favor, revise su conexión a internet.',
+          'otp_expired': 'OTP expirado',
+          'otp_expired_message':
+              'Su OTP ha expirado. Por favor solicite uno nuevo.',
+          'logout': 'Cerrar sesión',
+          'home_page': 'Página de inicio',
+          'signed_in': '¡Has iniciado sesión!',
+          'delete_account': 'Eliminar cuenta',
+          'delete_account_confirmation':
+              '¿Está seguro de que desea eliminar su cuenta?',
+          'cancel': 'Cancelar',
+          'delete': 'Eliminar',
+          'account_deleted': 'Su cuenta ha sido eliminada.',
+          'failed_to_delete_account': 'No se pudo eliminar la cuenta.',
+          'too_many_requests': 'Demasiadas solicitudes. Por favor intente más tarde.',
+          'server_error': 'Error del servidor. Por favor intente más tarde.',
+          'unexpected_error': 'Ocurrió un error inesperado.',
+          'unauthorized': 'No autorizado. Por favor solicite un nuevo OTP.',
         },
       };
 }
