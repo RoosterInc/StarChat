@@ -56,6 +56,10 @@ class AppTranslations extends Translations {
         'invalid_username': 'Invalid username',
         'invalid_username_message':
             'Usernames must be 3-15 characters and can include letters, numbers, and underscores.',
+        'check_availability': 'Check Availability',
+        'empty_username': 'Please enter a username',
+        'username_check_error': 'Failed to check username. Please try again.',
+        'user_id_label': 'User ID: @id',
         },
         'es_ES': {
           'app_name': 'StarChat',
@@ -115,6 +119,10 @@ class AppTranslations extends Translations {
         'invalid_username': 'Nombre de usuario inválido',
         'invalid_username_message':
             'Los nombres deben tener entre 3 y 15 caracteres y solo pueden incluir letras, números y guiones bajos.',
+        'check_availability': 'Comprobar disponibilidad',
+        'empty_username': 'Por favor ingrese un nombre de usuario',
+        'username_check_error': 'Error al comprobar el nombre. Inténtelo de nuevo.',
+        'user_id_label': 'ID de usuario: @id',
         },
       };
 }
