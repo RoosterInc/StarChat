@@ -39,6 +39,3 @@ python update_collection_permissions.py
 
 Ensure the environment variables above are exported or stored in your `.env` file before running the script.
 
-### Verify Collection Attributes
-
-If you encounter `document_invalid_structure` errors when creating profile documents, check that the collection includes `userId`, `username`, `firstName`, and `lastName` attributes. The helper script does not modify attributes.
