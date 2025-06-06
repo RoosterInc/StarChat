@@ -54,17 +54,6 @@ class AuthController extends GetxController {
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
 
-    final apiKey = dotenv.env[_apiKeyKey];
-    if (apiKey != null && apiKey.isNotEmpty) {
-      serverClient
-          .setEndpoint(endpoint)
-          .setProject(projectId)
-          .setKey(apiKey);
-      serverDatabases = Databases(serverClient);
-    } else {
-      serverDatabases = Databases(client);
-    }
-
     emailController = TextEditingController();
     otpController = TextEditingController();
 
