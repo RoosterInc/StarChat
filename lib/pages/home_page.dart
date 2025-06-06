@@ -49,10 +49,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
-                Get.find<AuthController>().clearControllers();
-                Get.find<AuthController>().isOTPSent.value = false;
-                Get.offAllNamed('/');
+                await Get.find<AuthController>().logout();
               },
               child: Text('logout'.tr),
             ),

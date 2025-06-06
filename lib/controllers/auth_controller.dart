@@ -214,6 +214,7 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await account.get();
+      cancelTimers();
       await Get.offAllNamed('/home');
       await Future.delayed(const Duration(milliseconds: 100));
       await ensureUsername();
@@ -225,6 +226,7 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
+        cancelTimers();
         bool hasUsername = await ensureUsername();
         if (hasUsername) {
           await Get.offAllNamed('/home');
@@ -312,6 +314,11 @@ class AuthController extends GetxController {
     emailController.dispose();
     otpController.dispose();
     usernameController.dispose();
+    _usernameDebounce?.cancel();
+    isUsernameValid.value = false;
+    usernameAvailable.value = false;
+    isCheckingUsername.value = false;
+    hasCheckedUsername.value = false;
     usernameController = TextEditingController();
     usernameController.addListener(() {
       usernameText.value = usernameController.text;
@@ -680,5 +687,20 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> logout() async {
+    try {
+      await account.deleteSession(sessionId: 'current');
+    } catch (e) {
+      logger.e('Error deleting session', error: e);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    username.value = '';
+    clearControllers();
+    isOTPSent.value = false;
+    userId = null;
+    await Get.offAllNamed('/');
   }
 }
