@@ -206,6 +206,8 @@ class AuthController extends GetxController {
   }
 
   Future<void> verifyOTP() async {
+    // Close any open snackbars to avoid context issues when navigating
+    Get.closeAllSnackbars();
     String otp = otpController.text.trim();
 
     if (!isValidOTP(otp)) {
