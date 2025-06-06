@@ -347,7 +347,7 @@ class AuthController extends GetxController {
 
   Future<void> _promptForUsername(
       String dbId, String collectionId, String uid, SharedPreferences prefs) async {
-    final controller = TextEditingController();
+    final textController = TextEditingController();
     usernameAvailable.value = false;
 
     await Get.dialog(
@@ -355,28 +355,67 @@ class AuthController extends GetxController {
         builder: (context, setState) {
           return AlertDialog(
             title: Text('enter_username'.tr),
-            content: Obx(() => TextField(
-                  controller: controller,
+            content: Obx(() {
+              final children = <Widget>[
+                TextField(
+                  controller: textController,
                   decoration: InputDecoration(
                     labelText: 'username'.tr,
-                    suffixIcon: isCheckingUsername.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                    suffixIcon: textController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              textController.clear();
+                              usernameAvailable.value = false;
+                            },
                           )
-                        : Icon(
-                            usernameAvailable.value ? Icons.check : Icons.close,
-                            color: usernameAvailable.value
-                                ? Colors.green
-                                : Colors.red,
-                          ),
+                        : null,
                   ),
                   onChanged: (value) async {
                     setState(() {});
                     await _checkUsernameAvailability(value);
                   },
-                )),
+                ),
+              ];
+
+              if (textController.text.isNotEmpty) {
+                children.add(const SizedBox(height: 8));
+                if (isCheckingUsername.value) {
+                  children.add(const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ));
+                } else {
+                  final available = isValidUsername(textController.text) &&
+                      usernameAvailable.value;
+                  children.add(Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        available ? Icons.check : Icons.close,
+                        color: available ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        available
+                            ? 'username_available'.tr
+                            : 'username_taken'.tr,
+                        style: TextStyle(
+                          color: available ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ));
+                }
+              }
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              );
+            }),
             actions: [
               TextButton(
                 onPressed: () => Get.back(),
@@ -386,7 +425,7 @@ class AuthController extends GetxController {
                     onPressed: usernameAvailable.value
                         ? () async {
                             await _saveUsername(
-                                dbId, collectionId, uid, controller.text, prefs);
+                                dbId, collectionId, uid, textController.text, prefs);
                             Get.back();
                           }
                         : null,
