@@ -468,14 +468,23 @@ class AuthController extends GetxController {
       return usernameAvailable.value;
     } on AppwriteException catch (e) {
       logger.e('AppwriteException checking username', error: e);
-      Get.snackbar('error'.tr, 'username_check_error'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      final message = e.message ?? 'username_check_error'.tr;
+      Get.snackbar(
+        'error'.tr,
+        message,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       usernameAvailable.value = false;
       return false;
     } catch (e) {
       logger.e('Unknown error checking username', error: e);
-      Get.snackbar('error'.tr, 'unexpected_error'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'error'.tr,
+        'unexpected_error'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       usernameAvailable.value = false;
       return false;
     } finally {
@@ -535,13 +544,21 @@ class AuthController extends GetxController {
   Future<void> checkUsernameAvailability() async {
     final name = usernameController.text.trim();
     if (name.isEmpty) {
-      Get.snackbar('error'.tr, 'empty_username'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'error'.tr,
+        'empty_username'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       return;
     }
     if (!isValidUsername(name)) {
-      Get.snackbar('error'.tr, 'invalid_username_message'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'error'.tr,
+        'invalid_username_message'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       return;
     }
     hasCheckedUsername.value = false;
@@ -560,16 +577,24 @@ class AuthController extends GetxController {
   Future<void> submitUsername() async {
     final name = usernameController.text.trim();
     if (!isValidUsername(name)) {
-      Get.snackbar('error'.tr, 'invalid_username_message'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'error'.tr,
+        'invalid_username_message'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       return;
     }
     isLoading.value = true;
     final available = await _checkUsernameAvailability(name);
     if (!available) {
       isLoading.value = false;
-      Get.snackbar('error'.tr, 'username_taken'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'error'.tr,
+        'username_taken'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10),
+      );
       return;
     }
     final prefs = await SharedPreferences.getInstance();
