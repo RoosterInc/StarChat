@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
@@ -12,6 +13,7 @@ class AuthController extends GetxController {
   final Client client = Client();
   late Account account;
   late Databases databases;
+  late Storage storage;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -19,6 +21,7 @@ class AuthController extends GetxController {
   final usernameAvailable = false.obs;
   final hasCheckedUsername = false.obs;
   final username = ''.obs;
+  final profilePictureUrl = ''.obs;
   final isUsernameValid = false.obs;
   final usernameText = ''.obs;
   Timer? _usernameDebounce;
@@ -49,6 +52,7 @@ class AuthController extends GetxController {
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
   static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
   static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
+  static const String _bucketIdKey = 'PROFILE_PICTURES_BUCKET_ID';
 
   @override
   void onInit() {
@@ -66,6 +70,7 @@ class AuthController extends GetxController {
 
     account = Account(client);
     databases = Databases(client);
+    storage = Storage(client);
 
     checkExistingSession();
   }
@@ -344,6 +349,9 @@ class AuthController extends GetxController {
         final data = result.documents.first.data;
         if (data['username'] != null && data['username'] != '') {
           username.value = data['username'];
+          if (data['profilePicture'] != null && data['profilePicture'] != '') {
+            profilePictureUrl.value = data['profilePicture'];
+          }
           await prefs.setString('username', username.value);
           return true;
         }
@@ -503,6 +511,7 @@ class AuthController extends GetxController {
         data: {
           'userId': uid,
           'username': name,
+          'profilePicture': '',
           'firstName': '',
           'lastName': '',
           'createdAt': DateTime.now().toUtc().toIso8601String(),
@@ -677,6 +686,46 @@ class AuthController extends GetxController {
         'unexpected_error'.tr,
         snackPosition: SnackPosition.BOTTOM,
       );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateProfilePicture(File file) async {
+    isLoading.value = true;
+    final bucketId = dotenv.env[_bucketIdKey] ?? 'profile_pics';
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    try {
+      final session = await account.get();
+      final uid = session.\$id;
+      final upload = await storage.createFile(
+        bucketId: bucketId,
+        fileId: ID.unique(),
+        file: InputFile.fromPath(path: file.path),
+      );
+      final url = storage
+          .getFileView(bucketId: bucketId, fileId: upload.\$id)
+          .href;
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [Query.equal('userId', uid)],
+      );
+      if (result.documents.isNotEmpty) {
+        final docId = result.documents.first.\$id;
+        await databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: docId,
+          data: {'profilePicture': url},
+        );
+        profilePictureUrl.value = url;
+      }
+    } catch (e) {
+      logger.e('Error updating profile picture', error: e);
+      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }

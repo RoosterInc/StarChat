@@ -41,13 +41,18 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'signed_in'.tr,
-              style: const TextStyle(fontSize: 24),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          Text(
+            'signed_in'.tr,
+            style: const TextStyle(fontSize: 24),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => Get.toNamed('/profile'),
+            child: Text('profile'.tr),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
               onPressed: () async {
                 await Get.find<AuthController>().account.deleteSession(sessionId: 'current');
                 Get.find<AuthController>().clearControllers();

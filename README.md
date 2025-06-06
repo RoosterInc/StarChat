@@ -24,6 +24,7 @@ APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 APPWRITE_PROJECT_ID=65f5a3e4bd0514b418a4
 APPWRITE_DATABASE_ID=StarChat_DB
 USER_PROFILES_COLLECTION_ID=user_profiles
+PROFILE_PICTURES_BUCKET_ID=profile_pics
 APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 
