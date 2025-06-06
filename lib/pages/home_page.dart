@@ -48,13 +48,6 @@ class HomePage extends StatelessWidget {
                 },
                 child: Text('logout'.tr),
               ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  _showDeleteAccountDialog(context);
-                },
-                child: Text('delete_account'.tr),
-              ),
             ],
           ),
         ),
@@ -62,28 +55,5 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('delete_account'.tr),
-          content: Text('delete_account_confirmation'.tr),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text('cancel'.tr),
-            ),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                Get.find<AuthController>().deleteUserAccount();
-              },
-              child: Text('delete'.tr),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // Deleted account removal feature for now
 }

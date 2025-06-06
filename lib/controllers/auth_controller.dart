@@ -14,8 +14,8 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final isOTPSent = false.obs;
 
-  final emailController = TextEditingController();
-  final otpController = TextEditingController();
+  late TextEditingController emailController;
+  late TextEditingController otpController;
 
   String? userId;
 
@@ -43,6 +43,9 @@ class AuthController extends GetxController {
     final endpoint = dotenv.env[_endpointKey] ?? '';
     final projectId = dotenv.env[_projectIdKey] ?? '';
     client.setEndpoint(endpoint).setProject(projectId);
+
+    emailController = TextEditingController();
+    otpController = TextEditingController();
 
     account = Account(client);
 
@@ -266,8 +269,10 @@ class AuthController extends GetxController {
   }
 
   void clearControllers() {
-    emailController.clear();
-    otpController.clear();
+    emailController.dispose();
+    otpController.dispose();
+    emailController = TextEditingController();
+    otpController = TextEditingController();
     cancelTimers();
   }
 
