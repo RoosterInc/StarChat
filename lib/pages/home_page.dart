@@ -23,6 +23,11 @@ class HomePage extends StatelessWidget {
                     : Icons.dark_mode),
                 onPressed: themeController.toggleTheme, // Toggle the theme on press
               )),
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'profile'.tr,
+            onPressed: () => Get.toNamed('/profile'),
+          )
         ],
       ),
       body: ResponsiveLayout(
@@ -34,6 +39,7 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, double width) {
+    final authController = Get.find<AuthController>();
     return Center(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -41,16 +47,11 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-          Text(
-            'signed_in'.tr,
-            style: const TextStyle(fontSize: 24),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => Get.toNamed('/profile'),
-            child: Text('profile'.tr),
-          ),
+          Obx(() => Text(
+                'signed_in_as'.trParams({'username': authController.username.value}),
+                style: const TextStyle(fontSize: 24),
+                textAlign: TextAlign.center,
+              )),
           const SizedBox(height: 20),
           ElevatedButton(
               onPressed: () async {
@@ -60,11 +61,6 @@ class HomePage extends StatelessWidget {
                 Get.offAllNamed('/');
               },
               child: Text('logout'.tr),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: Get.find<AuthController>().deleteUsername,
-              child: Text('delete_username'.tr),
             ),
           ],
         ),
