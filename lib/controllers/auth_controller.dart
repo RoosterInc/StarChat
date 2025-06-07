@@ -282,7 +282,7 @@ class AuthController extends GetxController {
         return;
       }
       try {
-        await account.updateMagicURLSession(
+        await account.createSession(
           userId: userId!,
           secret: otp,
         );
