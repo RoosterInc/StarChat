@@ -39,27 +39,27 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/',
               page: () => const SignInPage(),
-              // binding: AuthBinding(), // Removed, covered by initialBinding
+              binding: AuthBinding(),
             ),
             GetPage(
               name: '/set_username',
               page: () => const SetUsernamePage(),
-              // binding: AuthBinding(), // Removed
+              binding: AuthBinding(),
             ),
             GetPage(
               name: '/home',
               page: () => const HomePage(),
-              // binding: AuthBinding(), // Removed
+              binding: AuthBinding(),
             ),
             GetPage(
               name: '/profile',
               page: () => const ProfilePage(),
-              // binding: AuthBinding(), // Removed
+              binding: AuthBinding(),
             ),
             GetPage(
               name: '/settings',
               page: () => const SettingsPage(),
-              // binding: AuthBinding(), // Removed
+              binding: AuthBinding(),
             ),
           ],
           locale: Get.deviceLocale,
