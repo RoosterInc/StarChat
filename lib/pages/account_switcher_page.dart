@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/multi_account_controller.dart';
-import '../controllers/auth_controller.dart';
-
-class AccountSwitcherPage extends GetView<MultiAccountController> {
   const AccountSwitcherPage({super.key});
 
   @override
@@ -40,7 +37,10 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
               ListTile(
                 leading: const Icon(Icons.add),
                 title: Text('add_account'.tr),
-                onTap: () => Get.offAllNamed('/'),
+                onTap: () => Get.offAllNamed(
+                  '/',
+                  arguments: {'fromAddAccount': true},
+                ),
               )
             ],
           )),
