@@ -748,6 +748,12 @@ class AuthController extends GetxController {
     } catch (e) {
       logger.e('Error deleting session', error: e);
     } finally {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('username');
+      } catch (e) {
+        logger.e('Error clearing cached username', error: e);
+      }
       clearControllers();
       isOTPSent.value = false;
       username.value = '';
