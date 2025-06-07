@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/multi_account_controller.dart';
+import '../controllers/auth_controller.dart';
+
+class AccountSwitcherPage extends GetView<MultiAccountController> {
   const AccountSwitcherPage({super.key});
 
   @override
