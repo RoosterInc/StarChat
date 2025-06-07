@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
-import '../widgets/responsive_sizes.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,6 +62,15 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Navigator.pop(context);
                   Get.toNamed('/settings');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text('logout'.tr),
+                onTap: () async {
+                  Navigator.pop(context);
+                  Get.closeAllSnackbars();
+                  await authController.logout();
                 },
               ),
             ],
@@ -143,28 +151,17 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16),
         width: width,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Obx(() => Text(
-                  'signed_in_as'
-                      .trParams({'username': authController.username.value}),
-                  style: const TextStyle(fontSize: 24),
-                  textAlign: TextAlign.center,
-                )),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                Get.closeAllSnackbars();
-                await Get.find<AuthController>().logout();
-              },
-              child: Text('logout'.tr),
-            ),
-            const SizedBox(height: 20),
             _buildPredictionScoresSection(context),
             const SizedBox(height: 20),
-            _buildChatRoomsSection(context),
-            const SizedBox(height: 20),
-            Text('Tab $_selectedIndex'),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Watch List',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            const SizedBox(height: 8),
+            Expanded(child: _buildWatchListSection(context)),
           ],
         ),
       ),
@@ -226,64 +223,39 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildChatRoomsSection(BuildContext context) {
+  Widget _buildWatchListSection(BuildContext context) {
     final rooms = ['Ashwini', 'Bharani', 'Krittika', 'Rohini'];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Chat Rooms', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final itemWidth = ResponsiveSizes.chatRoomItemWidth(
-                context, constraints.maxWidth);
-            return SizedBox(
-              height: 120,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: rooms.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final color = Colors.accents[index % Colors.accents.length]
-                      .withOpacity(0.3);
-                  return GestureDetector(
-                    onTap: () =>
-                        Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
-                    child: Container(
-                      width: itemWidth,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Stack(
-                        children: [
-                          Center(child: Text(rooms[index])),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: CircleAvatar(
-                              radius: 12,
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
-                              child: const Text(
-                                '0',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+    return SafeArea(
+      bottom: true,
+      child: ListView.builder(
+        itemCount: rooms.length,
+        padding: EdgeInsets.zero,
+        itemBuilder: (context, index) {
+          final color =
+              Colors.accents[index % Colors.accents.length].withOpacity(0.3);
+          return Container(
+            height: 100,
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              title: Text(rooms[index]),
+              trailing: CircleAvatar(
+                radius: 12,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                child: const Text(
+                  '0',
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
-            );
-          },
-        ),
-      ],
+              onTap: () => Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
+            ),
+          );
+        },
+      ),
     );
   }
 
