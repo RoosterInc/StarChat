@@ -110,11 +110,13 @@ class AuthController extends GetxController {
 
       bool hasUsername = await ensureUsername();
       try {
-        Get.find<MultiAccountController>().addAccount(
+        final multi = Get.find<MultiAccountController>();
+        final existing = multi.activeAccount;
+        multi.addAccount(
           AccountInfo(
             userId: session.$id,
             username: username.value,
-            sessionId: '',
+            sessionId: existing?.sessionId ?? '',
             profilePictureUrl: profilePictureUrl.value,
           ),
         );
@@ -304,7 +306,7 @@ class AuthController extends GetxController {
         return;
       }
       try {
-        await account.createSession(
+        final session = await account.createSession(
           userId: userId!,
           secret: otp,
         );
@@ -317,7 +319,7 @@ class AuthController extends GetxController {
             AccountInfo(
               userId: accountInfo.$id,
               username: username.value,
-              sessionId: '',
+                sessionId: session.$id,
               profilePictureUrl: profilePictureUrl.value,
             ),
           );
@@ -880,10 +882,15 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     isLoading.value = true;
+    final multi = Get.find<MultiAccountController>();
+    final active = multi.activeAccount;
     try {
-      await account.deleteSessions();
+      if (active != null && active.sessionId.isNotEmpty) {
+        client.setSession(active.sessionId);
+        await account.deleteSession(sessionId: active.sessionId);
+      }
     } catch (e) {
-      logger.e('Error deleting Appwrite session(s)', error: e);
+      logger.e('Error deleting Appwrite session', error: e);
     } finally {
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -897,11 +904,10 @@ class AuthController extends GetxController {
       isOTPSent.value = false;
       username.value = '';
       profilePictureUrl.value = '';
-      final currentId = userId;
       userId = null;
-      if (currentId != null) {
+      if (active != null) {
         try {
-          await Get.find<MultiAccountController>().removeAccount(currentId);
+          await multi.removeAccount(active.userId);
         } catch (_) {}
       }
 
