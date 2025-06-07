@@ -3,43 +3,31 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountInfo {
-  final String appwriteUserId; // Renamed from userId
+  final String userId;
   final String username;
   final String profilePictureUrl;
-  final String email;
-  final String tokenGenerationUserId;
-  final String tokenSecret;
-  final String? currentSessionId; // Optional
+  final String sessionId;
 
   AccountInfo({
-    required this.appwriteUserId,
+    required this.userId,
     required this.username,
-    required this.email,
-    required this.tokenGenerationUserId,
-    required this.tokenSecret,
-    this.currentSessionId,
+    required this.sessionId,
     this.profilePictureUrl = '',
   });
 
   factory AccountInfo.fromJson(Map<String, dynamic> json) {
     return AccountInfo(
-      appwriteUserId: json['appwriteUserId'] as String, // Changed from 'userId'
+      userId: json['userId'] as String,
       username: json['username'] as String? ?? '',
-      email: json['email'] as String,
-      tokenGenerationUserId: json['tokenGenerationUserId'] as String,
-      tokenSecret: json['tokenSecret'] as String,
-      currentSessionId: json['currentSessionId'] as String?,
+      sessionId: json['sessionId'] as String? ?? '',
       profilePictureUrl: json['profilePictureUrl'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'appwriteUserId': appwriteUserId, // Changed from 'userId'
+        'userId': userId,
         'username': username,
-        'email': email,
-        'tokenGenerationUserId': tokenGenerationUserId,
-        'tokenSecret': tokenSecret,
-        'currentSessionId': currentSessionId,
+        'sessionId': sessionId,
         'profilePictureUrl': profilePictureUrl,
       };
 }
@@ -81,14 +69,14 @@ class MultiAccountController extends GetxController {
 
   AccountInfo? _findById(String id) {
     try {
-      return accounts.firstWhere((e) => e.appwriteUserId == id); // Changed to appwriteUserId
+      return accounts.firstWhere((e) => e.userId == id);
     } catch (_) {
       return null;
     }
   }
 
   Future<void> addAccount(AccountInfo account) async {
-    final existing = _findById(account.appwriteUserId); // Changed to appwriteUserId
+    final existing = _findById(account.userId);
     if (existing == null) {
       if (accounts.length >= 3) {
         throw Exception('Maximum accounts reached');
@@ -99,23 +87,23 @@ class MultiAccountController extends GetxController {
       accounts[accounts.indexOf(existing)] = account;
       await _saveAccounts();
     }
-    activeAccountId.value = account.appwriteUserId; // Changed to appwriteUserId
+    activeAccountId.value = account.userId;
     await _saveActiveAccount();
   }
 
-  Future<void> removeAccount(String appwriteUserId) async { // Changed parameter name
-    accounts.removeWhere((a) => a.appwriteUserId == appwriteUserId); // Changed to appwriteUserId
+  Future<void> removeAccount(String userId) async {
+    accounts.removeWhere((a) => a.userId == userId);
     await _saveAccounts();
-    if (activeAccountId.value == appwriteUserId) { // Changed to appwriteUserId
-      activeAccountId.value = accounts.isNotEmpty ? accounts.first.appwriteUserId : ''; // Changed to appwriteUserId
+    if (activeAccountId.value == userId) {
+      activeAccountId.value = accounts.isNotEmpty ? accounts.first.userId : '';
       await _saveActiveAccount();
     }
   }
 
-  Future<void> switchAccount(String appwriteUserId) async { // Changed parameter name
-    if (activeAccountId.value == appwriteUserId) return; // Changed to appwriteUserId
-    if (_findById(appwriteUserId) != null) { // Changed to appwriteUserId
-      activeAccountId.value = appwriteUserId; // Changed to appwriteUserId
+  Future<void> switchAccount(String userId) async {
+    if (activeAccountId.value == userId) return;
+    if (_findById(userId) != null) {
+      activeAccountId.value = userId;
       await _saveActiveAccount();
     }
   }
