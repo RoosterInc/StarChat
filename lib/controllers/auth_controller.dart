@@ -3,17 +3,26 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
 import 'package:logger/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../core/constants/app_constants.dart';
+
 class AuthController extends GetxController {
   final Client client = Client();
-  late Account account;
-  late Databases databases;
-  late Storage storage;
+  // Remove direct Appwrite SDK instances
+  // late Account account;
+  // late Databases databases;
+  // late Storage storage;
+
+  late AuthService _authService;
+  late UserService _userService;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -25,7 +34,7 @@ class AuthController extends GetxController {
   final isUsernameValid = false.obs;
   final usernameText = ''.obs;
   Timer? _usernameDebounce;
-  static const Duration usernameDebounceDuration = Duration(milliseconds: 500);
+  // static const Duration usernameDebounceDuration = Duration(milliseconds: 500); // Replaced by AppConstants
   late TextEditingController usernameController;
 
   late TextEditingController emailController;
@@ -44,22 +53,30 @@ class AuthController extends GetxController {
   Timer? _otpTimer;
 
   // Constants for durations
-  static const int resendCooldownDuration = 60; // in seconds
-  static const int otpExpirationDuration = 300; // in seconds
+  // static const int resendCooldownDuration = 60; // Replaced by AppConstants
+  // static const int otpExpirationDuration = 300; // Replaced by AppConstants
 
   // Environment variable keys
-  static const String _endpointKey = 'APPWRITE_ENDPOINT';
-  static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
-  static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
-  static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
-  static const String _bucketIdKey = 'PROFILE_PICTURES_BUCKET_ID';
+  // static const String _endpointKey = 'APPWRITE_ENDPOINT'; // Replaced by AppConstants
+  // static const String _projectIdKey = 'APPWRITE_PROJECT_ID'; // Replaced by AppConstants
+  // Keys for database, collection, bucket are now managed by UserService
+  // static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
+  // static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
+  // static const String _bucketIdKey = 'PROFILE_PICTURES_BUCKET_ID';
 
   @override
   void onInit() {
     super.onInit();
-    final endpoint = dotenv.env[_endpointKey] ?? '';
-    final projectId = dotenv.env[_projectIdKey] ?? '';
-    client.setEndpoint(endpoint).setProject(projectId);
+    final endpoint = dotenv.env[AppConstants.appwriteEndpointKey] ?? AppConstants.defaultAppwriteEndpoint;
+    final projectId = dotenv.env[AppConstants.appwriteProjectIdKey] ?? AppConstants.defaultAppwriteProjectId;
+    client.setEndpoint(endpoint).setProject(projectId); // Initialize the class member client
+
+    _authService = AuthService(account: Account(client)); // Use the class member client
+    _userService = UserService(
+        databases: Databases(client), // Use the class member client
+        storage: Storage(client),     // Use the class member client
+        client: client                // Use the class member client
+    );
 
     emailController = TextEditingController();
     otpController = TextEditingController();
@@ -68,10 +85,11 @@ class AuthController extends GetxController {
       usernameText.value = usernameController.text;
     });
 
-    account = Account(client);
-    databases = Databases(client);
-    storage = Storage(client);
-
+    // Call the updated version
+    // Note: onInit cannot be async directly. checkExistingSession needs to be called carefully.
+    // Typically, you might not await it here or use a .then() approach if absolutely needed,
+    // or ensure checkExistingSession handles its own loading state without blocking onInit.
+    // For this refactor, we'll keep it as per plan, assuming GetX handles it.
     checkExistingSession();
   }
 
@@ -86,24 +104,38 @@ class AuthController extends GetxController {
   }
 
   Future<void> checkExistingSession() async {
+    isLoading.value = true;
     try {
-      isLoading.value = true;
-      await account.get();
-      bool hasUsername = await ensureUsername();
-      if (hasUsername) {
-        // Only redirect to home when coming from unauthenticated routes
-        if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
-          await Get.offAllNamed('/home');
+      final models.User? user = await _authService.getCurrentUserSession();
+      if (user != null) {
+        // User is authenticated
+        bool hasUsername = await ensureUsername(); // ensureUsername will use _userService
+        if (hasUsername) {
+          if (Get.currentRoute == '/' || Get.currentRoute == '/login' || Get.currentRoute == '/set_username') { // Added /login
+            await Get.offAllNamed('/home');
+          }
+        } else {
+          if (Get.currentRoute != '/set_username') {
+            await Get.offAllNamed('/set_username');
+          }
         }
       } else {
-        if (Get.currentRoute != '/set_username') {
-          await Get.offAllNamed('/set_username');
-        }
+        // No active session, or error that implies no session
+        // Navigate to SignInPage if not already there or on splash
+         if (Get.currentRoute != '/' && Get.currentRoute != '/login') { // Added /login
+           Get.offAllNamed('/');
+         }
       }
     } on AppwriteException catch (e) {
-      logger.i('No active session: $e');
+      logger.i('AppwriteException during session check, navigating to sign-in: $e');
+      if (Get.currentRoute != '/' && Get.currentRoute != '/login') { // Added /login
+           Get.offAllNamed('/');
+      }
     } catch (e) {
-      logger.e('Error checking session', error: e);
+      logger.e('Error checking session, navigating to sign-in', error: e);
+       if (Get.currentRoute != '/' && Get.currentRoute != '/login') { // Added /login
+           Get.offAllNamed('/');
+      }
     } finally {
       isLoading.value = false;
     }
@@ -156,12 +188,8 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      final result = await account.createEmailToken(
-        userId: ID.unique(),
-        email: email,
-      );
-
-      userId = result.userId;
+      final models.Token tokenDetails = await _authService.sendOTP(email);
+      userId = tokenDetails.userId; // Assuming 'userId' is still a class member String?
       isOTPSent.value = true;
 
       Get.snackbar(
@@ -223,31 +251,25 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      await account.get();
-      await Get.offAllNamed('/home');
-      clearControllers();
-      isOTPSent.value = false;
-      await Future.delayed(const Duration(milliseconds: 100));
-      await ensureUsername();
-    } on AppwriteException {
-      logger.i('No existing session, verifying OTP...');
-      try {
-        await account.updateMagicURLSession(
-          userId: userId!,
-          secret: otp,
-        );
+      // The AuthService.verifyOTP should create the session.
+      await _authService.verifyOTP(userId!, otp); // otp is local var, userId is class member
 
-        bool hasUsername = await ensureUsername();
-        if (hasUsername) {
-          await Get.offAllNamed('/home');
-        } else {
-          await Get.offAllNamed('/set_username');
-        }
-        clearControllers();
-        isOTPSent.value = false;
-      } on AppwriteException catch (e) {
-        logger.e('AppwriteException in verifyOTP', error: e);
-        String errorMessage = 'failed_to_verify_otp'.tr;
+      bool hasUsername = await ensureUsername(); // ensureUsername will use _userService
+      if (hasUsername) {
+        await Get.offAllNamed('/home');
+      } else {
+        await Get.offAllNamed('/set_username');
+      }
+      // Clear only OTP specific fields after successful verification
+      otpController.clear();
+      // isOTPSent.value = false; // This was already present below, remove duplication
+      // Timers would have run their course or been cancelled by going back.
+      // No need to call the old clearControllers() or the new comprehensive reset.
+      isOTPSent.value = false;
+
+    } on AppwriteException catch (e) {
+      logger.e('AppwriteException in verifyOTP', error: e);
+      String errorMessage = 'failed_to_verify_otp'.tr;
 
         if (e.code == 400) {
           errorMessage = 'invalid_otp_message'.tr;
@@ -283,7 +305,7 @@ class AuthController extends GetxController {
 
   void startResendCooldownTimer() {
     _resendTimer?.cancel();
-    resendCooldown.value = resendCooldownDuration;
+    resendCooldown.value = AppConstants.resendCooldownDuration;
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       resendCooldown.value--;
       if (resendCooldown.value <= 0) {
@@ -295,7 +317,7 @@ class AuthController extends GetxController {
 
   void startOTPExpirationTimer() {
     _otpTimer?.cancel();
-    otpExpiration.value = otpExpirationDuration;
+    otpExpiration.value = AppConstants.otpExpirationDuration;
     _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       otpExpiration.value--;
       if (otpExpiration.value <= 0) {
@@ -311,63 +333,74 @@ class AuthController extends GetxController {
   }
 
   void goBackToEmailInput() {
-    cancelTimers();
     otpController.clear();
-    isOTPSent.value = false;
-    canResendOTP.value = true;
+    isOTPSent.value = false; // Go back to email input UI
+    cancelTimers(); // Stop OTP timers
+    canResendOTP.value = true; // Allow immediate resend if they go back
+    resendCooldown.value = AppConstants.resendCooldownDuration; // Reset cooldown display
+    // Do NOT clear emailController.text here
   }
 
   void cancelTimers() {
     _resendTimer?.cancel();
     _otpTimer?.cancel();
+    _usernameDebounce?.cancel(); // Also cancel username debounce if active
   }
 
-  void clearControllers() {
-    emailController.dispose();
-    otpController.dispose();
-    usernameController.dispose();
-    usernameController = TextEditingController();
-    usernameController.addListener(() {
-      usernameText.value = usernameController.text;
-    });
-    emailController = TextEditingController();
-    otpController = TextEditingController();
-    usernameText.value = '';
-    cancelTimers();
+  // Removed old clearControllers() method.
+  // void clearControllers() { ... }
+
+  void resetAllAuthRelatedStateAndForms() {
+      emailController.clear();
+      otpController.clear();
+      // usernameController is handled by clearUsernameInput()
+      clearUsernameInput();
+
+      // Reset reactive state related to auth
+      // usernameText.value is cleared by clearUsernameInput's effect on usernameController listener
+      username.value = '';     // The actual username from profile
+      profilePictureUrl.value = '';
+      isOTPSent.value = false;
+
+      // Reset OTP process specific state
+      userId = null; // The temporary Appwrite User ID from createEmailToken
+      canResendOTP.value = true;
+      resendCooldown.value = AppConstants.resendCooldownDuration; // Reset to initial
+      otpExpiration.value = AppConstants.otpExpirationDuration; // Reset to initial
+
+      cancelTimers(); // Cancel any running timers (OTP, debounce etc.)
   }
 
   Future<bool> ensureUsername() async {
     final prefs = await SharedPreferences.getInstance();
-    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    // final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB'; // Managed by UserService
+    // final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles'; // Managed by UserService
 
     try {
-      final session = await account.get();
-      final uid = session.$id;
+      final currentUser = await _authService.getCurrentUserSession();
+      if (currentUser == null) {
+          // No user session, cannot ensure username.
+          // This case should ideally be handled by checkExistingSession routing to login.
+          // If somehow called without a session, clear local username and return false.
+          await prefs.remove('username');
+          username.value = '';
+          profilePictureUrl.value = '';
+          return false;
+      }
+      final uid = currentUser.$id;
 
-      final result = await databases.listDocuments(
-        databaseId: dbId,
-        collectionId: collectionId,
-        queries: [
-          Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
-          Query.limit(1),
-        ],
-      );
-      if (result.documents.isNotEmpty) {
-        final data = result.documents.first.data;
-        if (data['username'] != null && data['username'] != '') {
-          username.value = data['username'];
-          if (data['profilePicture'] != null && data['profilePicture'] != '') {
-            profilePictureUrl.value = data['profilePicture'];
-          }
-          await prefs.setString('username', username.value);
-          return true;
+      final models.Document? profile = await _userService.getUserProfile(uid);
+      if (profile != null && profile.data[AppConstants.usernameField] != null && profile.data[AppConstants.usernameField].isNotEmpty) { // check for empty string
+        username.value = profile.data[AppConstants.usernameField];
+        if (profile.data[AppConstants.profilePictureField] != null && profile.data[AppConstants.profilePictureField].isNotEmpty) { // check for empty string
+          profilePictureUrl.value = profile.data[AppConstants.profilePictureField];
         }
+        await prefs.setString(AppConstants.usernameField, username.value); // Use AppConstants for prefs key if desired
+        return true;
       }
 
       // If no username found on server, clear any cached value
-      await prefs.remove('username');
+      await prefs.remove(AppConstants.usernameField); // Use AppConstants for prefs key
       username.value = '';
       profilePictureUrl.value = '';
       return false;
@@ -375,9 +408,10 @@ class AuthController extends GetxController {
       logger.e('Error fetching username from server', error: e);
 
       // Fallback to cached username only when the server cannot be reached
-      final cachedName = prefs.getString('username');
-      if (cachedName != null) {
+      final cachedName = prefs.getString(AppConstants.usernameField); // Use AppConstants for prefs key
+      if (cachedName != null && cachedName.isNotEmpty) { // check for empty string
         username.value = cachedName;
+        // Assuming profile picture URL might also be cached or not critical for fallback
         return true;
       }
 
@@ -464,8 +498,8 @@ class AuthController extends GetxController {
               Obx(() => ElevatedButton(
                     onPressed: usernameAvailable.value
                         ? () async {
-                            await _saveUsername(
-                                dbId, collectionId, uid, textController.text, prefs);
+                            // Corrected: dbId and collectionId are not needed for _saveUsername
+                            await _saveUsername(uid, textController.text, prefs);
                             Get.back();
                           }
                         : null,
@@ -486,15 +520,10 @@ class AuthController extends GetxController {
       return false;
     }
     isCheckingUsername.value = true;
-    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    // final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB'; // Managed by UserService
+    // final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles'; // Managed by UserService
     try {
-      final result = await databases.listDocuments(
-        databaseId: dbId,
-        collectionId: collectionId,
-        queries: [Query.equal('username', name)],
-      );
-      usernameAvailable.value = result.documents.isEmpty;
+      usernameAvailable.value = await _userService.checkUsernameAvailability(name);
       return usernameAvailable.value;
     } on AppwriteException catch (e) {
       logger.e('AppwriteException checking username', error: e);
@@ -523,53 +552,19 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _saveUsername(String dbId, String collectionId, String uid,
-      String name, SharedPreferences prefs) async {
+  Future<void> _saveUsername(String uid, String name, SharedPreferences prefs) async {
     try {
-      final existing = await databases.listDocuments(
-        databaseId: dbId,
-        collectionId: collectionId,
-        queries: [
-          Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
-          Query.limit(1),
-        ],
+      final models.Document? existingProfile = await _userService.getUserProfile(uid);
+      await _userService.saveUserProfile(
+        documentId: existingProfile?.$id,
+        userId: uid,
+        username: name,
       );
-      if (existing.documents.isNotEmpty) {
-        await databases.updateDocument(
-          databaseId: dbId,
-          collectionId: collectionId,
-          documentId: existing.documents.first.$id,
-          data: {
-            'username': name,
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
-          },
-        );
-      } else {
-        await databases.createDocument(
-          databaseId: dbId,
-          collectionId: collectionId,
-          documentId: ID.unique(),
-          data: {
-            'userId': uid,
-            'username': name,
-            'profilePicture': '',
-            'firstName': '',
-            'lastName': '',
-            'createdAt': DateTime.now().toUtc().toIso8601String(),
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
-          },
-          permissions: [
-            Permission.read(Role.user(uid)),
-            Permission.update(Role.user(uid)),
-            Permission.delete(Role.user(uid)),
-          ],
-        );
-      }
       username.value = name;
       await prefs.setString('username', name);
     } catch (e) {
       logger.e('Error saving username', error: e);
+      // Optionally, rethrow or show a snackbar
     }
   }
 
@@ -584,7 +579,7 @@ class AuthController extends GetxController {
       return;
     }
     isCheckingUsername.value = true;
-    _usernameDebounce = Timer(usernameDebounceDuration, () {
+    _usernameDebounce = Timer(AppConstants.usernameDebounceDuration, () {
       _checkUsernameAvailability(value);
     });
   }
@@ -624,8 +619,8 @@ class AuthController extends GetxController {
 
   Future<String?> fetchCurrentUserId() async {
     try {
-      final session = await account.get();
-      return session.$id;
+      final models.User? user = await _authService.getCurrentUserSession();
+      return user?.$id;
     } catch (e) {
       logger.e('Error fetching user ID', error: e);
       return null;
@@ -643,68 +638,76 @@ class AuthController extends GetxController {
       return;
     }
     isLoading.value = true;
-    final available = await _checkUsernameAvailability(name);
+
+    final available = await _userService.checkUsernameAvailability(name); // Uses service
     if (!available) {
-      isLoading.value = false;
       Get.snackbar(
         'error'.tr,
         'username_taken'.tr,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 10),
       );
+      isLoading.value = false;
       return;
     }
+
     final prefs = await SharedPreferences.getInstance();
-    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
-    final session = await account.get();
-    final uid = session.$id;
-    await _saveUsername(dbId, collectionId, uid, name, prefs);
-    isLoading.value = false;
-    if (Get.previousRoute.isEmpty) {
-      Get.offAllNamed('/home');
-    } else {
-      Get.back();
+    final currentUser = await _authService.getCurrentUserSession();
+    if (currentUser == null) {
+        Get.snackbar('Error', 'No active session. Please sign in again.'); // Not translated, for brevity
+        isLoading.value = false;
+        Get.offAllNamed('/');
+        return;
     }
+    final uid = currentUser.$id;
+
+    // _saveUsername was simplified and might be directly used or its logic incorporated here
+    try {
+      await _saveUsername(uid, name, prefs); // Call the updated _saveUsername
+      // username.value and prefs.setString are handled by _saveUsername which should also use AppConstants for prefs keys
+
+      isLoading.value = false;
+      if (Get.previousRoute.isEmpty) {
+        Get.offAllNamed('/home');
+      } else {
+        Get.back();
+      }
+    } catch (e) {
+      logger.e('Error submitting username', error: e);
+      Get.snackbar('Error', 'Failed to save username. Please try again.'); // Not translated
+      isLoading.value = false;
+    }
+    // Removed misplaced else { Get.back(); } block from here
   }
 
-  Future<void> deleteUsername() async {
+  // Renamed deleteUsername to clearUserUsernameEntry
+  Future<void> clearUserUsernameEntry() async {
     isLoading.value = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
-      final session = await account.get();
-      final uid = session.$id;
-      final result = await databases.listDocuments(
-        databaseId: dbId,
-        collectionId: collectionId,
-        queries: [
-          Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
-          Query.limit(1),
-        ],
-      );
-      if (result.documents.isNotEmpty) {
-        final docId = result.documents.first.$id;
-        await databases.deleteDocument(
-          databaseId: dbId,
-          collectionId: collectionId,
-          documentId: docId,
-        );
+      final currentUser = await _authService.getCurrentUserSession();
+      if (currentUser == null) {
+        Get.snackbar('Error', 'No active session.'); // Not translated
+        isLoading.value = false;
+        return;
       }
-      username.value = "";
-      await prefs.remove("username");
+      final uid = currentUser.$id;
+
+      await _userService.setUsernameEmpty(uid); // Calls the service method
+
+      username.value = ""; // Clear local state
+      await prefs.remove(AppConstants.usernameField); // Clear cache using AppConstants key
+
+      // ensureUsername might try to re-fetch or show set_username page again.
+      // This behavior needs to be clear. If user clears username, where should they go?
+      // For now, keep ensureUsername to re-evaluate state.
       await ensureUsername();
-      Get.snackbar('success'.tr, 'username_deleted'.tr,
+
+      Get.snackbar('success'.tr, 'username_cleared'.tr, // Or a more accurate translation key
           snackPosition: SnackPosition.BOTTOM);
-    } on AppwriteException catch (e) {
-      logger.e('Error deleting username', error: e);
-      Get.snackbar('error'.tr, 'failed_to_delete_username'.tr,
-          snackPosition: SnackPosition.BOTTOM);
-    } catch (e) {
-      logger.e('Unknown error deleting username', error: e);
-      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+    } catch (e) { // Catch generic Exception as services might throw AppwriteException or others
+      logger.e('Error clearing username entry', error: e);
+      Get.snackbar('error'.tr, 'failed_to_clear_username'.tr, // Ensure this key exists or update it
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
@@ -713,28 +716,30 @@ class AuthController extends GetxController {
   Future<void> deleteUserAccount() async {
     isLoading.value = true;
     try {
-      await account.updateStatus();
-      logger.i('Account deleted successfully');
-      clearControllers();
-      isOTPSent.value = false;
+      await _authService.requestAccountDeletion();
+      logger.i('Account deletion request processed.'); // Updated log message
+      // clearControllers(); // Replaced by resetAllAuthRelatedStateAndForms
+      resetAllAuthRelatedStateAndForms();
+      // isOTPSent.value = false; // Handled by resetAllAuthRelatedStateAndForms
+      // Navigation and snackbar might change depending on how requestAccountDeletion is handled (e.g., if it throws UnimplementedError)
       Get.offAllNamed('/');
       Get.snackbar(
-        'success'.tr,
-        'account_deleted'.tr,
+        'success'.tr, // This might be optimistic if it's just a request
+        'account_deletion_requested'.tr, // Needs new translation key
         snackPosition: SnackPosition.BOTTOM,
       );
-    } on AppwriteException catch (e) {
-      logger.e('Error deleting account', error: e);
+    } on AppwriteException catch (e) { // Catch AppwriteException specifically if services throw them
+      logger.e('Error requesting account deletion', error: e);
       Get.snackbar(
         'error'.tr,
-        'failed_to_delete_account'.tr,
+        'failed_to_request_account_deletion'.tr, // Needs new translation key
         snackPosition: SnackPosition.BOTTOM,
       );
-    } catch (e) {
-      logger.e('Unknown error deleting account', error: e);
+    } catch (e) { // Catch other errors, like UnimplementedError
+      logger.e('Error during account deletion process', error: e);
       Get.snackbar(
         'error'.tr,
-        'unexpected_error'.tr,
+        e is UnimplementedError ? 'Feature not implemented' : 'unexpected_error'.tr, // Handle UnimplementedError gracefully
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -744,61 +749,46 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     try {
-      await account.deleteSession(sessionId: 'current');
+      await _authService.logout();
     } catch (e) {
-      logger.e('Error deleting session', error: e);
+      logger.e('Error during logout', error: e); // Changed log message slightly
     } finally {
       try {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('username');
+        await prefs.remove(AppConstants.usernameField); // Use AppConstants for prefs key
       } catch (e) {
         logger.e('Error clearing cached username', error: e);
       }
-      clearControllers();
-      isOTPSent.value = false;
-      username.value = '';
-      profilePictureUrl.value = '';
+      // clearControllers(); // Replaced by resetAllAuthRelatedStateAndForms
+      resetAllAuthRelatedStateAndForms();
+      // isOTPSent.value = false; // Handled by resetAllAuthRelatedStateAndForms
+      // username.value = ''; // Handled by resetAllAuthRelatedStateAndForms
+      // profilePictureUrl.value = ''; // Handled by resetAllAuthRelatedStateAndForms
       Get.offAllNamed('/');
     }
   }
 
   Future<void> updateProfilePicture(File file) async {
     isLoading.value = true;
-    final bucketId = dotenv.env[_bucketIdKey] ?? 'profile_pics';
-    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    // final bucketId = dotenv.env[_bucketIdKey] ?? 'profile_pics'; // Managed by UserService
+    // final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB'; // Managed by UserService
+    // final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles'; // Managed by UserService
     try {
-      final session = await account.get();
-      final uid = session.$id;
-      final upload = await storage.createFile(
-        bucketId: bucketId,
-        fileId: ID.unique(),
-        file: InputFile.fromPath(path: file.path),
-      );
-      final url =
-          '${client.endPoint}/storage/buckets/$bucketId/files/${upload.$id}/view?project=${client.config['project']}';
-      final result = await databases.listDocuments(
-        databaseId: dbId,
-        collectionId: collectionId,
-        queries: [
-          Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
-          Query.limit(1),
-        ],
-      );
-      if (result.documents.isNotEmpty) {
-        final docId = result.documents.first.$id;
-        await databases.updateDocument(
-          databaseId: dbId,
-          collectionId: collectionId,
-          documentId: docId,
-          data: {'profilePicture': url},
-        );
-        profilePictureUrl.value = url;
+      final currentUser = await _authService.getCurrentUserSession();
+      if (currentUser == null) {
+        Get.snackbar('Error', 'No active session.'); // Not translated
+        isLoading.value = false;
+        return;
       }
+      final uid = currentUser.$id;
+
+      final String newUrl = await _userService.uploadProfilePictureAndUpdateUser(uid, file);
+      profilePictureUrl.value = newUrl;
+      Get.snackbar('Success', 'Profile picture updated!'); // Not translated
+
     } catch (e) {
       logger.e('Error updating profile picture', error: e);
-      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+      Get.snackbar('error'.tr, 'failed_to_update_profile_picture'.tr, // Needs new translation key
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;

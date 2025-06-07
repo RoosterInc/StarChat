@@ -10,7 +10,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get the ThemeController to manage theme changes
-    final themeController = Get.put(ThemeController());
+    final themeController = Get.find<ThemeController>();
 
     return Scaffold(
       appBar: AppBar(
