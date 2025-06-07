@@ -249,6 +249,14 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
+    } else if (otpExpiration.value <= 0) {
+      otpError.value = 'otp_expired_message'.tr;
+      Get.snackbar(
+        'otp_expired'.tr,
+        otpError.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
     } else {
       otpError.value = '';
     }
@@ -293,7 +301,11 @@ class AuthController extends GetxController {
         String errorMessage = 'failed_to_verify_otp'.tr;
 
         if (e.code == 400 || e.code == 404) {
-          errorMessage = 'incorrect_otp_message'.tr;
+          if (otpExpiration.value <= 0) {
+            errorMessage = 'otp_expired_message'.tr;
+          } else {
+            errorMessage = 'incorrect_otp_message'.tr;
+          }
         } else if (e.code == 401) {
           errorMessage = 'unauthorized'.tr;
         } else if (e.code == 500) {

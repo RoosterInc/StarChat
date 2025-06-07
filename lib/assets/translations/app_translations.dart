@@ -27,7 +27,7 @@ class AppTranslations extends Translations {
           'invalid_email_message': 'Please enter a valid email address.',
           'invalid_otp': 'Invalid OTP',
           'invalid_otp_message': 'Please enter a valid 6-digit OTP.',
-          'incorrect_otp_message': 'The OTP you entered is incorrect or expired.',
+          'incorrect_otp_message': 'The OTP you entered is incorrect.',
           'wait': 'Wait',
           'no_internet': 'No Internet',
           'check_internet': 'Please check your internet connection.',
@@ -99,7 +99,7 @@ class AppTranslations extends Translations {
           'invalid_otp_message':
               'Por favor, introduzca un OTP de 6 dígitos válido.',
           'incorrect_otp_message':
-              'El código que ingresó es incorrecto o ha expirado.',
+              'El código que ingresó es incorrecto.',
           'wait': 'Espere',
           'no_internet': 'Sin internet',
           'check_internet': 'Por favor, revise su conexión a internet.',
