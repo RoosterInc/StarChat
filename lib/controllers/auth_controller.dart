@@ -878,6 +878,14 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> applyAccount(AccountInfo account) async {
+    username.value = account.username;
+    profilePictureUrl.value = account.profilePictureUrl;
+    userId = account.userId;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', account.username);
+  }
+
   Future<void> logout() async {
     isLoading.value = true;
     try {
