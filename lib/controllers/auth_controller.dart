@@ -110,12 +110,11 @@ class AuthController extends GetxController {
 
       bool hasUsername = await ensureUsername();
       try {
-        final currentSession = await account.getSession(sessionId: 'current');
         Get.find<MultiAccountController>().addAccount(
           AccountInfo(
             userId: session.$id,
             username: username.value,
-            sessionId: currentSession.$id,
+            sessionId: '',
             profilePictureUrl: profilePictureUrl.value,
           ),
         );
@@ -289,6 +288,14 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
+      await account.get();
+      await Get.offAllNamed('/home');
+      clearControllers();
+      isOTPSent.value = false;
+      await Future.delayed(const Duration(milliseconds: 100));
+      await ensureUsername();
+    } on AppwriteException {
+      logger.i('No existing session, verifying OTP...');
       if (userId == null) {
         logger.e('verifyOTP called with null userId');
         Get.snackbar(
@@ -299,32 +306,33 @@ class AuthController extends GetxController {
         isLoading.value = false;
         return;
       }
-      final newSession = await account.createSession(
-        userId: userId!,
-        secret: otp,
-      );
-
-      otpError.value = '';
-      bool hasUsername = await ensureUsername();
       try {
-        final accountInfo = await account.get();
-        Get.find<MultiAccountController>().addAccount(
-          AccountInfo(
-            userId: accountInfo.$id,
-            username: username.value,
-            sessionId: newSession.$id,
-            profilePictureUrl: profilePictureUrl.value,
-          ),
+        await account.createSession(
+          userId: userId!,
+          secret: otp,
         );
-      } catch (_) {}
-      if (hasUsername) {
-        await Get.offAllNamed('/home');
-      } else {
-        await Get.offAllNamed('/set_username');
-      }
-      clearControllers();
-      isOTPSent.value = false;
-    } on AppwriteException catch (e) {
+
+        otpError.value = '';
+        bool hasUsername = await ensureUsername();
+        try {
+          final accountInfo = await account.get();
+          Get.find<MultiAccountController>().addAccount(
+            AccountInfo(
+              userId: accountInfo.$id,
+              username: username.value,
+              sessionId: '',
+              profilePictureUrl: profilePictureUrl.value,
+            ),
+          );
+        } catch (_) {}
+        if (hasUsername) {
+          await Get.offAllNamed('/home');
+        } else {
+          await Get.offAllNamed('/set_username');
+        }
+        clearControllers();
+        isOTPSent.value = false;
+      } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
 
