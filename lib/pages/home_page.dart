@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/sample_sliver_app_bar.dart';
+import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,113 +21,112 @@ class _HomePageState extends State<HomePage> {
 
     final pages = [
       _buildHomeBody(context),
-      const Center(child: SizedBox()),
-      const Center(child: SizedBox()),
-      const Center(child: SizedBox()),
-      const Center(child: SizedBox()),
-      const Center(child: SizedBox()),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
     ];
 
     return Scaffold(
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              Obx(
-                () => UserAccountsDrawerHeader(
-                  currentAccountPicture: CircleAvatar(
-                    backgroundImage: authController
-                            .profilePictureUrl.value.isNotEmpty
-                        ? NetworkImage(authController.profilePictureUrl.value)
-                        : null,
-                    child: authController.profilePictureUrl.value.isEmpty
-                        ? const Icon(Icons.person, size: 40)
-                        : null,
-                  ),
-                  accountName: Text(authController.username.value),
-                  accountEmail: null,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Obx(
+              () => UserAccountsDrawerHeader(
+                currentAccountPicture: CircleAvatar(
+                  backgroundImage:
+                      authController.profilePictureUrl.value.isNotEmpty
+                          ? NetworkImage(authController.profilePictureUrl.value)
+                          : null,
+                  child: authController.profilePictureUrl.value.isEmpty
+                      ? const Icon(Icons.person, size: 40)
+                      : null,
                 ),
+                accountName: Text(authController.username.value),
+                accountEmail: null,
               ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: Text('profile'.tr),
-                onTap: () {
-                  Navigator.pop(context);
-                  Get.toNamed('/profile');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.switch_account),
-                title: Text('manage_accounts'.tr),
-                onTap: () {
-                  Navigator.pop(context);
-                  Get.toNamed('/accounts');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings),
-                title: Text('settings'.tr),
-                onTap: () {
-                  Navigator.pop(context);
-                  Get.toNamed('/settings');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text('logout'.tr),
-                onTap: () async {
-                  Navigator.pop(context);
-                  Get.closeAllSnackbars();
-                  await authController.logout();
-                },
-              ),
-            ],
-          ),
-        ),
-        body: pages[_selectedIndex],
-        bottomNavigationBar: BottomNavigationBar(
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          currentIndex: _selectedIndex,
-          type: BottomNavigationBarType.fixed,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: Text('profile'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/profile');
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              activeIcon: Icon(Icons.search),
-              label: 'Search',
+            ListTile(
+              leading: const Icon(Icons.switch_account),
+              title: Text('manage_accounts'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/accounts');
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline),
-              activeIcon: Icon(Icons.favorite),
-              label: 'Match',
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: Text('settings'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/settings');
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications_none),
-              activeIcon: Icon(Icons.notifications),
-              label: 'Notifications',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.storefront_outlined),
-              activeIcon: Icon(Icons.storefront),
-              label: 'Marketplace',
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: Text('logout'.tr),
+              onTap: () async {
+                Navigator.pop(context);
+                Get.closeAllSnackbars();
+                await authController.logout();
+              },
             ),
           ],
         ),
+      ),
+      body: pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        currentIndex: _selectedIndex,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_outline),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Match',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Notifications',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.storefront_outlined),
+            activeIcon: Icon(Icons.storefront),
+            label: 'Marketplace',
+          ),
+        ],
       ),
     );
   }
