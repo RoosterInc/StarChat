@@ -27,6 +27,11 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.person),
             tooltip: 'profile'.tr,
             onPressed: () => Get.toNamed('/profile'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.switch_account),
+            tooltip: 'manage_accounts'.tr,
+            onPressed: () => Get.toNamed('/accounts'),
           )
         ],
       ),

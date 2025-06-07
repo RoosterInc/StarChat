@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'multi_account_controller.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
@@ -108,6 +109,16 @@ class AuthController extends GetxController {
       logger.i("[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
 
       bool hasUsername = await ensureUsername();
+      try {
+        Get.find<MultiAccountController>().addAccount(
+          AccountInfo(
+            userId: session.$id,
+            username: username.value,
+            sessionId: '',
+            profilePictureUrl: profilePictureUrl.value,
+          ),
+        );
+      } catch (_) {}
       if (hasUsername) {
         logger.i("[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
@@ -289,6 +300,17 @@ class AuthController extends GetxController {
 
         otpError.value = '';
         bool hasUsername = await ensureUsername();
+        try {
+          final accountInfo = await account.get();
+          Get.find<MultiAccountController>().addAccount(
+            AccountInfo(
+              userId: accountInfo.$id,
+              username: username.value,
+              sessionId: '',
+              profilePictureUrl: profilePictureUrl.value,
+            ),
+          );
+        } catch (_) {}
         if (hasUsername) {
           await Get.offAllNamed('/home');
         } else {
@@ -848,7 +870,13 @@ class AuthController extends GetxController {
       isOTPSent.value = false;
       username.value = '';
       profilePictureUrl.value = '';
+      final currentId = userId;
       userId = null;
+      if (currentId != null) {
+        try {
+          await Get.find<MultiAccountController>().removeAccount(currentId);
+        } catch (_) {}
+      }
 
       isCheckingUsername.value = false;
       usernameAvailable.value = false;
