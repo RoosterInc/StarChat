@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:collection/collection.dart'; // Added for firstWhereOrNull
 import 'multi_account_controller.dart';
 
 class AuthController extends GetxController {
@@ -93,62 +94,198 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  Future<void> checkExistingSession() async {
+  Future<void> checkExistingSession({String? userIdToSwitchTo}) async {
+    isLoading.value = true;
+    logger.i("[Auth] checkExistingSession: Called. userIdToSwitchTo: $userIdToSwitchTo, justLoggedOut: ${justLoggedOut.value}");
+
     if (justLoggedOut.value) {
       justLoggedOut.value = false;
-      logger.i("[Auth] checkExistingSession: 'justLoggedOut' flag was true. Short-circuiting logic. Current route should be '/'.");
-      if (isLoading.value) {
-        isLoading.value = false;
-      }
+      logger.i("[Auth] checkExistingSession: 'justLoggedOut' flag was true. Short-circuiting. Current route should be '/'.");
+      isLoading.value = false;
+      if (Get.currentRoute != '/') Get.offAllNamed('/');
       return;
     }
-    logger.i("[Auth] checkExistingSession: Attempting to get existing session.");
-    try {
-      isLoading.value = true;
-      final session = await account.get();
-      logger.i("[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
 
-      bool hasUsername = await ensureUsername();
+    String? targetAppwriteUserId;
+    final multiAccountController = Get.find<MultiAccountController>();
+
+    if (userIdToSwitchTo != null) {
+      targetAppwriteUserId = userIdToSwitchTo;
+      logger.i("[Auth] checkExistingSession: Explicit userIdToSwitchTo provided: $targetAppwriteUserId");
+    } else {
+      final activeUserFromMultiAccount = multiAccountController.activeAccountId.value;
+      if (activeUserFromMultiAccount.isNotEmpty) {
+        targetAppwriteUserId = activeUserFromMultiAccount;
+        logger.i("[Auth] checkExistingSession: Using active user from MultiAccountController: $targetAppwriteUserId");
+      }
+    }
+
+    Models.Session? currentAppwriteSession;
+    try {
+      currentAppwriteSession = await account.get().catchError((e) {
+        logger.i('[Auth] checkExistingSession: Error getting current Appwrite session (initial check): $e');
+        return null;
+      });
+    } catch (e) {
+      logger.i('[Auth] checkExistingSession: Exception during initial account.get(): $e');
+      currentAppwriteSession = null; // Ensure it's null on any error
+    }
+
+
+    if (targetAppwriteUserId == null || targetAppwriteUserId.isEmpty) {
+      logger.i("[Auth] checkExistingSession: No targetAppwriteUserId determined yet.");
+      if (currentAppwriteSession != null) {
+        logger.i("[Auth] checkExistingSession: Found an existing Appwrite session (${currentAppwriteSession.$userId}) not tracked by MultiAccountController or no specific user was targeted. Using this session.");
+        targetAppwriteUserId = currentAppwriteSession.$userId;
+        // Potentially add this user to MultiAccountController if we had their token generation details.
+        // For now, we just proceed with this session. If it's not in multiAccountController,
+        // switching away from it might require re-login for this specific account.
+        // We should also check if this account IS in multiAccountController and just wasn't active.
+        final existingAccountInfo = multiAccountController.accounts.firstWhereOrNull((acc) => acc.appwriteUserId == targetAppwriteUserId);
+        if (existingAccountInfo != null && existingAccountInfo.currentSessionId != currentAppwriteSession.$id) {
+          // Update session ID in multi-account store
+          final updatedAcc = AccountInfo(
+              appwriteUserId: existingAccountInfo.appwriteUserId,
+              username: existingAccountInfo.username,
+              email: existingAccountInfo.email,
+              tokenGenerationUserId: existingAccountInfo.tokenGenerationUserId,
+              tokenSecret: existingAccountInfo.tokenSecret,
+              profilePictureUrl: existingAccountInfo.profilePictureUrl,
+              currentSessionId: currentAppwriteSession.$id);
+          await multiAccountController.addAccount(updatedAcc);
+        }
+      } else {
+        logger.i("[Auth] checkExistingSession: No active Appwrite session and no target user from multi-account. Navigating to sign-in.");
+        Get.offAllNamed('/');
+        isLoading.value = false;
+        return;
+      }
+    }
+
+    // Re-fetch current session info if not already done, or if it might have changed.
+    // This might be redundant if the first account.get() was successful and targetAppwriteUserId was derived from it.
+    // However, if targetAppwriteUserId came from multiAccountController, we need to be sure.
+    if (currentAppwriteSession == null || currentAppwriteSession.$userId != targetAppwriteUserId) {
+        try {
+            currentAppwriteSession = await account.get().catchError((e) {
+                logger.i('[Auth] checkExistingSession: Error getting current Appwrite session (pre-switch check): $e');
+                return null;
+            });
+        } catch (e) {
+            logger.i('[Auth] checkExistingSession: Exception during account.get() (pre-switch check): $e');
+            currentAppwriteSession = null;
+        }
+    }
+
+
+    if (currentAppwriteSession != null && currentAppwriteSession.$userId == targetAppwriteUserId) {
+      logger.i('[Auth] checkExistingSession: Correct session already active for $targetAppwriteUserId.');
+      // Ensure MultiAccountController also knows this session is active if it wasn't before
+      final accInfo = multiAccountController.accounts.firstWhereOrNull((a) => a.appwriteUserId == targetAppwriteUserId);
+      if (accInfo != null && accInfo.currentSessionId != currentAppwriteSession.$id) {
+          final updatedAcc = AccountInfo(
+              appwriteUserId: accInfo.appwriteUserId,
+              username: accInfo.username,
+              email: accInfo.email,
+              tokenGenerationUserId: accInfo.tokenGenerationUserId,
+              tokenSecret: accInfo.tokenSecret,
+              profilePictureUrl: accInfo.profilePictureUrl,
+              currentSessionId: currentAppwriteSession.$id);
+          await multiAccountController.addAccount(updatedAcc);
+      }
+      // Proceed with ensuring username and navigation
+    } else {
+      logger.i('[Auth] checkExistingSession: Session switch needed. Target: $targetAppwriteUserId. Current SDK session: ${currentAppwriteSession?.$userId}');
+      if (currentAppwriteSession != null) {
+        logger.i('[Auth] checkExistingSession: Clearing existing session for ${currentAppwriteSession.$userId}.');
+        try {
+          await account.deleteSession(sessionId: 'current');
+          logger.i('[Auth] checkExistingSession: Successfully deleted current session.');
+        } catch (e) {
+          logger.e('[Auth] checkExistingSession: Failed to delete current session: $e. Proceeding with switch attempt.');
+        }
+        currentAppwriteSession = null; // Session is now invalid
+      }
+
+      final accountInfoToSwitch = multiAccountController.accounts.firstWhereOrNull((acc) => acc.appwriteUserId == targetAppwriteUserId);
+
+      if (accountInfoToSwitch == null ||
+          accountInfoToSwitch.tokenGenerationUserId.isEmpty ||
+          accountInfoToSwitch.tokenSecret.isEmpty) {
+        logger.e('[Auth] checkExistingSession: Account info not found or incomplete for $targetAppwriteUserId. Cannot switch. Navigating to sign-in.');
+        if (userIdToSwitchTo != null) {
+          Get.snackbar('Error', 'Failed to switch account. Please try logging in again.');
+        }
+        await multiAccountController.removeAccount(targetAppwriteUserId!); // Remove potentially corrupt/incomplete account
+        Get.offAllNamed('/');
+        isLoading.value = false;
+        return;
+      }
+
+      logger.i('[Auth] checkExistingSession: Attempting to create session for ${accountInfoToSwitch.appwriteUserId} using stored token info (token user ID: ${accountInfoToSwitch.tokenGenerationUserId}).');
       try {
-        Get.find<MultiAccountController>().addAccount(
-          AccountInfo(
-            userId: session.$id,
-            username: username.value,
-            sessionId: '',
-            profilePictureUrl: profilePictureUrl.value,
-          ),
+        final newSession = await account.createSession(
+          userId: accountInfoToSwitch.tokenGenerationUserId,
+          secret: accountInfoToSwitch.tokenSecret,
         );
-      } catch (_) {}
+        logger.i('[Auth] checkExistingSession: Successfully created new session for ${newSession.$userId}. New session ID: ${newSession.$id}');
+
+        final updatedAccountInfo = AccountInfo(
+          appwriteUserId: accountInfoToSwitch.appwriteUserId,
+          username: accountInfoToSwitch.username, // Preserve existing username
+          email: accountInfoToSwitch.email,
+          tokenGenerationUserId: accountInfoToSwitch.tokenGenerationUserId,
+          tokenSecret: accountInfoToSwitch.tokenSecret,
+          profilePictureUrl: accountInfoToSwitch.profilePictureUrl, // Preserve existing pic
+          currentSessionId: newSession.$id,
+        );
+        await multiAccountController.addAccount(updatedAccountInfo); // This updates and saves
+        multiAccountController.activeAccountId.value = newSession.$userId; // Explicitly set active
+        await multiAccountController.sendDataToWatch(); // Notify watch
+
+      } on AppwriteException catch (e) {
+        logger.e('[Auth] checkExistingSession: AppwriteException during createSession for $targetAppwriteUserId: ${e.message} (Code: ${e.code})');
+        if (e.code == 401 || e.code == 403 || (e.message != null && e.message!.toLowerCase().contains("user_not_found"))) { // 404 for user_not_found might also be relevant
+          logger.w('[Auth] checkExistingSession: Invalid token/secret or user not found for $targetAppwriteUserId. Removing account from multi-account list.');
+          await multiAccountController.removeAccount(targetAppwriteUserId);
+        }
+        Get.offAllNamed('/');
+        isLoading.value = false;
+        return;
+      } catch (e) {
+        logger.e('[Auth] checkExistingSession: Generic error during createSession for $targetAppwriteUserId: $e');
+        Get.offAllNamed('/');
+        isLoading.value = false;
+        return;
+      }
+    }
+
+    // Common final steps: ensure username and navigate
+    try {
+      bool hasUsername = await ensureUsername(); // ensureUsername should use the new session context
       if (hasUsername) {
         logger.i("[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
           logger.i("[Auth] checkExistingSession: Navigating to /home");
-          await Get.offAllNamed('/home');
+          Get.offAllNamed('/home');
         } else {
-          logger.i("[Auth] checkExistingSession: Already on an authenticated route (${Get.currentRoute}), not navigating from checkExistingSession.");
+          logger.i("[Auth] checkExistingSession: Already on an authenticated route (${Get.currentRoute}), not navigating further from checkExistingSession.");
         }
       } else {
         logger.i("[Auth] checkExistingSession: User does NOT have username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute != '/set_username') {
           logger.i("[Auth] checkExistingSession: Navigating to /set_username");
-          await Get.offAllNamed('/set_username');
+          Get.offAllNamed('/set_username');
         } else {
           logger.i("[Auth] checkExistingSession: Already on /set_username, not navigating.");
         }
       }
-    } on TimeoutException {
-      Get.snackbar(
-        'error'.tr,
-        'request_timeout'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } on AppwriteException catch (e) {
-      logger.e("[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
     } catch (e) {
-      logger.e("[Auth] checkExistingSession: Caught general error: {e}");
+        logger.e("[Auth] checkExistingSession: Error during ensureUsername or navigation: $e");
+        Get.offAllNamed('/'); // Fallback to sign-in on error
     } finally {
-      isLoading.value = false;
-      logger.i("[Auth] checkExistingSession: Finished.");
+        isLoading.value = false;
+        logger.i("[Auth] checkExistingSession: Finished.");
     }
   }
 
@@ -204,12 +341,18 @@ class AuthController extends GetxController {
     try {
       final result = await account
           .createEmailToken(
-            userId: ID.unique(),
+            userId: ID.unique(), // This is the tokenGenerationUserId
             email: email,
           )
           .timeout(const Duration(seconds: 15));
 
-      userId = result.userId;
+      // Store these details temporarily for verifyOTP, they will be saved permanently
+      // into AccountInfo by verifyOTP after successful session creation.
+      _tempTokenGenerationUserId = result.userId;
+      _tempTokenSecret = result.secret; // Storing the secret from createEmailToken
+      _tempEmail = email; // Storing the email
+
+      // userId = result.userId; // This 'userId' was ambiguous.
       isOTPSent.value = true;
 
       Get.snackbar(
@@ -307,25 +450,57 @@ class AuthController extends GetxController {
         return;
       }
       try {
-        await account.createSession(
-          userId: userId!,
-          secret: otp,
+        // final session = await account.createSession( // Original
+        //   userId: userId!, // This should be _tempTokenGenerationUserId
+        //   secret: otp, // This is correct, it's the OTP from the user
+        // );
+        if (_tempTokenGenerationUserId == null || _tempTokenSecret == null) {
+          logger.e('verifyOTP: Temporary token generation details are missing.');
+          Get.snackbar('Error', 'An internal error occurred. Please try sending OTP again.');
+          isLoading.value = false;
+          return;
+        }
+
+        final session = await account.createSession(
+          userId: _tempTokenGenerationUserId!, // Use the ID from createEmailToken
+          secret: otp, // Use the OTP entered by the user
         );
 
+        logger.i("[Auth] verifyOTP: Session created successfully for Appwrite User ID: ${session.$userId}, using Token Generation User ID: $_tempTokenGenerationUserId");
+
         otpError.value = '';
-        bool hasUsername = await ensureUsername();
-        try {
-          final accountInfo = await account.get();
-          Get.find<MultiAccountController>().addAccount(
-            AccountInfo(
-              userId: accountInfo.$id,
-              username: username.value,
-              sessionId: '',
-              profilePictureUrl: profilePictureUrl.value,
-            ),
-          );
-        } catch (_) {}
+        // After session creation, persist this account to MultiAccountController
+        // Use session.$userId as the appwriteUserId
+        // Use _tempTokenGenerationUserId and _tempTokenSecret for session recreation
+        final newAccountInfo = AccountInfo(
+          appwriteUserId: session.$userId, // This is the actual Appwrite User ID
+          username: '', // Username will be set by ensureUsername/setUsername flow
+          email: _tempEmail ?? '', // Email used for OTP
+          tokenGenerationUserId: _tempTokenGenerationUserId!, // ID used for createEmailToken
+          tokenSecret: _tempTokenSecret!, // Secret from createEmailToken
+          currentSessionId: session.$id, // Current active session ID
+          profilePictureUrl: '', // Will be set later
+        );
+        final multiAccountController = Get.find<MultiAccountController>();
+        await multiAccountController.addAccount(newAccountInfo);
+        multiAccountController.activeAccountId.value = session.$userId; // Set as active
+        await multiAccountController.sendDataToWatch(); // Notify watch
+
+
+        bool hasUsername = await ensureUsername(); // This will now use the new session context
+
         if (hasUsername) {
+          // Update username in AccountInfo if ensureUsername found one
+          final updatedAccWithUsername = AccountInfo(
+            appwriteUserId: newAccountInfo.appwriteUserId,
+            username: this.username.value, // Updated username
+            email: newAccountInfo.email,
+            tokenGenerationUserId: newAccountInfo.tokenGenerationUserId,
+            tokenSecret: newAccountInfo.tokenSecret,
+            currentSessionId: newAccountInfo.currentSessionId,
+            profilePictureUrl: this.profilePictureUrl.value, // Updated profile picture
+          );
+          await multiAccountController.addAccount(updatedAccWithUsername);
           await Get.offAllNamed('/home');
         } else {
           await Get.offAllNamed('/set_username');
@@ -886,23 +1061,66 @@ class AuthController extends GetxController {
     } finally {
       try {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('username');
+        await prefs.remove('username'); // Clear general username cache if any
       } catch (e) {
         logger.e('Error clearing cached username from SharedPreferences', error: e);
       }
 
-      clearControllers();
+      // Determine which account is being logged out
+      String? loggedOutAppwriteUserId;
+      try {
+        // Attempt to get current session to identify user before deleting sessions
+        final session = await account.get().catchError((_) => null);
+        loggedOutAppwriteUserId = session?.$userId;
+      } catch (_) { /* Ignore errors here */ }
 
-      isOTPSent.value = false;
-      username.value = '';
-      profilePictureUrl.value = '';
-      final currentId = userId;
-      userId = null;
-      if (currentId != null) {
-        try {
-          await Get.find<MultiAccountController>().removeAccount(currentId);
-        } catch (_) {}
+      try {
+        await account.deleteSessions(); // Delete all sessions for the current user context
+        logger.i("[Auth] logout: All Appwrite sessions deleted.");
+      } catch (e) {
+        logger.e('[Auth] logout: Error deleting Appwrite session(s)', error: e);
       }
+
+      clearControllers(); // Clears email/OTP controllers etc.
+
+      isOTPSent.value = false; // Reset OTP state
+      username.value = ''; // Clear local username cache
+      profilePictureUrl.value = ''; // Clear local profile pic cache
+
+      // userId = null; // This was the old ambiguous userId, ensure it's cleared or handled if still used elsewhere.
+      // For multi-account, the active user is managed by MultiAccountController.
+      // We need to inform MultiAccountController that this user is logged out.
+      final multiAccountController = Get.find<MultiAccountController>();
+      if (loggedOutAppwriteUserId != null) {
+        logger.i("[Auth] logout: User $loggedOutAppwriteUserId logged out. Updating MultiAccountController.");
+        // Option 1: Just clear the active session ID for this account
+        final accInfo = multiAccountController.accounts.firstWhereOrNull((a) => a.appwriteUserId == loggedOutAppwriteUserId);
+        if (accInfo != null) {
+          final updatedAcc = AccountInfo(
+            appwriteUserId: accInfo.appwriteUserId,
+            username: accInfo.username,
+            email: accInfo.email,
+            tokenGenerationUserId: accInfo.tokenGenerationUserId,
+            tokenSecret: accInfo.tokenSecret, // Keep token info for potential re-login
+            profilePictureUrl: accInfo.profilePictureUrl,
+            currentSessionId: null, // Mark session as inactive
+          );
+          await multiAccountController.addAccount(updatedAcc);
+        }
+        // Option 2: Or remove the account entirely if logout means "forget this account on this device"
+        // await multiAccountController.removeAccount(loggedOutAppwriteUserId);
+        // For now, let's go with Option 1 (marking session inactive)
+
+        if (multiAccountController.activeAccountId.value == loggedOutAppwriteUserId) {
+            multiAccountController.activeAccountId.value = ''; // Clear active account ID
+        }
+        await multiAccountController.sendDataToWatch(); // Notify watch
+      } else {
+        logger.w("[Auth] logout: Could not determine Appwrite User ID at logout. Active account in MultiAccountController might be stale.");
+        // Potentially clear multiAccountController.activeAccountId.value if it's non-empty
+        // but this case should ideally not happen if a session was active.
+      }
+
 
       isCheckingUsername.value = false;
       usernameAvailable.value = false;
