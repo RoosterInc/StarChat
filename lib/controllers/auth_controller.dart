@@ -312,6 +312,8 @@ class AuthController extends GetxController {
           } else {
             errorMessage = 'incorrect_otp_message'.tr;
           }
+        } else if (e.code == 429) {
+          errorMessage = 'too_many_requests'.tr;
         } else if (e.code == 500) {
           errorMessage = 'server_error'.tr;
         }
