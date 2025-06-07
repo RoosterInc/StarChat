@@ -10,7 +10,18 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
     return Scaffold(
-      appBar: AppBar(title: Text('manage_accounts'.tr)),
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Get.back(),
+              )
+            : IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Get.offAllNamed('/home'),
+              ),
+        title: Text('manage_accounts'.tr),
+      ),
       body: Obx(() => ListView(
             children: [
               ...controller.accounts.map(
@@ -31,6 +42,7 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
                   onTap: () async {
                     await controller.switchAccount(a.userId);
                     await auth.checkExistingSession();
+                    await Get.offAllNamed('/home');
                   },
                   onLongPress: () async {
                     await controller.removeAccount(a.userId);
