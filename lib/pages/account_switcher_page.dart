@@ -41,7 +41,7 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
                       : null,
                   onTap: () async {
                     await controller.switchAccount(a.userId);
-                    await auth.checkExistingSession();
+                    await auth.applyAccount(a);
                     await Get.offAllNamed('/home');
                   },
                   onLongPress: () async {
