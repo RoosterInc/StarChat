@@ -208,6 +208,8 @@ class AuthController extends GetxController {
   Future<void> verifyOTP() async {
     // Close any open snackbars to avoid context issues when navigating
     Get.closeAllSnackbars();
+    // Ensure any open keyboard is dismissed to prevent rendering errors
+    FocusManager.instance.primaryFocus?.unfocus();
     String otp = otpController.text.trim();
 
     if (!isValidOTP(otp)) {
@@ -223,6 +225,8 @@ class AuthController extends GetxController {
     try {
       await account.get();
       await Get.offAllNamed('/home');
+      clearControllers();
+      isOTPSent.value = false;
       await Future.delayed(const Duration(milliseconds: 100));
       await ensureUsername();
     } on AppwriteException {
@@ -239,6 +243,8 @@ class AuthController extends GetxController {
         } else {
           await Get.offAllNamed('/set_username');
         }
+        clearControllers();
+        isOTPSent.value = false;
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
@@ -701,6 +707,23 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Log the user out and reset all authentication state.
+  Future<void> logout() async {
+    Get.closeAllSnackbars();
+    try {
+      await account.deleteSession(sessionId: 'current');
+    } catch (e) {
+      logger.e('Error deleting session', error: e);
+    }
+    clearControllers();
+    isOTPSent.value = false;
+    username.value = '';
+    profilePictureUrl.value = '';
+    // Remove this controller so a fresh one is created on the next login
+    Get.delete<AuthController>(force: true);
+    await Get.offAllNamed('/');
   }
 
   Future<void> updateProfilePicture(File file) async {
