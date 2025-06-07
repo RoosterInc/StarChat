@@ -6,6 +6,7 @@ import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/account_switcher_page.dart';
 import 'themes/app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -59,6 +60,11 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/settings',
               page: () => const SettingsPage(),
+              binding: AuthBinding(),
+            ),
+            GetPage(
+              name: '/accounts',
+              page: () => const AccountSwitcherPage(),
               binding: AuthBinding(),
             ),
           ],
