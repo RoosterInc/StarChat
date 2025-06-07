@@ -342,7 +342,11 @@ class AuthController extends GetxController {
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
-        queries: [Query.equal('userId', uid)],
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderDesc('createdAt'),
+          Query.limit(1),
+        ],
       );
       if (result.documents.isNotEmpty) {
         final data = result.documents.first.data;
@@ -516,25 +520,46 @@ class AuthController extends GetxController {
   Future<void> _saveUsername(String dbId, String collectionId, String uid,
       String name, SharedPreferences prefs) async {
     try {
-      await databases.createDocument(
+      final existing = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
-        documentId: ID.unique(),
-        data: {
-          'userId': uid,
-          'username': name,
-          'profilePicture': '',
-          'firstName': '',
-          'lastName': '',
-          'createdAt': DateTime.now().toUtc().toIso8601String(),
-          'UpdateAt': DateTime.now().toUtc().toIso8601String(),
-        },
-        permissions: [
-          Permission.read(Role.user(uid)),
-          Permission.update(Role.user(uid)),
-          Permission.delete(Role.user(uid)),
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderDesc('createdAt'),
+          Query.limit(1),
         ],
       );
+      if (existing.documents.isNotEmpty) {
+        await databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: existing.documents.first.$id,
+          data: {
+            'username': name,
+            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      } else {
+        await databases.createDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: ID.unique(),
+          data: {
+            'userId': uid,
+            'username': name,
+            'profilePicture': '',
+            'firstName': '',
+            'lastName': '',
+            'createdAt': DateTime.now().toUtc().toIso8601String(),
+            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+          },
+          permissions: [
+            Permission.read(Role.user(uid)),
+            Permission.update(Role.user(uid)),
+            Permission.delete(Role.user(uid)),
+          ],
+        );
+      }
       username.value = name;
       await prefs.setString('username', name);
     } catch (e) {
@@ -630,7 +655,11 @@ class AuthController extends GetxController {
     final uid = session.$id;
     await _saveUsername(dbId, collectionId, uid, name, prefs);
     isLoading.value = false;
-    Get.offAllNamed('/home');
+    if (Get.previousRoute.isEmpty) {
+      Get.offAllNamed('/home');
+    } else {
+      Get.back();
+    }
   }
 
   Future<void> deleteUsername() async {
@@ -644,7 +673,11 @@ class AuthController extends GetxController {
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
-        queries: [Query.equal('userId', uid)],
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderDesc('createdAt'),
+          Query.limit(1),
+        ],
       );
       if (result.documents.isNotEmpty) {
         final docId = result.documents.first.$id;
@@ -721,7 +754,11 @@ class AuthController extends GetxController {
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
-        queries: [Query.equal('userId', uid)],
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderDesc('createdAt'),
+          Query.limit(1),
+        ],
       );
       if (result.documents.isNotEmpty) {
         final docId = result.documents.first.$id;
