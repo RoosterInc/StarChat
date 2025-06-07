@@ -742,6 +742,20 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> logout() async {
+    try {
+      await account.deleteSession(sessionId: 'current');
+    } catch (e) {
+      logger.e('Error deleting session', error: e);
+    } finally {
+      clearControllers();
+      isOTPSent.value = false;
+      username.value = '';
+      profilePictureUrl.value = '';
+      Get.offAllNamed('/');
+    }
+  }
+
   Future<void> updateProfilePicture(File file) async {
     isLoading.value = true;
     final bucketId = dotenv.env[_bucketIdKey] ?? 'profile_pics';
