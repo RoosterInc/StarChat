@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/theme_controller.dart';  // Import the ThemeController
 import '../widgets/responsive_layout.dart';
+import '../widgets/sample_sliver_app_bar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Get the ThemeController to manage theme changes
-    final themeController = Get.put(ThemeController());
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
     return Scaffold(
@@ -22,9 +26,10 @@ class HomePage extends StatelessWidget {
             Obx(
               () => UserAccountsDrawerHeader(
                 currentAccountPicture: CircleAvatar(
-                  backgroundImage: authController.profilePictureUrl.value.isNotEmpty
-                      ? NetworkImage(authController.profilePictureUrl.value)
-                      : null,
+                  backgroundImage:
+                      authController.profilePictureUrl.value.isNotEmpty
+                          ? NetworkImage(authController.profilePictureUrl.value)
+                          : null,
                   child: authController.profilePictureUrl.value.isEmpty
                       ? const Icon(Icons.person, size: 40)
                       : null,
@@ -60,22 +65,29 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      appBar: AppBar(
-        title: Text('home_page'.tr),
-        actions: [
-          // Observe the theme mode and display the appropriate icon
-          Obx(() => IconButton(
-                icon: Icon(themeController.isDarkMode.value
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-                onPressed: themeController.toggleTheme, // Toggle the theme on press
-              )),
+      body: CustomScrollView(
+        slivers: [
+          const SampleSliverAppBar(),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: ResponsiveLayout(
+              mobile: (_) => _buildContent(
+                  context, MediaQuery.of(context).size.width * 0.9),
+              tablet: (_) => _buildContent(context, 500),
+              desktop: (_) => _buildContent(context, 600),
+            ),
+          ),
         ],
       ),
-      body: ResponsiveLayout(
-        mobile: (_) => _buildContent(context, MediaQuery.of(context).size.width * 0.9),
-        tablet: (_) => _buildContent(context, 500),
-        desktop: (_) => _buildContent(context, 600),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (i) => setState(() => _selectedIndex = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: 'Settings'),
+        ],
       ),
     );
   }
@@ -89,19 +101,20 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-          Obx(() => Text(
-                'signed_in_as'.trParams({'username': authController.username.value}),
-                style: const TextStyle(fontSize: 24),
-                textAlign: TextAlign.center,
-              )),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () async {
-              Get.closeAllSnackbars();
-              await Get.find<AuthController>().logout();
-            },
-            child: Text('logout'.tr),
-          ),
+            Obx(() => Text(
+                  'signed_in_as'
+                      .trParams({'username': authController.username.value}),
+                  style: const TextStyle(fontSize: 24),
+                  textAlign: TextAlign.center,
+                )),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                Get.closeAllSnackbars();
+                await Get.find<AuthController>().logout();
+              },
+              child: Text('logout'.tr),
+            ),
           ],
         ),
       ),
