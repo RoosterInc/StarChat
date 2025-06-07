@@ -158,11 +158,124 @@ class _HomePageState extends State<HomePage> {
               },
               child: Text('logout'.tr),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
+            _buildPredictionScoresSection(context),
+            const SizedBox(height: 20),
+            _buildChatRoomsSection(context),
+            const SizedBox(height: 20),
             Text('Tab $_selectedIndex'),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPredictionScoresSection(BuildContext context) {
+    final names = [
+      'Aries',
+      'Taurus',
+      'Gemini',
+      'Cancer',
+      'Leo',
+      'Virgo',
+      'Libra',
+      'Scorpio',
+      'Sagittarius',
+      'Capricorn',
+      'Aquarius',
+      'Pisces',
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Prediction Scores',
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 80,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: names.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final color = Colors.primaries[index % Colors.primaries.length];
+              return GestureDetector(
+                onTap: () => Get.dialog(
+                  AlertDialog(
+                    title: Text(names[index]),
+                    content: const Text('R\u0101si details coming soon'),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: color,
+                      child: Text('${index + 1}'),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(names[index], style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChatRoomsSection(BuildContext context) {
+    final rooms = ['Ashwini', 'Bharani', 'Krittika', 'Rohini'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Chat Rooms', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: rooms.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final color = Colors.accents[index % Colors.accents.length]
+                  .withOpacity(0.3);
+              return GestureDetector(
+                onTap: () => Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
+                child: Container(
+                  width: 100,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Stack(
+                    children: [
+                      Center(child: Text(rooms[index])),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 12,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                          child: const Text(
+                            '0',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
