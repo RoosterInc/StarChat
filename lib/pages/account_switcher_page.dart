@@ -52,10 +52,13 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
               ListTile(
                 leading: const Icon(Icons.add),
                 title: Text('add_account'.tr),
-                onTap: () => Get.offAllNamed(
-                  '/',
-                  arguments: {'fromAddAccount': true},
-                ),
+                onTap: () {
+                  auth.resetSignInState();
+                  Get.offAllNamed(
+                    '/',
+                    arguments: {'fromAddAccount': true},
+                  );
+                },
               )
             ],
           )),
