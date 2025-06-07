@@ -263,6 +263,16 @@ class AuthController extends GetxController {
       await ensureUsername();
     } on AppwriteException {
       logger.i('No existing session, verifying OTP...');
+      if (userId == null) {
+        logger.e('verifyOTP called with null userId');
+        Get.snackbar(
+          'error'.tr,
+          'unauthorized'.tr,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        isLoading.value = false;
+        return;
+      }
       try {
         await account.updateMagicURLSession(
           userId: userId!,
