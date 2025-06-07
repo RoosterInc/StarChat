@@ -22,106 +22,119 @@ class _HomePageState extends State<HomePage> {
 
     final authController = Get.find<AuthController>();
 
-    return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Obx(
-              () => UserAccountsDrawerHeader(
-                currentAccountPicture: CircleAvatar(
-                  backgroundImage:
-                      authController.profilePictureUrl.value.isNotEmpty
-                          ? NetworkImage(authController.profilePictureUrl.value)
-                          : null,
-                  child: authController.profilePictureUrl.value.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null,
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              Obx(
+                () => UserAccountsDrawerHeader(
+                  currentAccountPicture: CircleAvatar(
+                    backgroundImage: authController
+                            .profilePictureUrl.value.isNotEmpty
+                        ? NetworkImage(authController.profilePictureUrl.value)
+                        : null,
+                    child: authController.profilePictureUrl.value.isEmpty
+                        ? const Icon(Icons.person, size: 40)
+                        : null,
+                  ),
+                  accountName: Text(authController.username.value),
+                  accountEmail: null,
                 ),
-                accountName: Text(authController.username.value),
-                accountEmail: null,
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: Text('profile'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.switch_account),
-              title: Text('manage_accounts'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/accounts');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text('settings'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/settings');
-              },
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: Text('profile'.tr),
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.toNamed('/profile');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.switch_account),
+                title: Text('manage_accounts'.tr),
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.toNamed('/accounts');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: Text('settings'.tr),
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.toNamed('/settings');
+                },
+              ),
+            ],
+          ),
+        ),
+        body: CustomScrollView(
+          slivers: [
+            const SampleSliverAppBar(),
+            SliverFillRemaining(
+              child: TabBarView(
+                children: [
+                  ResponsiveLayout(
+                    mobile: (_) => _buildContent(
+                        context, MediaQuery.of(context).size.width * 0.9),
+                    tablet: (_) => _buildContent(context, 500),
+                    desktop: (_) => _buildContent(context, 600),
+                  ),
+                  const Center(child: SizedBox()),
+                  const Center(child: SizedBox()),
+                  const Center(child: SizedBox()),
+                  const Center(child: SizedBox()),
+                ],
+              ),
             ),
           ],
         ),
-      ),
-      body: CustomScrollView(
-        slivers: [
-          const SampleSliverAppBar(),
-          SliverFillRemaining(
-            child: ResponsiveLayout(
-              mobile: (_) =>
-                  _buildContent(context, MediaQuery.of(context).size.width * 0.9),
-              tablet: (_) => _buildContent(context, 500),
-              desktop: (_) => _buildContent(context, 600),
+        bottomNavigationBar: BottomNavigationBar(
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          currentIndex: _selectedIndex,
+          type: BottomNavigationBarType.fixed,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Match',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            activeIcon: Icon(Icons.notifications),
-            label: 'Notifications',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.storefront_outlined),
-            activeIcon: Icon(Icons.storefront),
-            label: 'Marketplace',
-          ),
-        ],
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_outlined),
+              activeIcon: Icon(Icons.dashboard),
+              label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite),
+              label: 'Match',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_none),
+              activeIcon: Icon(Icons.notifications),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.storefront_outlined),
+              activeIcon: Icon(Icons.storefront),
+              label: 'Marketplace',
+            ),
+          ],
+        ),
       ),
     );
   }
