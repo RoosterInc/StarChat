@@ -307,7 +307,11 @@ class AuthController extends GetxController {
             errorMessage = 'incorrect_otp_message'.tr;
           }
         } else if (e.code == 401) {
-          errorMessage = 'unauthorized'.tr;
+          if (otpExpiration.value <= 0) {
+            errorMessage = 'otp_expired_message'.tr;
+          } else {
+            errorMessage = 'incorrect_otp_message'.tr;
+          }
         } else if (e.code == 500) {
           errorMessage = 'server_error'.tr;
         }
