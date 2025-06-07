@@ -50,6 +50,32 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: Text(version),
           ),
           ListTile(
+            title: Text('delete_account'.tr),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('delete_account'.tr),
+                  content: Text('delete_account_confirmation'.tr),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('cancel'.tr),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('delete'.tr),
+                    )
+                  ],
+                ),
+              );
+              if (confirm ?? false) {
+                Get.closeAllSnackbars();
+                await Get.find<AuthController>().deleteUserAccount();
+              }
+            },
+          ),
+          ListTile(
             title: Text('logout'.tr),
             onTap: () async {
               final confirm = await showDialog<bool>(
