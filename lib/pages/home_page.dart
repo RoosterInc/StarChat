@@ -18,9 +18,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
+    final pages = [
+      _buildHomeBody(context),
+      const Center(child: SizedBox()),
+      const Center(child: SizedBox()),
+      const Center(child: SizedBox()),
+      const Center(child: SizedBox()),
+      const Center(child: SizedBox()),
+    ];
+
+    return Scaffold(
         drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
@@ -76,27 +83,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        body: CustomScrollView(
-          slivers: [
-            const SampleSliverAppBar(),
-            SliverFillRemaining(
-              child: TabBarView(
-                children: [
-                  ResponsiveLayout(
-                    mobile: (_) => _buildContent(
-                        context, MediaQuery.of(context).size.width * 0.9),
-                    tablet: (_) => _buildContent(context, 500),
-                    desktop: (_) => _buildContent(context, 600),
-                  ),
-                  const Center(child: SizedBox()),
-                  const Center(child: SizedBox()),
-                  const Center(child: SizedBox()),
-                  const Center(child: SizedBox()),
-                ],
-              ),
-            ),
-          ],
-        ),
+        body: pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
@@ -140,6 +127,33 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHomeBody(BuildContext context) {
+    return DefaultTabController(
+      length: 5,
+      child: CustomScrollView(
+        slivers: [
+          const SampleSliverAppBar(),
+          SliverFillRemaining(
+            child: TabBarView(
+              children: [
+                ResponsiveLayout(
+                  mobile: (_) => _buildContent(
+                      context, MediaQuery.of(context).size.width * 0.9),
+                  tablet: (_) => _buildContent(context, 500),
+                  desktop: (_) => _buildContent(context, 600),
+                ),
+                const Center(child: SizedBox()),
+                const Center(child: SizedBox()),
+                const Center(child: SizedBox()),
+                const Center(child: SizedBox()),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
