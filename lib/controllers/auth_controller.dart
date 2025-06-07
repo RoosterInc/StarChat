@@ -136,6 +136,12 @@ class AuthController extends GetxController {
           logger.i("[Auth] checkExistingSession: Already on /set_username, not navigating.");
         }
       }
+    } on TimeoutException {
+      Get.snackbar(
+        'error'.tr,
+        'request_timeout'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } on AppwriteException catch (e) {
       logger.e("[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
     } catch (e) {
@@ -196,10 +202,12 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      final result = await account.createEmailToken(
-        userId: ID.unique(),
-        email: email,
-      );
+      final result = await account
+          .createEmailToken(
+            userId: ID.unique(),
+            email: email,
+          )
+          .timeout(const Duration(seconds: 15));
 
       userId = result.userId;
       isOTPSent.value = true;
@@ -216,6 +224,12 @@ class AuthController extends GetxController {
 
       // Start OTP expiration timer
       startOTPExpirationTimer();
+    } on TimeoutException {
+      Get.snackbar(
+        'error'.tr,
+        'request_timeout'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } on AppwriteException catch (e) {
       logger.e('AppwriteException in sendOTP', error: e);
       String errorMessage = 'failed_to_send_otp'.tr;
@@ -399,6 +413,18 @@ class AuthController extends GetxController {
     otpController.clear();
     isOTPSent.value = false;
     canResendOTP.value = true;
+  }
+
+  void exitSignIn() {
+    cancelTimers();
+    clearControllers();
+    isOTPSent.value = false;
+    isLoading.value = false;
+    if (Get.previousRoute.isNotEmpty) {
+      Get.back();
+    } else {
+      Get.offAllNamed('/accounts');
+    }
   }
 
   void cancelTimers() {
