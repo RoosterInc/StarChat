@@ -25,6 +25,9 @@ class AuthController extends GetxController {
   final profilePictureUrl = ''.obs;
   final isUsernameValid = false.obs;
   final usernameText = ''.obs;
+  final emailError = ''.obs;
+  final otpError = ''.obs;
+  final usernameError = ''.obs;
   Timer? _usernameDebounce;
   static const Duration usernameDebounceDuration = Duration(milliseconds: 500);
   late TextEditingController usernameController;
@@ -82,6 +85,9 @@ class AuthController extends GetxController {
     otpController.clear();
     usernameController.clear();
     usernameText.value = '';
+    emailError.value = '';
+    otpError.value = '';
+    usernameError.value = '';
     cancelTimers();
     super.onClose();
   }
@@ -146,12 +152,15 @@ class AuthController extends GetxController {
     String email = emailController.text.trim();
 
     if (!isValidEmail(email)) {
+      emailError.value = 'invalid_email_message'.tr;
       Get.snackbar(
         'invalid_email'.tr,
-        'invalid_email_message'.tr,
+        emailError.value,
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
+    } else {
+      emailError.value = '';
     }
 
     if (!canResendOTP.value) {
@@ -233,12 +242,15 @@ class AuthController extends GetxController {
     String otp = otpController.text.trim();
 
     if (!isValidOTP(otp)) {
+      otpError.value = 'invalid_otp_message'.tr;
       Get.snackbar(
         'invalid_otp'.tr,
-        'invalid_otp_message'.tr,
+        otpError.value,
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
+    } else {
+      otpError.value = '';
     }
 
     isLoading.value = true;
@@ -257,6 +269,7 @@ class AuthController extends GetxController {
           secret: otp,
         );
 
+        otpError.value = '';
         bool hasUsername = await ensureUsername();
         if (hasUsername) {
           await Get.offAllNamed('/home');
@@ -269,14 +282,15 @@ class AuthController extends GetxController {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
 
-        if (e.code == 400) {
-          errorMessage = 'invalid_otp_message'.tr;
+        if (e.code == 400 || e.code == 404) {
+          errorMessage = 'incorrect_otp_message'.tr;
         } else if (e.code == 401) {
           errorMessage = 'unauthorized'.tr;
         } else if (e.code == 500) {
           errorMessage = 'server_error'.tr;
         }
 
+        otpError.value = errorMessage;
         Get.snackbar(
           'error'.tr,
           errorMessage,
@@ -527,10 +541,14 @@ class AuthController extends GetxController {
         queries: [Query.equal('username', name)],
       );
       usernameAvailable.value = result.documents.isEmpty;
+      if (usernameAvailable.value) {
+        usernameError.value = '';
+      }
       return usernameAvailable.value;
     } on AppwriteException catch (e) {
       logger.e('AppwriteException checking username', error: e);
       final message = e.message ?? 'username_check_error'.tr;
+      usernameError.value = message;
       Get.snackbar(
         'error'.tr,
         message,
@@ -548,6 +566,7 @@ class AuthController extends GetxController {
         duration: const Duration(seconds: 10),
       );
       usernameAvailable.value = false;
+      usernameError.value = 'unexpected_error'.tr;
       return false;
     } finally {
       isCheckingUsername.value = false;
@@ -608,6 +627,7 @@ class AuthController extends GetxController {
   void onUsernameChanged(String value) {
     usernameText.value = value;
     isUsernameValid.value = isValidUsername(value);
+    usernameError.value = '';
     _usernameDebounce?.cancel();
     hasCheckedUsername.value = false;
     if (!isUsernameValid.value) {
@@ -627,29 +647,33 @@ class AuthController extends GetxController {
     usernameAvailable.value = false;
     usernameText.value = '';
     isCheckingUsername.value = false;
+    usernameError.value = '';
     _usernameDebounce?.cancel();
   }
 
   Future<void> checkUsernameAvailability() async {
     final name = usernameController.text.trim();
     if (name.isEmpty) {
+      usernameError.value = 'empty_username'.tr;
       Get.snackbar(
         'error'.tr,
-        'empty_username'.tr,
+        usernameError.value,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 10),
       );
       return;
     }
     if (!isValidUsername(name)) {
+      usernameError.value = 'invalid_username_message'.tr;
       Get.snackbar(
         'error'.tr,
-        'invalid_username_message'.tr,
+        usernameError.value,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 10),
       );
       return;
     }
+    usernameError.value = '';
     hasCheckedUsername.value = false;
     await _checkUsernameAvailability(name);
   }
@@ -666,21 +690,24 @@ class AuthController extends GetxController {
   Future<void> submitUsername() async {
     final name = usernameController.text.trim();
     if (!isValidUsername(name)) {
+      usernameError.value = 'invalid_username_message'.tr;
       Get.snackbar(
         'error'.tr,
-        'invalid_username_message'.tr,
+        usernameError.value,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 10),
       );
       return;
     }
+    usernameError.value = '';
     isLoading.value = true;
     final available = await _checkUsernameAvailability(name);
     if (!available) {
       isLoading.value = false;
+      usernameError.value = 'username_taken'.tr;
       Get.snackbar(
         'error'.tr,
-        'username_taken'.tr,
+        usernameError.value,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 10),
       );

@@ -51,7 +51,17 @@ class SignInPage extends GetView<AuthController> {
             border: const OutlineInputBorder(),
           ),
           keyboardType: TextInputType.emailAddress,
+          onChanged: (_) => controller.emailError.value = '',
         ),
+        Obx(() => controller.emailError.value.isEmpty
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  controller.emailError.value,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
@@ -89,7 +99,17 @@ class SignInPage extends GetView<AuthController> {
             border: const OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
+          onChanged: (_) => controller.otpError.value = '',
         ),
+        Obx(() => controller.otpError.value.isEmpty
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  controller.otpError.value,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,

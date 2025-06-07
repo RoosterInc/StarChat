@@ -36,11 +36,20 @@ class SetUsernamePage extends GetView<AuthController> {
                             onPressed: controller.clearUsernameInput,
                           )
                         : null,
-                  ),
-                  onChanged: controller.onUsernameChanged,
                 ),
-                const SizedBox(height: 8),
-                Obx(() {
+                onChanged: controller.onUsernameChanged,
+              ),
+              Obx(() => controller.usernameError.value.isEmpty
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        controller.usernameError.value,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    )),
+              const SizedBox(height: 8),
+              Obx(() {
                   if (!controller.hasCheckedUsername.value) {
                     return const SizedBox.shrink();
                   }
