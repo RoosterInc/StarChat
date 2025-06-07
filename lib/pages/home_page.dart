@@ -12,7 +12,54 @@ class HomePage extends StatelessWidget {
     // Get the ThemeController to manage theme changes
     final themeController = Get.put(ThemeController());
 
+    final authController = Get.find<AuthController>();
+
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Obx(
+              () => UserAccountsDrawerHeader(
+                currentAccountPicture: CircleAvatar(
+                  backgroundImage: authController.profilePictureUrl.value.isNotEmpty
+                      ? NetworkImage(authController.profilePictureUrl.value)
+                      : null,
+                  child: authController.profilePictureUrl.value.isEmpty
+                      ? const Icon(Icons.person, size: 40)
+                      : null,
+                ),
+                accountName: Text(authController.username.value),
+                accountEmail: null,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: Text('profile'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/profile');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.switch_account),
+              title: Text('manage_accounts'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/accounts');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: Text('settings'.tr),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/settings');
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
         title: Text('home_page'.tr),
         actions: [
@@ -23,16 +70,6 @@ class HomePage extends StatelessWidget {
                     : Icons.dark_mode),
                 onPressed: themeController.toggleTheme, // Toggle the theme on press
               )),
-          IconButton(
-            icon: const Icon(Icons.person),
-            tooltip: 'profile'.tr,
-            onPressed: () => Get.toNamed('/profile'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.switch_account),
-            tooltip: 'manage_accounts'.tr,
-            onPressed: () => Get.toNamed('/accounts'),
-          )
         ],
       ),
       body: ResponsiveLayout(
