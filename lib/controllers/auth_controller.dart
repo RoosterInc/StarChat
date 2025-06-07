@@ -208,6 +208,8 @@ class AuthController extends GetxController {
   Future<void> verifyOTP() async {
     // Close any open snackbars to avoid context issues when navigating
     Get.closeAllSnackbars();
+    // Ensure any open keyboard is dismissed to prevent rendering errors
+    FocusManager.instance.primaryFocus?.unfocus();
     String otp = otpController.text.trim();
 
     if (!isValidOTP(otp)) {
@@ -223,6 +225,8 @@ class AuthController extends GetxController {
     try {
       await account.get();
       await Get.offAllNamed('/home');
+      clearControllers();
+      isOTPSent.value = false;
       await Future.delayed(const Duration(milliseconds: 100));
       await ensureUsername();
     } on AppwriteException {
@@ -239,6 +243,8 @@ class AuthController extends GetxController {
         } else {
           await Get.offAllNamed('/set_username');
         }
+        clearControllers();
+        isOTPSent.value = false;
       } on AppwriteException catch (e) {
         logger.e('AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
