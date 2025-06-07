@@ -3,6 +3,18 @@ import 'package:flutter/material.dart';
 class SampleSliverAppBar extends StatelessWidget {
   const SampleSliverAppBar({super.key});
 
+  static const _planets = [
+    'Mercury',
+    'Venus',
+    'Earth',
+    'Mars',
+    'Jupiter',
+    'Saturn',
+    'Uranus',
+    'Neptune',
+    'Pluto',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -20,77 +32,83 @@ class SampleSliverAppBar extends StatelessWidget {
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile')),
-                    ),
-                    child: const CircleAvatar(radius: 18),
-                  ),
-                  Container(
-                    width: 56,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.all_inclusive, color: iconColor),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.settings, color: iconColor),
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Settings')),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 48,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 9,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: IconButton(
-                      icon: Icon(
-                        index.isEven ? Icons.circle : Icons.star,
-                        color: iconColor,
+        background: SafeArea(
+          top: true,
+          bottom: false,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile')),
+                        ),
+                        child: const CircleAvatar(radius: 18),
                       ),
-                      tooltip: 'Details',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Item tapped')),
+                      Container(
+                        width: 56,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.all_inclusive, color: iconColor),
                       ),
-                    ),
+                      IconButton(
+                        icon: Icon(Icons.settings, color: iconColor),
+                        onPressed: () =>
+                            ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Settings')),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Material(
-                elevation: 1,
-                color: colorScheme.surface,
-                child: const TabBar(
-                  isScrollable: false,
-                  tabs: [
-                    Tab(text: 'Home'),
-                    Tab(text: 'Feed'),
-                    Tab(text: 'Events'),
-                    Tab(text: 'Preds'),
-                    Tab(text: 'Msgs'),
-                  ],
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 56,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _planets.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final planet = _planets[index];
+                      return ActionChip(
+                        label: Text(planet),
+                        onPressed: () =>
+                            ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$planet tapped')),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Material(
+                  elevation: 1,
+                  color: colorScheme.surface,
+                  child: const TabBar(
+                    isScrollable: false,
+                    tabs: [
+                      Tab(text: 'Home'),
+                      Tab(text: 'Feed'),
+                      Tab(text: 'Events'),
+                      Tab(text: 'Preds'),
+                      Tab(text: 'Msgs'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
