@@ -8,8 +8,16 @@ class SignInPage extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
+    final fromAddAccount = Get.arguments?["fromAddAccount"] ?? false;
     return Scaffold(
       appBar: AppBar(
+        leading: fromAddAccount
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'cancel'.tr,
+                onPressed: () => Get.offAllNamed('/accounts'),
+              )
+            : null,
         title: Text('email_sign_in'.tr),
       ),
       body: ResponsiveLayout(
