@@ -25,10 +25,21 @@ class SampleSliverAppBar extends StatelessWidget {
       expandedHeight: 200,
       collapsedHeight: kToolbarHeight,
       automaticallyImplyLeading: false,
-      leading: Builder(
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Material(
+          elevation: 1,
+          color: colorScheme.surface,
+          child: const TabBar(
+            isScrollable: false,
+            tabs: [
+              Tab(text: 'Home'),
+              Tab(text: 'Feed'),
+              Tab(text: 'Events'),
+              Tab(text: 'Preds'),
+              Tab(text: 'Msgs'),
+            ],
+          ),
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(
@@ -46,11 +57,11 @@ class SampleSliverAppBar extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile')),
+                      Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
                         ),
-                        child: const CircleAvatar(radius: 18),
                       ),
                       Container(
                         width: 56,
@@ -93,20 +104,6 @@ class SampleSliverAppBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Material(
-                  elevation: 1,
-                  color: colorScheme.surface,
-                  child: const TabBar(
-                    isScrollable: false,
-                    tabs: [
-                      Tab(text: 'Home'),
-                      Tab(text: 'Feed'),
-                      Tab(text: 'Events'),
-                      Tab(text: 'Preds'),
-                      Tab(text: 'Msgs'),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
