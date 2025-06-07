@@ -3,8 +3,24 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
 
-class SignInPage extends GetView<AuthController> {
+const supportedLocales = [
+  Locale('en', 'US'),
+  Locale('hi', 'IN'),
+  Locale('ta', 'IN'),
+  Locale('ml', 'IN'),
+  Locale('te', 'IN'),
+  Locale('kn', 'IN'),
+];
+class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
+
+  @override
+  State<SignInPage> createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
+  Locale _currentLocale = Get.locale ?? const Locale('en', 'US');
+  final AuthController controller = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +42,28 @@ class SignInPage extends GetView<AuthController> {
         child: Container(
           padding: const EdgeInsets.all(16),
           width: width,
-          child: Obx(
-            () => controller.isOTPSent.value ? _otpForm() : _emailForm(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<Locale>(
+                value: _currentLocale,
+                items: [
+                  for (final locale in supportedLocales)
+                    DropdownMenuItem(
+                      value: locale,
+                      child: Text(locale.languageCode.toUpperCase()),
+                    )
+                ],
+                onChanged: (loc) {
+                  if (loc != null) {
+                    setState(() => _currentLocale = loc);
+                    Get.updateLocale(loc);
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
+              Obx(() => controller.isOTPSent.value ? _otpForm() : _emailForm()),
+            ],
           ),
         ),
       ),
