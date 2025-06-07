@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart'; // Import the ThemeController
 import '../widgets/responsive_layout.dart';
+import '../widgets/sample_sliver_app_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -68,24 +69,18 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      appBar: AppBar(
-        title: Text('home_page'.tr),
-        actions: [
-          // Observe the theme mode and display the appropriate icon
-          Obx(() => IconButton(
-                icon: Icon(themeController.isDarkMode.value
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-                onPressed:
-                    themeController.toggleTheme, // Toggle the theme on press
-              )),
+      body: CustomScrollView(
+        slivers: [
+          const SampleSliverAppBar(),
+          SliverFillRemaining(
+            child: ResponsiveLayout(
+              mobile: (_) =>
+                  _buildContent(context, MediaQuery.of(context).size.width * 0.9),
+              tablet: (_) => _buildContent(context, 500),
+              desktop: (_) => _buildContent(context, 600),
+            ),
+          ),
         ],
-      ),
-      body: ResponsiveLayout(
-        mobile: (_) =>
-            _buildContent(context, MediaQuery.of(context).size.width * 0.9),
-        tablet: (_) => _buildContent(context, 500),
-        desktop: (_) => _buildContent(context, 600),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
