@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
+import '../widgets/responsive_sizes.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 
 class HomePage extends StatefulWidget {
@@ -232,48 +233,55 @@ class _HomePageState extends State<HomePage> {
       children: [
         Text('Chat Rooms', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 120,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: rooms.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final color = Colors.accents[index % Colors.accents.length]
-                  .withOpacity(0.3);
-              return GestureDetector(
-                onTap: () => Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
-                child: Container(
-                  width: 100,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Stack(
-                    children: [
-                      Center(child: Text(rooms[index])),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 12,
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onPrimary,
-                          child: const Text(
-                            '0',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = ResponsiveSizes.chatRoomItemWidth(
+                context, constraints.maxWidth);
+            return SizedBox(
+              height: 120,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: rooms.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final color = Colors.accents[index % Colors.accents.length]
+                      .withOpacity(0.3);
+                  return GestureDetector(
+                    onTap: () =>
+                        Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
+                    child: Container(
+                      width: itemWidth,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                      padding: const EdgeInsets.all(8),
+                      child: Stack(
+                        children: [
+                          Center(child: Text(rooms[index])),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                              child: const Text(
+                                '0',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         ),
       ],
     );
