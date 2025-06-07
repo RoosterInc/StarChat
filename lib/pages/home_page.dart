@@ -4,6 +4,15 @@ import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart';  // Import the ThemeController
 import '../widgets/responsive_layout.dart';
 
+const supportedLocales = [
+  Locale('en', 'US'),
+  Locale('hi', 'IN'),
+  Locale('ta', 'IN'),
+  Locale('ml', 'IN'),
+  Locale('te', 'IN'),
+  Locale('kn', 'IN'),
+];
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -47,6 +56,22 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            DropdownButton<Locale>(
+              value: Get.locale ?? const Locale('en', 'US'),
+              items: [
+                for (final locale in supportedLocales)
+                  DropdownMenuItem(
+                    value: locale,
+                    child: Text(locale.languageCode.toUpperCase()),
+                  )
+              ],
+              onChanged: (loc) {
+                if (loc != null) {
+                  Get.updateLocale(loc);
+                }
+              },
+            ),
+            const SizedBox(height: 20),
           Obx(() => Text(
                 'signed_in_as'.trParams({'username': authController.username.value}),
                 style: const TextStyle(fontSize: 24),
