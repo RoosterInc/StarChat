@@ -17,6 +17,7 @@ class AuthController extends GetxController {
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
+  final justLoggedOut = false.obs;
   final isCheckingUsername = false.obs;
   final usernameAvailable = false.obs;
   final hasCheckedUsername = false.obs;
@@ -77,35 +78,54 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    emailController.dispose();
-    otpController.dispose();
-    usernameController.dispose();
+    emailController.clear();
+    otpController.clear();
+    usernameController.clear();
     usernameText.value = '';
     cancelTimers();
     super.onClose();
   }
 
   Future<void> checkExistingSession() async {
+    if (justLoggedOut.value) {
+      justLoggedOut.value = false;
+      logger.i("[Auth] checkExistingSession: 'justLoggedOut' flag was true. Short-circuiting logic. Current route should be '/'.");
+      if (isLoading.value) {
+        isLoading.value = false;
+      }
+      return;
+    }
+    logger.i("[Auth] checkExistingSession: Attempting to get existing session.");
     try {
       isLoading.value = true;
-      await account.get();
+      final session = await account.get();
+      logger.i("[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
+
       bool hasUsername = await ensureUsername();
       if (hasUsername) {
-        // Only redirect to home when coming from unauthenticated routes
+        logger.i("[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
+          logger.i("[Auth] checkExistingSession: Navigating to /home");
           await Get.offAllNamed('/home');
+        } else {
+          logger.i("[Auth] checkExistingSession: Already on an authenticated route (${Get.currentRoute}), not navigating from checkExistingSession.");
         }
       } else {
+        logger.i("[Auth] checkExistingSession: User does NOT have username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute != '/set_username') {
+          logger.i("[Auth] checkExistingSession: Navigating to /set_username");
           await Get.offAllNamed('/set_username');
+        } else {
+          logger.i("[Auth] checkExistingSession: Already on /set_username, not navigating.");
         }
       }
     } on AppwriteException catch (e) {
-      logger.i('No active session: $e');
+      logger.e("[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
     } catch (e) {
-      logger.e('Error checking session', error: e);
+      logger.e("[Auth] checkExistingSession: Caught general error: {e}");
     } finally {
       isLoading.value = false;
+      logger.i("[Auth] checkExistingSession: Finished.");
     }
   }
 
@@ -323,20 +343,16 @@ class AuthController extends GetxController {
   }
 
   void clearControllers() {
-    emailController.dispose();
-    otpController.dispose();
-    usernameController.dispose();
-    usernameController = TextEditingController();
-    usernameController.addListener(() {
-      usernameText.value = usernameController.text;
-    });
-    emailController = TextEditingController();
-    otpController = TextEditingController();
+    emailController.clear();
+    otpController.clear();
+    usernameController.clear();
     usernameText.value = '';
     cancelTimers();
   }
 
   Future<bool> ensureUsername() async {
+    logger.i("[Auth] ensureUsername: Called. Current local userId: ${this.userId}, Current local username: ${username.value}");
+
     final prefs = await SharedPreferences.getInstance();
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
@@ -344,6 +360,7 @@ class AuthController extends GetxController {
     try {
       final session = await account.get();
       final uid = session.$id;
+      logger.i("[Auth] ensureUsername: Fetched session successfully. User ID for query: $uid, Email: ${session.email}");
 
       final result = await databases.listDocuments(
         databaseId: dbId,
@@ -354,33 +371,48 @@ class AuthController extends GetxController {
           Query.limit(1),
         ],
       );
+      logger.i("[Auth] ensureUsername: Database query for userId '$uid' found ${result.documents.length} documents.");
+
       if (result.documents.isNotEmpty) {
         final data = result.documents.first.data;
-        if (data['username'] != null && data['username'] != '') {
-          username.value = data['username'];
+        final fetchedUsername = data['username'];
+        logger.i("[Auth] ensureUsername: Document found. Username from DB: '$fetchedUsername'. Profile Pic URL: '${data['profilePicture']}'");
+        if (fetchedUsername != null && fetchedUsername != '') {
+          username.value = fetchedUsername;
           if (data['profilePicture'] != null && data['profilePicture'] != '') {
             profilePictureUrl.value = data['profilePicture'];
           }
           await prefs.setString('username', username.value);
+          logger.i("[Auth] ensureUsername: Returning true (username found and set).");
           return true;
+        } else {
+          logger.i("[Auth] ensureUsername: Document found but username is null or empty in DB.");
         }
+      } else {
+        logger.i("[Auth] ensureUsername: No document found in DB for userId '$uid'.");
       }
 
-      // If no username found on server, clear any cached value
       await prefs.remove('username');
       username.value = '';
       profilePictureUrl.value = '';
+      logger.i("[Auth] ensureUsername: Returning false (no username found on server for this session/UID, or it was empty).");
       return false;
     } catch (e) {
-      logger.e('Error fetching username from server', error: e);
+      if (e is AppwriteException) {
+        logger.e("[Auth] ensureUsername: AppwriteException. Code: ${e.code}, Message: ${e.message}");
+      } else {
+        logger.e("[Auth] ensureUsername: General error: $e");
+      }
 
-      // Fallback to cached username only when the server cannot be reached
       final cachedName = prefs.getString('username');
+      logger.i("[Auth] ensureUsername: Attempting fallback to cached username. Cached name: '$cachedName'");
       if (cachedName != null) {
         username.value = cachedName;
+        logger.i("[Auth] ensureUsername: Returning true (using cached username due to server error).");
         return true;
       }
 
+      logger.i("[Auth] ensureUsername: Returning false (error and no cached username).");
       return false;
     }
   }
@@ -743,21 +775,39 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
+    isLoading.value = true;
     try {
-      await account.deleteSession(sessionId: 'current');
+      await account.deleteSessions();
     } catch (e) {
-      logger.e('Error deleting session', error: e);
+      logger.e('Error deleting Appwrite session(s)', error: e);
     } finally {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('username');
       } catch (e) {
-        logger.e('Error clearing cached username', error: e);
+        logger.e('Error clearing cached username from SharedPreferences', error: e);
       }
+
       clearControllers();
+
       isOTPSent.value = false;
       username.value = '';
       profilePictureUrl.value = '';
+      userId = null;
+
+      isCheckingUsername.value = false;
+      usernameAvailable.value = false;
+      hasCheckedUsername.value = false;
+      isUsernameValid.value = false;
+
+      canResendOTP.value = true;
+      resendCooldown.value = resendCooldownDuration;
+      otpExpiration.value = otpExpirationDuration;
+
+      cancelTimers();
+
+      justLoggedOut.value = true;
+      isLoading.value = false;
       Get.offAllNamed('/');
     }
   }
