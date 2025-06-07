@@ -82,9 +82,9 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    emailController.clear();
-    otpController.clear();
-    usernameController.clear();
+    emailController.dispose();
+    otpController.dispose();
+    usernameController.dispose();
     usernameText.value = '';
     emailError.value = '';
     otpError.value = '';
@@ -270,6 +270,17 @@ class AuthController extends GetxController {
       return;
     } else {
       otpError.value = '';
+    }
+
+    // Check network connectivity
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      Get.snackbar(
+        'no_internet'.tr,
+        'check_internet'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
     }
 
     isLoading.value = true;
@@ -573,6 +584,7 @@ class AuthController extends GetxController {
       ),
       barrierDismissible: false,
     );
+    textController.dispose();
   }
 
   Future<bool> _checkUsernameAvailability(String name) async {
