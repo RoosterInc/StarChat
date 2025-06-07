@@ -44,3 +44,4 @@ app.*.map.json
 
 # Env file
 .env
+flutter_linux_*.tar.xz
