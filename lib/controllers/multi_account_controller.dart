@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'auth_controller.dart';
 
 class AccountInfo {
   final String userId;
@@ -89,6 +90,9 @@ class MultiAccountController extends GetxController {
     }
     activeAccountId.value = account.userId;
     await _saveActiveAccount();
+    try {
+      Get.find<AuthController>().client.setSession(account.sessionId);
+    } catch (_) {}
   }
 
   Future<void> removeAccount(String userId) async {
@@ -102,9 +106,13 @@ class MultiAccountController extends GetxController {
 
   Future<void> switchAccount(String userId) async {
     if (activeAccountId.value == userId) return;
-    if (_findById(userId) != null) {
+    final account = _findById(userId);
+    if (account != null) {
       activeAccountId.value = userId;
       await _saveActiveAccount();
+      try {
+        Get.find<AuthController>().client.setSession(account.sessionId);
+      } catch (_) {}
     }
   }
 
