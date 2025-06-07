@@ -48,9 +48,10 @@ class SampleSliverAppBar extends StatelessWidget {
           bottom: false,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.topCenter,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

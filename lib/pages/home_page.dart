@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/theme_controller.dart'; // Import the ThemeController
 import '../widgets/responsive_layout.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 
@@ -17,9 +16,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the ThemeController to manage theme changes
-    final themeController = Get.put(ThemeController());
-
     final authController = Get.find<AuthController>();
 
     return DefaultTabController(
