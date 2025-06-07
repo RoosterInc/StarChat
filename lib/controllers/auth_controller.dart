@@ -425,6 +425,21 @@ class AuthController extends GetxController {
     cancelTimers();
   }
 
+  /// Reset all sign in related state back to defaults. Useful when navigating
+  /// to the sign in page from the account switcher so leftover values don't
+  /// disable the form.
+  void resetSignInState() {
+    clearControllers();
+    isLoading.value = false;
+    isOTPSent.value = false;
+    emailError.value = '';
+    otpError.value = '';
+    usernameError.value = '';
+    canResendOTP.value = true;
+    resendCooldown.value = resendCooldownDuration;
+    otpExpiration.value = otpExpirationDuration;
+  }
+
   Future<bool> ensureUsername() async {
     logger.i("[Auth] ensureUsername: Called. Current local userId: ${this.userId}, Current local username: ${username.value}");
 
