@@ -70,8 +70,6 @@ class AppTranslations extends Translations {
         'push_notifications': 'Push Notifications',
         'version': 'Version',
         'logout_confirm': 'Are you sure you want to logout?',
-        'manage_accounts': 'Manage Accounts',
-        'add_account': 'Add Account',
         },
         'es_ES': {
           'app_name': 'StarChat',
@@ -146,8 +144,6 @@ class AppTranslations extends Translations {
         'push_notifications': 'Notificaciones',
         'version': 'Versión',
         'logout_confirm': '¿Seguro que quieres cerrar sesión?',
-        'manage_accounts': 'Administrar cuentas',
-        'add_account': 'Agregar cuenta',
         },
       };
 }

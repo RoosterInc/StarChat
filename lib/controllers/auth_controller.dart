@@ -8,7 +8,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'multi_account_controller.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
@@ -138,21 +137,6 @@ class AuthController extends GetxController {
           "[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
 
       bool hasUsername = await ensureUsername();
-      try {
-        final success = await Get.find<MultiAccountController>().addAccount(
-          AccountInfo(
-            userId: session.$id,
-            username: username.value,
-            sessionId: '',
-            profilePictureUrl: profilePictureUrl.value,
-          ),
-        );
-        if (!success) {
-          Get.snackbar('Error', 'Maximum accounts reached (3)');
-        }
-      } catch (e) {
-        logger.e('Failed to add account: $e');
-      }
       if (hasUsername) {
         logger.i(
             "[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
@@ -355,22 +339,6 @@ class AuthController extends GetxController {
 
         otpError.value = '';
         bool hasUsername = await ensureUsername();
-        try {
-          final accountInfo = await account.get();
-          final success = await Get.find<MultiAccountController>().addAccount(
-            AccountInfo(
-              userId: accountInfo.$id,
-              username: username.value,
-              sessionId: '',
-              profilePictureUrl: profilePictureUrl.value,
-            ),
-          );
-          if (!success) {
-            Get.snackbar('Error', 'Maximum accounts reached (3)');
-          }
-        } catch (e) {
-          logger.e('Failed to add account to multi-account manager: $e');
-        }
         if (hasUsername) {
           await Get.offAllNamed('/home');
         } else {
@@ -963,13 +931,6 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> applyAccount(AccountInfo account) async {
-    username.value = account.username;
-    profilePictureUrl.value = account.profilePictureUrl;
-    userId = account.userId;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', account.username);
-  }
 
   Future<void> logout() async {
     isLoading.value = true;
@@ -991,13 +952,7 @@ class AuthController extends GetxController {
       isOTPSent.value = false;
       username.value = '';
       profilePictureUrl.value = '';
-      final currentId = userId;
       userId = null;
-      if (currentId != null) {
-        try {
-          await Get.find<MultiAccountController>().removeAccount(currentId);
-        } catch (_) {}
-      }
 
       isCheckingUsername.value = false;
       usernameAvailable.value = false;

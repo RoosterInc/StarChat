@@ -126,22 +126,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             delay: 100,
           ),
           _buildAnimatedListTile(
-            icon: Icons.switch_account,
-            title: 'manage_accounts'.tr,
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/accounts');
-            },
-            delay: 200,
-          ),
-          _buildAnimatedListTile(
             icon: Icons.settings,
             title: 'settings'.tr,
             onTap: () {
               Navigator.pop(context);
               Get.toNamed('/settings');
             },
-            delay: 300,
+            delay: 200,
           ),
           _buildAnimatedListTile(
             icon: Icons.logout,
@@ -151,7 +142,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Get.closeAllSnackbars();
               await authController.logout();
             },
-            delay: 400,
+            delay: 300,
           ),
         ],
       ),
