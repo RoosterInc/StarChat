@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
+import '../widgets/animated_form_field.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -66,24 +67,16 @@ class _SignInPageState extends State<SignInPage> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
-        TextField(
+        AnimatedFormField(
           controller: controller.emailController,
-          decoration: InputDecoration(
-            labelText: 'email'.tr,
-            border: const OutlineInputBorder(),
-          ),
+          label: 'email'.tr,
+          prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
+          errorText: controller.emailError.value.isEmpty
+              ? null
+              : controller.emailError.value,
           onChanged: (_) => controller.emailError.value = '',
         ),
-        Obx(() => controller.emailError.value.isEmpty
-            ? const SizedBox.shrink()
-            : Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  controller.emailError.value,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              )),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
@@ -142,24 +135,16 @@ class _SignInPageState extends State<SignInPage> {
                 style: const TextStyle(color: Colors.red),
               )),
           const SizedBox(height: 10),
-          TextField(
+          AnimatedFormField(
             controller: controller.otpController,
-            decoration: InputDecoration(
-              labelText: 'otp'.tr,
-              border: const OutlineInputBorder(),
-            ),
+            label: 'otp'.tr,
+            prefixIcon: Icons.lock_outlined,
             keyboardType: TextInputType.number,
+            errorText: controller.otpError.value.isEmpty
+                ? null
+                : controller.otpError.value,
             onChanged: (_) => controller.otpError.value = '',
           ),
-          Obx(() => controller.otpError.value.isEmpty
-              ? const SizedBox.shrink()
-              : Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    controller.otpError.value,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                )),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
