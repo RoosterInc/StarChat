@@ -32,6 +32,9 @@ const List<IconData> availableIcons = [
 // DATA MODELS
 // ============================================================================
 
+// ============================================================================
+// CONTROLLER
+// ============================================================================
 
 // ============================================================================
 // ANIMATION HELPERS
@@ -470,10 +473,22 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   onRemove: () async {
                     HapticFeedback.mediumImpact();
                     await controller.removeItem(item.id);
-                    _showSuccessSnackbar(
+                    Get.snackbar(
                       'Removed from Watchlist',
                       '${item.name} has been removed from your watchlist',
-                      Colors.red,
+                      snackPosition: SnackPosition.BOTTOM,
+                      duration: const Duration(seconds: 4),
+                      backgroundColor: Colors.red.shade100,
+                      colorText: Colors.red.shade800,
+                      icon: Icon(Icons.delete_outline, color: Colors.red.shade800),
+                      mainButton: TextButton(
+                        onPressed: () async {
+                          await controller.addItem(item);
+                          Get.back();
+                          _showSuccessSnackbar('Restored', '${item.name} has been restored', Colors.blue);
+                        },
+                        child: const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
                     );
                   },
                   onEdit: () => _showEditItemDialog(context, controller, item),
@@ -666,17 +681,17 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
                       name: name,
                       count: count,
+                      order: 0,
                       color: selectedColor,
                       icon: selectedIcon,
-                      order: 0,
                     );
                     await controller.addItem(newItem);
-                    Get.back();
                     _showSuccessSnackbar(
                       'Added to Watchlist',
                       '${newItem.name} has been added to your watchlist',
                       Colors.green,
                     );
+                    Get.back();
                   }
                 },
                 child: const Text('Add'),
@@ -795,12 +810,12 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       color: selectedColor,
                       icon: selectedIcon,
                     );
-                    Get.back();
                     _showSuccessSnackbar(
                       'Updated',
                       'Item has been updated',
                       Colors.blue,
                     );
+                    Get.back();
                   }
                 },
                 child: const Text('Update'),
@@ -906,7 +921,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               Get.back();
               _showSuccessSnackbar(
                 'Cleared',
-                '$count items removed from watchlist',
+                '${count} items removed from watchlist',
                 Colors.orange,
               );
             },
@@ -920,16 +935,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
       ),
     );
   }
-
-  void _showSuccessSnackbar(String title, String message, Color color) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      backgroundColor: color.withOpacity(0.1),
-      colorText: color.withOpacity(0.8),
-      icon: Icon(Icons.check_circle_outline, color: color),
-    );
-  }
+}
+void _showSuccessSnackbar(String title, String message, Color color) {
+  Get.snackbar(title, message, snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 2), backgroundColor: color.withOpacity(0.1), colorText: color.withOpacity(0.8), icon: Icon(Icons.check_circle_outline, color: color),);
 }
