@@ -96,24 +96,42 @@ class AuthController extends GetxController {
   }
 
   Future<void> checkExistingSession() async {
+    // If a session check is already in progress, wait for it to finish
     if (_sessionCheckLock.value) {
-      logger
-          .i("[Auth] checkExistingSession: Already checking session, skipping");
-      return;
+      logger.i(
+          "[Auth] checkExistingSession: Already checking session, waiting...");
+
+      int attempts = 0;
+      while (_sessionCheckLock.value && attempts < 50) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      if (_sessionCheckLock.value) {
+        logger.w(
+            "[Auth] checkExistingSession: Timeout waiting for session check, forcing unlock");
+        _sessionCheckLock.value = false;
+      } else {
+        logger
+            .i("[Auth] checkExistingSession: Previous session check completed");
+        return; // Navigation already handled
+      }
     }
 
     _sessionCheckLock.value = true;
 
-    if (justLoggedOut.value) {
-      justLoggedOut.value = false;
-      logger.i(
-          "[Auth] checkExistingSession: 'justLoggedOut' flag was true. Short-circuiting logic. Current route should be '/'.");
-      _sessionCheckLock.value = false;
-      return;
-    }
-    logger
-        .i("[Auth] checkExistingSession: Attempting to get existing session.");
     try {
+      if (justLoggedOut.value) {
+        justLoggedOut.value = false;
+        logger.i(
+            "[Auth] checkExistingSession: 'justLoggedOut' flag was true. Navigating to sign-in.");
+        await Get.offAllNamed('/');
+        return;
+      }
+
+      logger.i(
+          "[Auth] checkExistingSession: Attempting to get existing session.");
+
       isLoading.value = true;
       final session = await account.get();
       logger.i(
