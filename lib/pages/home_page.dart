@@ -5,6 +5,7 @@ import '../widgets/enhanced_responsive_layout.dart';
 import '../widgets/adaptive_navigation.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 import '../widgets/safe_network_image.dart';
+import '../widgets/complete_enhanced_watchlist.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -213,18 +214,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             _buildPredictionScoresSection(context),
             SizedBox(height: _getResponsiveSpacing(context)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Watch List',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: _getResponsiveFontSize(context, 18),
-                    ),
-              ),
-            ),
-            SizedBox(height: _getResponsiveSpacing(context) * 0.5),
             Expanded(
-              child: _buildWatchListSection(context),
+              child: const EnhancedWatchlistWidget(),
             ),
           ],
         ),
@@ -359,98 +350,4 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return baseHeight;
   }
 
-  Widget _buildWatchListSection(BuildContext context) {
-    final rooms = ['Ashwini', 'Bharani', 'Krittika', 'Rohini'];
-    return SafeArea(
-      bottom: true,
-      child: OrientationBuilder(
-        builder: (context, orientation) {
-          final isLandscape = orientation == Orientation.landscape;
-          final crossAxisCount = isLandscape ? 2 : 1;
-          if (isLandscape) {
-            return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: _getResponsiveSpacing(context),
-                mainAxisSpacing: _getResponsiveSpacing(context) * 0.5,
-                childAspectRatio: 3.0,
-              ),
-              itemCount: rooms.length,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index) =>
-                  _buildWatchListItem(context, rooms[index], index),
-            );
-          }
-          return ListView.builder(
-            itemCount: rooms.length,
-            padding: EdgeInsets.zero,
-            itemBuilder: (context, index) =>
-                _buildWatchListItem(context, rooms[index], index),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWatchListItem(BuildContext context, String roomName, int index) {
-    final color = Colors.accents[index % Colors.accents.length].withOpacity(0.3);
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 100)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(30 * (1 - value), 0),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              height: _getResponsiveHeight(context, 100),
-              margin: EdgeInsets.only(
-                  bottom: _getResponsiveSpacing(context) * 0.5),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showChatRoomSnackbar(roomName),
-                  child: ListTile(
-                    title: Text(
-                      roomName,
-                      style: TextStyle(
-                        fontSize: _getResponsiveFontSize(context, 16),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    trailing: CircleAvatar(
-                      radius: _getResponsiveHeight(context, 12),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      child: Text(
-                        '0',
-                        style:
-                            TextStyle(fontSize: _getResponsiveFontSize(context, 12)),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showChatRoomSnackbar(String roomName) {
-    Get.snackbar(
-      'Chat Room',
-      'Open $roomName',
-      snackPosition: SnackPosition.BOTTOM,
-      animationDuration: const Duration(milliseconds: 300),
-      duration: const Duration(seconds: 2),
-    );
-  }
 }
