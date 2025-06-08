@@ -21,7 +21,8 @@ class SignInPage extends GetView<AuthController> {
         title: Text('email_sign_in'.tr),
       ),
       body: ResponsiveLayout(
-        mobile: (_) => _buildForm(context, MediaQuery.of(context).size.width * 0.9),
+        mobile: (_) =>
+            _buildForm(context, MediaQuery.of(context).size.width * 0.9),
         tablet: (_) => _buildForm(context, 500),
         desktop: (_) => _buildForm(context, 400),
       ),
@@ -74,7 +75,8 @@ class SignInPage extends GetView<AuthController> {
         SizedBox(
           width: double.infinity,
           child: Obx(() => ElevatedButton(
-                onPressed: controller.isLoading.value ? null : controller.sendOTP,
+                onPressed:
+                    controller.isLoading.value ? null : controller.sendOTP,
                 child: controller.isLoading.value
                     ? const CircularProgressIndicator()
                     : Text('send_otp'.tr),
@@ -85,64 +87,95 @@ class SignInPage extends GetView<AuthController> {
   }
 
   Widget _otpForm() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'enter_otp'.tr,
-          style: const TextStyle(fontSize: 18),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-        Obx(() => Text(
-              'otp_expires_in'
-                  .trParams({'seconds': controller.otpExpiration.value.toString()}),
-              style: const TextStyle(color: Colors.red),
-            )),
-        const SizedBox(height: 10),
-        TextField(
-          controller: controller.otpController,
-          decoration: InputDecoration(
-            labelText: 'otp'.tr,
-            border: const OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-          onChanged: (_) => controller.otpError.value = '',
-        ),
-        Obx(() => controller.otpError.value.isEmpty
-            ? const SizedBox.shrink()
-            : Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  controller.otpError.value,
-                  style: const TextStyle(color: Colors.red),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Get.dialog(
+            AlertDialog(
+              title: Text('Go Back?'),
+              content: Text('Do you want to go back to email input?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  child: Text('cancel'.tr),
                 ),
+                TextButton(
+                  onPressed: () {
+                    Get.back();
+                    controller.goBackToEmailInput();
+                  },
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'enter_otp'.tr,
+            style: const TextStyle(fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Obx(() => Text(
+                'otp_expires_in'.trParams(
+                    {'seconds': controller.otpExpiration.value.toString()}),
+                style: const TextStyle(color: Colors.red),
               )),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          child: Obx(() => ElevatedButton(
-                onPressed: controller.isLoading.value ? null : controller.verifyOTP,
-                child: controller.isLoading.value
-                    ? const CircularProgressIndicator()
-                    : Text('verify_otp'.tr),
+          const SizedBox(height: 10),
+          TextField(
+            controller: controller.otpController,
+            decoration: InputDecoration(
+              labelText: 'otp'.tr,
+              border: const OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (_) => controller.otpError.value = '',
+          ),
+          Obx(() => controller.otpError.value.isEmpty
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    controller.otpError.value,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                )),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: Obx(() => ElevatedButton(
+                  onPressed:
+                      controller.isLoading.value ? null : controller.verifyOTP,
+                  child: controller.isLoading.value
+                      ? const CircularProgressIndicator()
+                      : Text('verify_otp'.tr),
+                )),
+          ),
+          const SizedBox(height: 10),
+          Obx(() => TextButton(
+                onPressed:
+                    controller.canResendOTP.value ? controller.resendOTP : null,
+                child: controller.canResendOTP.value
+                    ? Text('resend_otp'.tr)
+                    : Text('resend_otp_in'.trParams({
+                        'seconds': controller.resendCooldown.value.toString()
+                      })),
               )),
-        ),
-        const SizedBox(height: 10),
-        Obx(() => TextButton(
-              onPressed: controller.canResendOTP.value ? controller.resendOTP : null,
-              child: controller.canResendOTP.value
-                  ? Text('resend_otp'.tr)
-                  : Text('resend_otp_in'.trParams(
-                      {'seconds': controller.resendCooldown.value.toString()})),
-            )),
-        const SizedBox(height: 10),
-        // Add the 'Change Email' button
-        TextButton(
-          onPressed: controller.goBackToEmailInput,
-          child: Text('change_email'.tr),
-        ),
-      ],
+          const SizedBox(height: 10),
+          // Add the 'Change Email' button
+          TextButton(
+            onPressed: controller.goBackToEmailInput,
+            child: Text('change_email'.tr),
+          ),
+        ],
+      ),
     );
   }
 }
