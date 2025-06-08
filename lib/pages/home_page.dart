@@ -5,7 +5,7 @@ import '../widgets/enhanced_responsive_layout.dart';
 import '../widgets/adaptive_navigation.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 import '../widgets/safe_network_image.dart';
-import '../widgets/complete_enhanced_watchlist.dart';
+import '../widgets/complete_persistent_watchlist.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -215,7 +215,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _buildPredictionScoresSection(context),
             SizedBox(height: _getResponsiveSpacing(context)),
             Expanded(
-              child: const EnhancedWatchlistWidget(),
+              child: const CompletePersistentWatchlistWidget(),
             ),
           ],
         ),
