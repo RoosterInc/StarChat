@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/multi_account_controller.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/safe_network_image.dart';
 
 class AccountSwitcherPage extends GetView<MultiAccountController> {
   const AccountSwitcherPage({super.key});
@@ -27,12 +28,15 @@ class AccountSwitcherPage extends GetView<MultiAccountController> {
               ...controller.accounts.map(
                 (a) => ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: a.profilePictureUrl.isNotEmpty
-                        ? NetworkImage(a.profilePictureUrl)
-                        : null,
-                    child: a.profilePictureUrl.isEmpty
-                        ? const Icon(Icons.person)
-                        : null,
+                    child: ClipOval(
+                      child: SafeNetworkImage(
+                        imageUrl: a.profilePictureUrl,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorWidget: const Icon(Icons.person),
+                      ),
+                    ),
                   ),
                   title: Text(a.username),
                   subtitle: Text(a.userId),

@@ -75,11 +75,11 @@ class MultiAccountController extends GetxController {
     }
   }
 
-  Future<void> addAccount(AccountInfo account) async {
+  Future<bool> addAccount(AccountInfo account) async {
     final existing = _findById(account.userId);
     if (existing == null) {
       if (accounts.length >= 3) {
-        throw Exception('Maximum accounts reached');
+        return false;
       }
       accounts.add(account);
       await _saveAccounts();
@@ -89,6 +89,7 @@ class MultiAccountController extends GetxController {
     }
     activeAccountId.value = account.userId;
     await _saveActiveAccount();
+    return true;
   }
 
   Future<void> removeAccount(String userId) async {

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 import '../controllers/auth_controller.dart';
+import '../widgets/safe_network_image.dart';
 
 class ProfilePage extends GetView<AuthController> {
   const ProfilePage({super.key});
@@ -38,12 +39,15 @@ class ProfilePage extends GetView<AuthController> {
             children: [
               CircleAvatar(
                 radius: 60,
-                backgroundImage: controller.profilePictureUrl.value.isNotEmpty
-                    ? NetworkImage(controller.profilePictureUrl.value)
-                    : null,
-                child: controller.profilePictureUrl.value.isEmpty
-                    ? const Icon(Icons.person, size: 60)
-                    : null,
+                child: ClipOval(
+                  child: SafeNetworkImage(
+                    imageUrl: controller.profilePictureUrl.value,
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorWidget: const Icon(Icons.person, size: 60),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               Text(
