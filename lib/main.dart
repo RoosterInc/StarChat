@@ -6,7 +6,6 @@ import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/settings_page.dart';
-import 'pages/account_switcher_page.dart';
 import 'pages/sliver_sample_page.dart';
 import 'themes/enhanced_app_theme.dart';
 import 'assets/translations/app_translations.dart';
@@ -71,12 +70,6 @@ class MyApp extends StatelessWidget {
               page: () => const SettingsPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-            ),
-            GetPage(
-              name: '/accounts',
-              page: () => const AccountSwitcherPage(),
-              binding: AuthBinding(),
-              transition: Transition.downToUp,
             ),
             GetPage(
               name: '/sliver',
