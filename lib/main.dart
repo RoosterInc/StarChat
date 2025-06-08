@@ -8,7 +8,7 @@ import 'pages/profile_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/account_switcher_page.dart';
 import 'pages/sliver_sample_page.dart';
-import 'themes/app_theme.dart';
+import 'themes/enhanced_app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
@@ -29,49 +29,60 @@ class MyApp extends StatelessWidget {
     final themeController = Get.put(ThemeController());
 
     return Obx(() => GetMaterialApp(
-          title: 'Email OTP Sign-In',
-          theme: AppTheme.lightTheme, // Light theme
-          darkTheme: AppTheme.darkTheme, // Dark theme
+          title: 'StarChat',
+          theme: EnhancedAppTheme.lightTheme,
+          darkTheme: EnhancedAppTheme.darkTheme,
           themeMode: themeController.isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light, // Reactive theme
           initialBinding: AuthBinding(),
           initialRoute: '/',
+          defaultTransition: Transition.cupertino,
+          transitionDuration: const Duration(milliseconds: 300),
           getPages: [
             GetPage(
               name: '/',
               page: () => const SignInPage(),
               binding: AuthBinding(),
+              transition: Transition.fadeIn,
+              transitionDuration: const Duration(milliseconds: 400),
             ),
             GetPage(
               name: '/set_username',
               page: () => const SetUsernamePage(),
               binding: AuthBinding(),
+              transition: Transition.rightToLeft,
             ),
             GetPage(
               name: '/home',
               page: () => const HomePage(),
               binding: AuthBinding(),
+              transition: Transition.fadeIn,
+              transitionDuration: const Duration(milliseconds: 500),
             ),
             GetPage(
               name: '/profile',
               page: () => const ProfilePage(),
               binding: AuthBinding(),
+              transition: Transition.rightToLeft,
             ),
             GetPage(
               name: '/settings',
               page: () => const SettingsPage(),
               binding: AuthBinding(),
+              transition: Transition.rightToLeft,
             ),
             GetPage(
               name: '/accounts',
               page: () => const AccountSwitcherPage(),
               binding: AuthBinding(),
+              transition: Transition.downToUp,
             ),
             GetPage(
               name: '/sliver',
               page: () => const SliverSamplePage(),
               binding: AuthBinding(),
+              transition: Transition.rightToLeft,
             ),
           ],
           locale: Get.deviceLocale,

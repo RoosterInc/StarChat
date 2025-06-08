@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../widgets/responsive_layout.dart';
+import '../widgets/enhanced_responsive_layout.dart';
+import '../widgets/adaptive_navigation.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 import '../widgets/safe_network_image.dart';
 import 'empty_page.dart';
@@ -13,12 +14,49 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _fadeController.forward();
+    _slideController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    final screenSize = MediaQuery.of(context).size;
+    final isLargeScreen = screenSize.width >= 1024;
 
     final pages = [
       _buildHomeBody(context),
@@ -29,108 +67,120 @@ class _HomePageState extends State<HomePage> {
       const EmptyPage(),
     ];
 
-    return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Obx(
-              () => UserAccountsDrawerHeader(
-                currentAccountPicture: CircleAvatar(
-                  child: ClipOval(
-                    child: SafeNetworkImage(
-                      imageUrl: authController.profilePictureUrl.value,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      errorWidget: const Icon(Icons.person, size: 40),
+    return AdaptiveNavigation(
+      selectedIndex: _selectedIndex,
+      onDestinationSelected: (index) {
+        setState(() => _selectedIndex = index);
+        _slideController.reset();
+        _slideController.forward();
+      },
+      body: Scaffold(
+        drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: pages[_selectedIndex],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, AuthController authController) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Obx(() => UserAccountsDrawerHeader(
+                currentAccountPicture: Hero(
+                  tag: 'profile_avatar',
+                  child: CircleAvatar(
+                    child: ClipOval(
+                      child: SafeNetworkImage(
+                        imageUrl: authController.profilePictureUrl.value,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorWidget: const Icon(Icons.person, size: 40),
+                      ),
                     ),
                   ),
                 ),
-                accountName: Text(authController.username.value),
+                accountName: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    authController.username.value,
+                    key: ValueKey(authController.username.value),
+                  ),
+                ),
                 accountEmail: null,
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: Text('profile'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.switch_account),
-              title: Text('manage_accounts'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/accounts');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text('settings'.tr),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed('/settings');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: Text('logout'.tr),
-              onTap: () async {
-                Navigator.pop(context);
-                Get.closeAllSnackbars();
-                await authController.logout();
-              },
-            ),
-          ],
-        ),
-      ),
-      body: pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        currentIndex: _selectedIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+              )),
+          _buildAnimatedListTile(
+            icon: Icons.person,
+            title: 'profile'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/profile');
+            },
+            delay: 100,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          _buildAnimatedListTile(
+            icon: Icons.switch_account,
+            title: 'manage_accounts'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/accounts');
+            },
+            delay: 200,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
+          _buildAnimatedListTile(
+            icon: Icons.settings,
+            title: 'settings'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/settings');
+            },
+            delay: 300,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Match',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            activeIcon: Icon(Icons.notifications),
-            label: 'Notifications',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.storefront_outlined),
-            activeIcon: Icon(Icons.storefront),
-            label: 'Marketplace',
+          _buildAnimatedListTile(
+            icon: Icons.logout,
+            title: 'logout'.tr,
+            onTap: () async {
+              Navigator.pop(context);
+              Get.closeAllSnackbars();
+              await authController.logout();
+            },
+            delay: 400,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAnimatedListTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required int delay,
+  }) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + delay),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(50 * (1 - value), 0),
+          child: Opacity(
+            opacity: value,
+            child: ListTile(
+              leading: Icon(icon),
+              title: Text(title),
+              onTap: onTap,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -143,11 +193,11 @@ class _HomePageState extends State<HomePage> {
           SliverFillRemaining(
             child: TabBarView(
               children: [
-                ResponsiveLayout(
-                  mobile: (_) => _buildContent(
-                      context, MediaQuery.of(context).size.width * 0.9),
-                  tablet: (_) => _buildContent(context, 500),
-                  desktop: (_) => _buildContent(context, 600),
+                EnhancedResponsiveLayout(
+                  mobile: (context) =>
+                      _buildContent(context, MediaQuery.of(context).size.width * 0.95),
+                  tablet: (context) => _buildContent(context, 600),
+                  desktop: (context) => _buildContent(context, 800),
                 ),
                 const Center(child: SizedBox()),
                 const Center(child: SizedBox()),
@@ -162,27 +212,54 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildContent(BuildContext context, double width) {
-    final authController = Get.find<AuthController>();
+    final screenHeight = MediaQuery.of(context).size.height;
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(_getResponsivePadding(context)),
         width: width,
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
             _buildPredictionScoresSection(context),
-            const SizedBox(height: 20),
+            SizedBox(height: _getResponsiveSpacing(context)),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text('Watch List',
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Watch List',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: _getResponsiveFontSize(context, 18),
+                    ),
+              ),
             ),
-            const SizedBox(height: 8),
-            Expanded(child: _buildWatchListSection(context)),
+            SizedBox(height: _getResponsiveSpacing(context) * 0.5),
+            Expanded(
+              child: _buildWatchListSection(context),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  double _getResponsivePadding(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 24.0;
+    if (width >= 600) return 20.0;
+    return 16.0;
+  }
+
+  double _getResponsiveSpacing(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 32.0;
+    if (width >= 600) return 24.0;
+    return 20.0;
+  }
+
+  double _getResponsiveFontSize(BuildContext context, double baseSize) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseSize * 1.2;
+    if (width >= 600) return baseSize * 1.1;
+    return baseSize;
   }
 
   Widget _buildPredictionScoresSection(BuildContext context) {
@@ -203,35 +280,31 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Prediction Scores',
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
+        Text(
+          'Prediction Scores',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: _getResponsiveFontSize(context, 18),
+              ),
+        ),
+        SizedBox(height: _getResponsiveSpacing(context) * 0.5),
         SizedBox(
-          height: 80,
+          height: _getResponsiveHeight(context, 80),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: names.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, __) => SizedBox(width: _getResponsiveSpacing(context) * 0.4),
             itemBuilder: (context, index) {
               final color = Colors.primaries[index % Colors.primaries.length];
-              return GestureDetector(
-                onTap: () => Get.dialog(
-                  AlertDialog(
-                    title: Text(names[index]),
-                    content: const Text('R\u0101si details coming soon'),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: color,
-                      child: Text('${index + 1}'),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(names[index], style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 200 + (index * 50)),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: _buildPredictionCard(context, names[index], index + 1, color),
+                  );
+                },
               );
             },
           ),
@@ -240,41 +313,153 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildPredictionCard(BuildContext context, String name, int number, Color color) {
+    return GestureDetector(
+      onTap: () => _showPredictionDialog(name),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: _getResponsiveHeight(context, 25),
+              backgroundColor: color,
+              child: Text(
+                '$number',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: _getResponsiveFontSize(context, 16),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(height: _getResponsiveSpacing(context) * 0.25),
+            Text(
+              name,
+              style: TextStyle(fontSize: _getResponsiveFontSize(context, 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPredictionDialog(String name) {
+    Get.dialog(
+      AlertDialog(
+        title: Text(name),
+        content: const Text('R\u0101si details coming soon'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionCurve: Curves.easeInOut,
+    );
+  }
+
+  double _getResponsiveHeight(BuildContext context, double baseHeight) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseHeight * 1.3;
+    if (width >= 600) return baseHeight * 1.15;
+    return baseHeight;
+  }
+
   Widget _buildWatchListSection(BuildContext context) {
     final rooms = ['Ashwini', 'Bharani', 'Krittika', 'Rohini'];
     return SafeArea(
       bottom: true,
-      child: ListView.builder(
-        itemCount: rooms.length,
-        padding: EdgeInsets.zero,
-        itemBuilder: (context, index) {
-          final color =
-              Colors.accents[index % Colors.accents.length].withOpacity(0.3);
-          return Container(
-            height: 100,
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              title: Text(rooms[index]),
-              trailing: CircleAvatar(
-                radius: 12,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                child: const Text(
-                  '0',
-                  style: TextStyle(fontSize: 12),
-                ),
+      child: OrientationBuilder(
+        builder: (context, orientation) {
+          final isLandscape = orientation == Orientation.landscape;
+          final crossAxisCount = isLandscape ? 2 : 1;
+          if (isLandscape) {
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: _getResponsiveSpacing(context),
+                mainAxisSpacing: _getResponsiveSpacing(context) * 0.5,
+                childAspectRatio: 3.0,
               ),
-              onTap: () => Get.snackbar('Chat Room', 'Open ${rooms[index]}'),
-            ),
+              itemCount: rooms.length,
+              padding: EdgeInsets.zero,
+              itemBuilder: (context, index) =>
+                  _buildWatchListItem(context, rooms[index], index),
+            );
+          }
+          return ListView.builder(
+            itemCount: rooms.length,
+            padding: EdgeInsets.zero,
+            itemBuilder: (context, index) =>
+                _buildWatchListItem(context, rooms[index], index),
           );
         },
       ),
     );
   }
 
-  // Deleted account removal feature for now
+  Widget _buildWatchListItem(BuildContext context, String roomName, int index) {
+    final color = Colors.accents[index % Colors.accents.length].withOpacity(0.3);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(30 * (1 - value), 0),
+          child: Opacity(
+            opacity: value,
+            child: Container(
+              height: _getResponsiveHeight(context, 100),
+              margin: EdgeInsets.only(
+                  bottom: _getResponsiveSpacing(context) * 0.5),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => _showChatRoomSnackbar(roomName),
+                  child: ListTile(
+                    title: Text(
+                      roomName,
+                      style: TextStyle(
+                        fontSize: _getResponsiveFontSize(context, 16),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    trailing: CircleAvatar(
+                      radius: _getResponsiveHeight(context, 12),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      child: Text(
+                        '0',
+                        style:
+                            TextStyle(fontSize: _getResponsiveFontSize(context, 12)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showChatRoomSnackbar(String roomName) {
+    Get.snackbar(
+      'Chat Room',
+      'Open $roomName',
+      snackPosition: SnackPosition.BOTTOM,
+      animationDuration: const Duration(milliseconds: 300),
+      duration: const Duration(seconds: 2),
+    );
+  }
 }
