@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/sample_sliver_app_bar.dart';
+import '../widgets/safe_network_image.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -36,13 +37,15 @@ class _HomePageState extends State<HomePage> {
             Obx(
               () => UserAccountsDrawerHeader(
                 currentAccountPicture: CircleAvatar(
-                  backgroundImage:
-                      authController.profilePictureUrl.value.isNotEmpty
-                          ? NetworkImage(authController.profilePictureUrl.value)
-                          : null,
-                  child: authController.profilePictureUrl.value.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null,
+                  child: ClipOval(
+                    child: SafeNetworkImage(
+                      imageUrl: authController.profilePictureUrl.value,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorWidget: const Icon(Icons.person, size: 40),
+                    ),
+                  ),
                 ),
                 accountName: Text(authController.username.value),
                 accountEmail: null,
