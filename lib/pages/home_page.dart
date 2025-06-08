@@ -40,8 +40,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+            CurvedAnimation(
+                parent: _slideController, curve: Curves.easeOutCubic));
     _fadeController.forward();
     _slideController.forward();
   }
@@ -186,8 +188,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: TabBarView(
               children: [
                 EnhancedResponsiveLayout(
-                  mobile: (context) =>
-                      _buildContent(context, MediaQuery.of(context).size.width * 0.95),
+                  mobile: (context) => _buildContent(
+                      context, MediaQuery.of(context).size.width * 0.95),
                   tablet: (context) => _buildContent(context, 600),
                   desktop: (context) => _buildContent(context, 800),
                 ),
@@ -274,7 +276,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: names.length,
-            separatorBuilder: (_, __) => SizedBox(width: _getResponsiveSpacing(context) * 0.4),
+            separatorBuilder: (_, __) =>
+                SizedBox(width: _getResponsiveSpacing(context) * 0.4),
             itemBuilder: (context, index) {
               final color = Colors.primaries[index % Colors.primaries.length];
               return TweenAnimationBuilder<double>(
@@ -284,7 +287,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 builder: (context, value, child) {
                   return Transform.scale(
                     scale: value,
-                    child: _buildPredictionCard(context, names[index], index + 1, color),
+                    child: _buildPredictionCard(
+                        context, names[index], index + 1, color),
                   );
                 },
               );
@@ -295,7 +299,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPredictionCard(BuildContext context, String name, int number, Color color) {
+  Widget _buildPredictionCard(
+      BuildContext context, String name, int number, Color color) {
     return GestureDetector(
       onTap: () => _showPredictionDialog(name),
       child: AnimatedContainer(
@@ -349,5 +354,4 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (width >= 600) return baseHeight * 1.15;
     return baseHeight;
   }
-
 }
