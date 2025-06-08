@@ -35,11 +35,11 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(title: Text('settings'.tr)),
       body: ListView(
         children: [
-          SwitchListTile(
-            title: Text('dark_mode'.tr),
-            value: themeController.isDarkMode.value,
-            onChanged: (_) => themeController.toggleTheme(),
-          ),
+          Obx(() => SwitchListTile(
+                title: Text('dark_mode'.tr),
+                value: themeController.isDarkMode.value,
+                onChanged: (_) => themeController.toggleTheme(),
+              )),
           SwitchListTile(
             title: Text('push_notifications'.tr),
             value: notifications,
