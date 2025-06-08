@@ -4,217 +4,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../controllers/persistent_watchlist_controller.dart';
+
+const List<Color> availableColors = [
+  Color(0xFFEC407A),
+  Color(0xFFAB47BC),
+  Color(0xFF42A5F5),
+  Color(0xFF66BB6A),
+  Color(0xFFFF7043),
+  Color(0xFF26A69A),
+  Color(0xFF5C6BC0),
+  Color(0xFFFFCA28),
+];
+
+const List<IconData> availableIcons = [
+  Icons.star,
+  Icons.favorite,
+  Icons.flash_on,
+  Icons.brightness_high,
+  Icons.nightlight_round,
+  Icons.wb_sunny,
+  Icons.ac_unit,
+  Icons.local_fire_department,
+];
 
 // ============================================================================
 // DATA MODELS
 // ============================================================================
 
-class WatchlistItem {
-  final String id;
-  final String name;
-  final int count;
-  final Color color;
-  final IconData icon;
-  final DateTime createdAt;
-  
-  WatchlistItem({
-    required this.id,
-    required this.name,
-    required this.count,
-    required this.color,
-    required this.icon,
-    DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
-  
-  WatchlistItem copyWith({
-    String? name,
-    int? count,
-    Color? color,
-    IconData? icon,
-  }) {
-    return WatchlistItem(
-      id: id,
-      name: name ?? this.name,
-      count: count ?? this.count,
-      color: color ?? this.color,
-      icon: icon ?? this.icon,
-      createdAt: createdAt,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'count': count,
-      'colorValue': color.value,
-      'iconCodePoint': icon.codePoint,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
-
-  factory WatchlistItem.fromJson(Map<String, dynamic> json) {
-    return WatchlistItem(
-      id: json['id'],
-      name: json['name'],
-      count: json['count'],
-      color: Color(json['colorValue']),
-      icon: IconData(json['iconCodePoint'], fontFamily: 'MaterialIcons'),
-      createdAt: DateTime.parse(json['createdAt']),
-    );
-  }
-}
-
-// ============================================================================
-// CONTROLLER
-// ============================================================================
-
-class WatchlistController extends GetxController {
-  final RxList<WatchlistItem> _items = <WatchlistItem>[
-    WatchlistItem(
-      id: '1',
-      name: 'Ashwini',
-      count: 0,
-      color: Colors.pinkAccent.shade100,
-      icon: Icons.star,
-    ),
-    WatchlistItem(
-      id: '2',
-      name: 'Bharani',
-      count: 0,
-      color: Colors.purpleAccent.shade100,
-      icon: Icons.favorite,
-    ),
-    WatchlistItem(
-      id: '3',
-      name: 'Krittika',
-      count: 0,
-      color: Colors.blueAccent.shade100,
-      icon: Icons.flash_on,
-    ),
-    WatchlistItem(
-      id: '4',
-      name: 'Rohini',
-      count: 0,
-      color: Colors.greenAccent.shade100,
-      icon: Icons.brightness_high,
-    ),
-  ].obs;
-
-  final RxBool _isLoading = false.obs;
-
-  List<WatchlistItem> get items => _items;
-  bool get isLoading => _isLoading.value;
-
-  // Available colors for new items
-  static const List<Color> availableColors = [
-    Color(0xFFEC407A),
-    Color(0xFFAB47BC),
-    Color(0xFF42A5F5),
-    Color(0xFF66BB6A),
-    Color(0xFFFF7043),
-    Color(0xFF26A69A),
-    Color(0xFF5C6BC0),
-    Color(0xFFFFCA28),
-  ];
-
-  // Available icons for new items
-  static const List<IconData> availableIcons = [
-    Icons.star,
-    Icons.favorite,
-    Icons.flash_on,
-    Icons.brightness_high,
-    Icons.nightlight_round,
-    Icons.wb_sunny,
-    Icons.ac_unit,
-    Icons.local_fire_department,
-  ];
-
-  void addItem(WatchlistItem item) {
-    _items.add(item);
-    _showSuccessSnackbar(
-      'Added to Watchlist',
-      '${item.name} has been added to your watchlist',
-      Colors.green,
-    );
-    HapticFeedback.lightImpact();
-  }
-
-  void removeItem(String id) {
-    final itemIndex = _items.indexWhere((item) => item.id == id);
-    if (itemIndex == -1) return;
-    
-    final item = _items[itemIndex];
-    _items.removeAt(itemIndex);
-    
-    Get.snackbar(
-      'Removed from Watchlist',
-      '${item.name} has been removed from your watchlist',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 4),
-      backgroundColor: Colors.red.shade100,
-      colorText: Colors.red.shade800,
-      icon: Icon(Icons.delete_outline, color: Colors.red.shade800),
-      mainButton: TextButton(
-        onPressed: () {
-          _items.insert(itemIndex, item);
-          Get.back();
-          _showSuccessSnackbar('Restored', '${item.name} has been restored', Colors.blue);
-        },
-        child: const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
-    HapticFeedback.mediumImpact();
-  }
-
-  void updateItemCount(String id, int newCount) {
-    final index = _items.indexWhere((item) => item.id == id);
-    if (index != -1) {
-      _items[index] = _items[index].copyWith(count: newCount);
-      HapticFeedback.selectionClick();
-    }
-  }
-
-  void updateItem(String id, {String? name, int? count, Color? color, IconData? icon}) {
-    final index = _items.indexWhere((item) => item.id == id);
-    if (index != -1) {
-      _items[index] = _items[index].copyWith(
-        name: name,
-        count: count,
-        color: color,
-        icon: icon,
-      );
-      _showSuccessSnackbar('Updated', 'Item has been updated', Colors.blue);
-    }
-  }
-
-  void reorderItems(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
-    }
-    final item = _items.removeAt(oldIndex);
-    _items.insert(newIndex, item);
-    HapticFeedback.selectionClick();
-  }
-
-  void clearAllItems() {
-    final itemCount = _items.length;
-    _items.clear();
-    _showSuccessSnackbar('Cleared', '$itemCount items removed from watchlist', Colors.orange);
-  }
-
-  void _showSuccessSnackbar(String title, String message, Color color) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      backgroundColor: color.withOpacity(0.1),
-      colorText: color.withOpacity(0.8),
-      icon: Icon(Icons.check_circle_outline, color: color),
-    );
-  }
-}
 
 // ============================================================================
 // ANIMATION HELPERS
@@ -568,7 +385,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(WatchlistController());
+    final controller = Get.put(PersistentWatchlistController());
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,7 +467,15 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   key: ValueKey(item.id),
                   item: item,
                   index: index,
-                  onRemove: () => controller.removeItem(item.id),
+                  onRemove: () async {
+                    HapticFeedback.mediumImpact();
+                    await controller.removeItem(item.id);
+                    _showSuccessSnackbar(
+                      'Removed from Watchlist',
+                      '${item.name} has been removed from your watchlist',
+                      Colors.red,
+                    );
+                  },
                   onEdit: () => _showEditItemDialog(context, controller, item),
                   onTap: () => _showItemDetails(context, item),
                 );
@@ -662,7 +487,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WatchlistController controller) {
+  Widget _buildEmptyState(BuildContext context, PersistentWatchlistController controller) {
     return Center(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.0, end: 1.0),
@@ -718,11 +543,11 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showAddItemDialog(BuildContext context, WatchlistController controller) {
+  void _showAddItemDialog(BuildContext context, PersistentWatchlistController controller) {
     final nameController = TextEditingController();
     final countController = TextEditingController(text: '0');
-    Color selectedColor = WatchlistController.availableColors.first;
-    IconData selectedIcon = WatchlistController.availableIcons.first;
+    Color selectedColor = availableColors.first;
+    IconData selectedIcon = availableIcons.first;
 
     Get.dialog(
       StatefulBuilder(
@@ -759,7 +584,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: WatchlistController.availableColors.map((color) {
+                    children: availableColors.map((color) {
                       final isSelected = color == selectedColor;
                       return GestureDetector(
                         onTap: () {
@@ -793,7 +618,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: WatchlistController.availableIcons.map((icon) {
+                    children: availableIcons.map((icon) {
                       final isSelected = icon == selectedIcon;
                       return GestureDetector(
                         onTap: () {
@@ -832,7 +657,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final name = nameController.text.trim();
                   final count = int.tryParse(countController.text.trim()) ?? 0;
                   
@@ -843,9 +668,15 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       count: count,
                       color: selectedColor,
                       icon: selectedIcon,
+                      order: 0,
                     );
-                    controller.addItem(newItem);
+                    await controller.addItem(newItem);
                     Get.back();
+                    _showSuccessSnackbar(
+                      'Added to Watchlist',
+                      '${newItem.name} has been added to your watchlist',
+                      Colors.green,
+                    );
                   }
                 },
                 child: const Text('Add'),
@@ -857,7 +688,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showEditItemDialog(BuildContext context, WatchlistController controller, WatchlistItem item) {
+  void _showEditItemDialog(BuildContext context, PersistentWatchlistController controller, WatchlistItem item) {
     final nameController = TextEditingController(text: item.name);
     final countController = TextEditingController(text: item.count.toString());
     Color selectedColor = item.color;
@@ -894,7 +725,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: WatchlistController.availableColors.map((color) {
+                    children: availableColors.map((color) {
                       final isSelected = color == selectedColor;
                       return GestureDetector(
                         onTap: () => setState(() => selectedColor = color),
@@ -920,7 +751,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: WatchlistController.availableIcons.map((icon) {
+                    children: availableIcons.map((icon) {
                       final isSelected = icon == selectedIcon;
                       return GestureDetector(
                         onTap: () => setState(() => selectedIcon = icon),
@@ -952,12 +783,12 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final name = nameController.text.trim();
                   final count = int.tryParse(countController.text) ?? 0;
                   
                   if (name.isNotEmpty) {
-                    controller.updateItem(
+                    await controller.updateItem(
                       item.id,
                       name: name,
                       count: count,
@@ -965,6 +796,11 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       icon: selectedIcon,
                     );
                     Get.back();
+                    _showSuccessSnackbar(
+                      'Updated',
+                      'Item has been updated',
+                      Colors.blue,
+                    );
                   }
                 },
                 child: const Text('Update'),
@@ -1032,7 +868,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Get.back();
-                      _showEditItemDialog(context, Get.find<WatchlistController>(), item);
+                      _showEditItemDialog(context, Get.find<PersistentWatchlistController>(), item);
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit'),
@@ -1053,7 +889,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showClearAllDialog(BuildContext context, WatchlistController controller) {
+  void _showClearAllDialog(BuildContext context, PersistentWatchlistController controller) {
     Get.dialog(
       AlertDialog(
         title: const Text('Clear All Items'),
@@ -1064,9 +900,15 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              controller.clearAllItems();
+            onPressed: () async {
+              final count = controller.items.length;
+              await controller.clearAllItems();
               Get.back();
+              _showSuccessSnackbar(
+                'Cleared',
+                '$count items removed from watchlist',
+                Colors.orange,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -1076,6 +918,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSuccessSnackbar(String title, String message, Color color) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+      backgroundColor: color.withOpacity(0.1),
+      colorText: color.withOpacity(0.8),
+      icon: Icon(Icons.check_circle_outline, color: color),
     );
   }
 }

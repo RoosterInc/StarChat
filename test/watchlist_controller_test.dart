@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:myapp/widgets/complete_persistent_watchlist.dart';
+import 'package:myapp/controllers/persistent_watchlist_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
