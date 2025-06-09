@@ -77,7 +77,7 @@ class WatchlistItem {
 class WatchlistController extends GetxController {
   final RxList<WatchlistItem> _items = <WatchlistItem>[].obs;
   final AuthController _auth = Get.find<AuthController>();
-  static const String _watchlistCollectionKey = 'WATCHLIST_COLLECTION_ID';
+  static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
 
   final RxBool _isLoading = false.obs;
 
@@ -107,7 +107,7 @@ class WatchlistController extends GetxController {
 
   Future<void> _fetchFromDatabase() async {
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -216,7 +216,7 @@ class WatchlistController extends GetxController {
     _items.add(item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -251,7 +251,7 @@ class WatchlistController extends GetxController {
     await _saveItemsToPrefs();
 
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       await _auth.databases.deleteDocument(
         databaseId: dbId,
@@ -290,7 +290,7 @@ class WatchlistController extends GetxController {
       _items[index] = _items[index].copyWith(count: newCount);
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         await _auth.databases.updateDocument(
           databaseId: dbId,
@@ -315,7 +315,7 @@ class WatchlistController extends GetxController {
       );
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         final session = await _auth.account.get();
         final uid = session.$id;
@@ -338,7 +338,7 @@ class WatchlistController extends GetxController {
     _items.insert(newIndex, item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       for (int i = 0; i < _items.length; i++) {
         final it = _items[i];
@@ -358,7 +358,7 @@ class WatchlistController extends GetxController {
     _items.clear();
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
