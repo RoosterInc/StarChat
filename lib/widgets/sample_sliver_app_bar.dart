@@ -23,7 +23,8 @@ class SampleSliverAppBar extends StatelessWidget {
     return SliverAppBar(
       pinned: true,
       expandedHeight: 200,
-      collapsedHeight: kToolbarHeight,
+      collapsedHeight: 0,
+      toolbarHeight: 0,
       automaticallyImplyLeading: false,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -84,7 +85,7 @@ class SampleSliverAppBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 SizedBox(
                   height: 56,
                   child: ListView.separated(
@@ -104,7 +105,7 @@ class SampleSliverAppBar extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
               ],
             ),
           ),
