@@ -312,7 +312,8 @@ class WatchlistController extends GetxController {
           documentId: id,
         );
       } catch (e, st) {
-        logger.e('Error removing item from watchlist', error: e, stackTrace: st);
+        logger.e('Error removing item from watchlist',
+            error: e, stackTrace: st);
         _showErrorSnackbar('Error', 'Failed to remove item');
       }
     }
@@ -540,7 +541,7 @@ class WatchlistAnimations {
         return Transform.translate(
           offset: Offset(30 * (1 - value), 0),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: child,
           ),
         );
@@ -558,10 +559,12 @@ class WatchlistAnimations {
       duration: duration ?? Duration(milliseconds: 400 + (index * 100)),
       curve: Curves.easeOutBack,
       builder: (context, value, _) {
+        final clampedOpacity = value.clamp(0.0, 1.0);
+        final scale = (0.8 + (0.2 * value)).clamp(0.0, double.infinity);
         return Transform.scale(
-          scale: 0.8 + (0.2 * value),
+          scale: scale,
           child: Opacity(
-            opacity: value,
+            opacity: clampedOpacity,
             child: child,
           ),
         );
@@ -984,7 +987,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
         curve: Curves.easeOut,
         builder: (context, value, child) {
           return Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
               child: SingleChildScrollView(
