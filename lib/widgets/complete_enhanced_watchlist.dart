@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
 import '../controllers/auth_controller.dart';
 
 // ============================================================================
@@ -79,6 +80,8 @@ class WatchlistController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
   static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
 
+  final logger = Logger();
+
   final RxBool _isLoading = false.obs;
 
   List<WatchlistItem> get items => _items;
@@ -100,6 +103,8 @@ class WatchlistController extends GetxController {
             cached.map((e) => WatchlistItem.fromJson(jsonDecode(e))).toList());
       }
       await _fetchFromDatabase();
+    } catch (e, st) {
+      logger.e('Error loading watchlist items', error: e, stackTrace: st);
     } finally {
       _isLoading.value = false;
     }
@@ -164,8 +169,8 @@ class WatchlistController extends GetxController {
         }).toList());
       }
       await _saveItemsToPrefs();
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e, st) {
+      logger.e('Error fetching watchlist from database', error: e, stackTrace: st);
     }
   }
 
@@ -183,9 +188,13 @@ class WatchlistController extends GetxController {
   }
 
   Future<void> _saveItemsToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _items.map((e) => jsonEncode(e.toJson())).toList();
-    await prefs.setStringList('watchlist_items', data);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _items.map((e) => jsonEncode(e.toJson())).toList();
+      await prefs.setStringList('watchlist_items', data);
+    } catch (e, st) {
+      logger.e('Error saving watchlist locally', error: e, stackTrace: st);
+    }
   }
 
   // Available colors for new items
@@ -231,8 +240,8 @@ class WatchlistController extends GetxController {
           Permission.delete(Role.user(uid)),
         ],
       );
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e, st) {
+      logger.e('Error adding item to watchlist', error: e, stackTrace: st);
     }
     _showSuccessSnackbar(
       'Added to Watchlist',
@@ -258,8 +267,8 @@ class WatchlistController extends GetxController {
         collectionId: collectionId,
         documentId: id,
       );
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e, st) {
+      logger.e('Error removing item from watchlist', error: e, stackTrace: st);
     }
 
     Get.snackbar(
@@ -298,7 +307,9 @@ class WatchlistController extends GetxController {
           documentId: id,
           data: {'count': newCount},
         );
-      } catch (_) {}
+      } catch (e, st) {
+        logger.e('Error updating item count', error: e, stackTrace: st);
+      }
       HapticFeedback.selectionClick();
     }
   }
@@ -325,7 +336,9 @@ class WatchlistController extends GetxController {
           documentId: id,
           data: _itemDataForDb(_items[index], uid, position: index),
         );
-      } catch (_) {}
+      } catch (e, st) {
+        logger.e('Error updating watchlist item', error: e, stackTrace: st);
+      }
       _showSuccessSnackbar('Updated', 'Item has been updated', Colors.blue);
     }
   }
@@ -349,7 +362,9 @@ class WatchlistController extends GetxController {
           data: {'position': i},
         );
       }
-    } catch (_) {}
+    } catch (e, st) {
+      logger.e('Error reordering watchlist items', error: e, stackTrace: st);
+    }
     HapticFeedback.selectionClick();
   }
 
@@ -374,7 +389,9 @@ class WatchlistController extends GetxController {
           documentId: doc.$id,
         );
       }
-    } catch (_) {}
+    } catch (e, st) {
+      logger.e('Error clearing watchlist', error: e, stackTrace: st);
+    }
     _showSuccessSnackbar(
         'Cleared', '$itemCount items removed from watchlist', Colors.orange);
   }
