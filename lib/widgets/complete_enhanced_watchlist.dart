@@ -317,12 +317,13 @@ class WatchlistController extends GetxController {
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
       final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
       try {
+        final session = await _auth.account.get();
+        final uid = session.$id;
         await _auth.databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: id,
-          data: _itemDataForDb(_items[index], _auth.userId ?? '',
-              position: index),
+          data: _itemDataForDb(_items[index], uid, position: index),
         );
       } catch (_) {}
       _showSuccessSnackbar('Updated', 'Item has been updated', Colors.blue);
@@ -359,9 +360,12 @@ class WatchlistController extends GetxController {
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
     final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
     try {
+      final session = await _auth.account.get();
+      final uid = session.$id;
       final docs = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
+        queries: [Query.equal('userId', uid)],
       );
       for (final doc in docs.documents) {
         await _auth.databases.deleteDocument(
@@ -853,9 +857,12 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             opacity: value,
             child: Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -898,7 +905,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 ],
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );
