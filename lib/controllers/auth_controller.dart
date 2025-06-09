@@ -934,7 +934,10 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     isLoading.value = true;
+    String? uid;
     try {
+      final session = await account.get();
+      uid = session.$id;
       await account.deleteSessions();
     } catch (e) {
       logger.e('Error deleting Appwrite session(s)', error: e);
@@ -942,6 +945,9 @@ class AuthController extends GetxController {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('username');
+        if (uid != null) {
+          await prefs.remove('watchlist_items_$uid');
+        }
       } catch (e) {
         logger.e('Error clearing cached username from SharedPreferences',
             error: e);
