@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
+import '../utils/modern_color_palettes.dart';
 
 import '../models/chat_room.dart';
 import 'auth_controller.dart';
@@ -33,7 +35,7 @@ class ChatController extends GetxController {
     } catch (e) {
       error.value = e.toString();
       logger.e('Error loading chat rooms', error: e);
-      _createMockRashiRooms();
+      _createModernMockRashiRooms();
     } finally {
       isLoading.value = false;
     }
@@ -56,106 +58,78 @@ class ChatController extends GetxController {
     rashiRooms.assignAll(rooms);
   }
 
-  void _createMockRashiRooms() {
-    rashiRooms.assignAll([
-      ChatRoom(
-        id: '1',
-        name: 'Aries Rashi',
-        type: 'rashi',
-        symbol: '♈',
-        dailyMessages: 142,
-        gradientColors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-      ),
-      ChatRoom(
-        id: '2',
-        name: 'Taurus Rashi',
-        type: 'rashi',
-        symbol: '♉',
-        dailyMessages: 98,
-        gradientColors: [Color(0xFF4ECDC4), Color(0xFF7EDDD4)],
-      ),
-      ChatRoom(
-        id: '3',
-        name: 'Gemini Rashi',
-        type: 'rashi',
-        symbol: '♊',
-        dailyMessages: 156,
-        gradientColors: [Color(0xFF45B7D1), Color(0xFF75C7E1)],
-      ),
-      ChatRoom(
-        id: '4',
-        name: 'Cancer Rashi',
-        type: 'rashi',
-        symbol: '♋',
-        dailyMessages: 89,
-        gradientColors: [Color(0xFF96CEB4), Color(0xFFB6DEC4)],
-      ),
-      ChatRoom(
-        id: '5',
-        name: 'Leo Rashi',
-        type: 'rashi',
-        symbol: '♌',
-        dailyMessages: 203,
-        gradientColors: [Color(0xFFFFA726), Color(0xFFFFB74D)],
-      ),
-      ChatRoom(
-        id: '6',
-        name: 'Virgo Rashi',
-        type: 'rashi',
-        symbol: '♍',
-        dailyMessages: 76,
-        gradientColors: [Color(0xFF8E24AA), Color(0xFFAB47BC)],
-      ),
-      ChatRoom(
-        id: '7',
-        name: 'Libra Rashi',
-        type: 'rashi',
-        symbol: '♎',
-        dailyMessages: 134,
-        gradientColors: [Color(0xFFE91E63), Color(0xFFF06292)],
-      ),
-      ChatRoom(
-        id: '8',
-        name: 'Scorpio Rashi',
-        type: 'rashi',
-        symbol: '♏',
-        dailyMessages: 167,
-        gradientColors: [Color(0xFF5D4037), Color(0xFF8D6E63)],
-      ),
-      ChatRoom(
-        id: '9',
-        name: 'Sagittarius Rashi',
-        type: 'rashi',
-        symbol: '♐',
-        dailyMessages: 92,
-        gradientColors: [Color(0xFF00ACC1), Color(0xFF26C6DA)],
-      ),
-      ChatRoom(
-        id: '10',
-        name: 'Capricorn Rashi',
-        type: 'rashi',
-        symbol: '♑',
-        dailyMessages: 118,
-        gradientColors: [Color(0xFF6D4C41), Color(0xFF8D6E63)],
-      ),
-      ChatRoom(
-        id: '11',
-        name: 'Aquarius Rashi',
-        type: 'rashi',
-        symbol: '♒',
-        dailyMessages: 145,
-        gradientColors: [Color(0xFF42A5F5), Color(0xFF64B5F6)],
-      ),
-      ChatRoom(
-        id: '12',
-        name: 'Pisces Rashi',
-        type: 'rashi',
-        symbol: '♓',
-        dailyMessages: 101,
-        gradientColors: [Color(0xFF26A69A), Color(0xFF4DB6AC)],
-      ),
-    ]);
-    logger.i('Created mock rashi rooms');
+  void _createModernMockRashiRooms() {
+    // Modern, sophisticated color palettes based on 2024-2025 UI trends
+    final modernGradients = [
+      // Aries - Warm coral to soft peach
+      [const Color(0xFFFF9A9E), const Color(0xFFFECFEF)],
+
+      // Taurus - Earth green to sage
+      [const Color(0xFF83A4D4), const Color(0xFFB6FBFF)],
+
+      // Gemini - Sky blue to lavender
+      [const Color(0xFFA8EDEA), const Color(0xFFFED6E3)],
+
+      // Cancer - Soft purple to pink
+      [const Color(0xFFD299C2), const Color(0xFFFED6E3)],
+
+      // Leo - Golden yellow to orange
+      [const Color(0xFFFDC830), const Color(0xFFF37335)],
+
+      // Virgo - Mint to teal
+      [const Color(0xFF4FACFE), const Color(0xFF00F2FE)],
+
+      // Libra - Rose to coral
+      [const Color(0xFFF093FB), const Color(0xFFF5576C)],
+
+      // Scorpio - Deep purple to magenta
+      [const Color(0xFF4E54C8), const Color(0xFF8F94FB)],
+
+      // Sagittarius - Turquoise to blue
+      [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+
+      // Capricorn - Gray blue to light blue
+      [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+
+      // Aquarius - Electric blue to cyan
+      [const Color(0xFF2196F3), const Color(0xFF21CBF3)],
+
+      // Pisces - Ocean blue to aqua
+      [const Color(0xFF36D1DC), const Color(0xFF5B86E5)],
+    ];
+
+    final rashiData = [
+      {'name': 'Aries Rashi', 'symbol': '♈', 'messages': 142},
+      {'name': 'Taurus Rashi', 'symbol': '♉', 'messages': 98},
+      {'name': 'Gemini Rashi', 'symbol': '♊', 'messages': 156},
+      {'name': 'Cancer Rashi', 'symbol': '♋', 'messages': 89},
+      {'name': 'Leo Rashi', 'symbol': '♌', 'messages': 203},
+      {'name': 'Virgo Rashi', 'symbol': '♍', 'messages': 76},
+      {'name': 'Libra Rashi', 'symbol': '♎', 'messages': 134},
+      {'name': 'Scorpio Rashi', 'symbol': '♏', 'messages': 167},
+      {'name': 'Sagittarius Rashi', 'symbol': '♐', 'messages': 92},
+      {'name': 'Capricorn Rashi', 'symbol': '♑', 'messages': 118},
+      {'name': 'Aquarius Rashi', 'symbol': '♒', 'messages': 145},
+      {'name': 'Pisces Rashi', 'symbol': '♓', 'messages': 101},
+    ];
+
+    rashiRooms.assignAll(
+      rashiData.asMap().entries.map((entry) {
+        final index = entry.key;
+        final data = entry.value;
+        
+        return ChatRoom(
+          id: (index + 1).toString(),
+          name: data['name'] as String,
+          type: 'rashi',
+          symbol: data['symbol'] as String,
+          dailyMessages: data['messages'] as int,
+          gradientColors: modernGradients[index],
+        );
+      }).toList(),
+    );
+    
+    logger.i('Created modern mock rashi rooms with sophisticated color palettes');
   }
 
   ChatRoom? getRoomById(String roomId) {
@@ -175,5 +149,58 @@ class ChatController extends GetxController {
 
   Future<void> leaveRoom(String roomId) async {
     joinedRooms.removeWhere((r) => r.id == roomId);
+  }
+}
+
+/// Modern glassmorphism utility functions
+class GlassmorphismUtils {
+  /// Create a modern glassmorphism container
+  static Widget createGlassContainer({
+    required Widget child,
+    double borderRadius = 20,
+    double blur = 10,
+    List<Color>? gradientColors,
+    bool isDark = false,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradientColors ?? [
+                Colors.white.withOpacity(isDark ? 0.1 : 0.2),
+                Colors.white.withOpacity(isDark ? 0.05 : 0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1.5,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  /// Create modern elevation shadow
+  static List<BoxShadow> createModernShadow(Color baseColor, double elevation) {
+    return [
+      BoxShadow(
+        color: baseColor.withOpacity(0.2),
+        blurRadius: elevation,
+        offset: Offset(0, elevation / 2),
+      ),
+      BoxShadow(
+        color: Colors.black.withOpacity(0.1),
+        blurRadius: elevation * 2,
+        offset: Offset(0, elevation),
+      ),
+    ];
   }
 }
