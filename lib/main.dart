@@ -7,8 +7,6 @@ import 'pages/set_username_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
-import 'pages/chat_room_page.dart';
-import 'pages/chat_rooms_list_page.dart';
 import 'themes/enhanced_app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -76,18 +74,6 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/sliver',
               page: () => const SliverSamplePage(),
-              binding: AuthBinding(),
-              transition: Transition.rightToLeft,
-            ),
-            GetPage(
-              name: '/chat-room/:roomId',
-              page: () => const ChatRoomPage(),
-              binding: AuthBinding(),
-              transition: Transition.rightToLeft,
-            ),
-            GetPage(
-              name: '/chat-rooms-list',
-              page: () => const ChatRoomsListPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
             ),
