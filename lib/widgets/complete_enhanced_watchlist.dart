@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
 import '../controllers/auth_controller.dart';
 
 // ============================================================================
@@ -77,7 +78,8 @@ class WatchlistItem {
 class WatchlistController extends GetxController {
   final RxList<WatchlistItem> _items = <WatchlistItem>[].obs;
   final AuthController _auth = Get.find<AuthController>();
-  static const String _watchlistCollectionKey = 'WATCHLIST_COLLECTION_ID';
+  static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
+  final logger = Logger();
 
   final RxBool _isLoading = false.obs;
 
@@ -107,7 +109,7 @@ class WatchlistController extends GetxController {
 
   Future<void> _fetchFromDatabase() async {
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -164,8 +166,8 @@ class WatchlistController extends GetxController {
         }).toList());
       }
       await _saveItemsToPrefs();
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e) {
+      logger.e('[Watchlist] Failed to fetch items', error: e);
     }
   }
 
@@ -216,7 +218,7 @@ class WatchlistController extends GetxController {
     _items.add(item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -231,8 +233,8 @@ class WatchlistController extends GetxController {
           Permission.delete(Role.user(uid)),
         ],
       );
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e) {
+      logger.e('[Watchlist] Failed to add item', error: e);
     }
     _showSuccessSnackbar(
       'Added to Watchlist',
@@ -251,15 +253,15 @@ class WatchlistController extends GetxController {
     await _saveItemsToPrefs();
 
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       await _auth.databases.deleteDocument(
         databaseId: dbId,
         collectionId: collectionId,
         documentId: id,
       );
-    } catch (_) {
-      // ignore errors when offline
+    } catch (e) {
+      logger.e('[Watchlist] Failed to remove item', error: e);
     }
 
     Get.snackbar(
@@ -290,7 +292,7 @@ class WatchlistController extends GetxController {
       _items[index] = _items[index].copyWith(count: newCount);
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         await _auth.databases.updateDocument(
           databaseId: dbId,
@@ -298,7 +300,9 @@ class WatchlistController extends GetxController {
           documentId: id,
           data: {'count': newCount},
         );
-      } catch (_) {}
+      } catch (e) {
+        logger.e('[Watchlist] Failed to update count', error: e);
+      }
       HapticFeedback.selectionClick();
     }
   }
@@ -315,16 +319,19 @@ class WatchlistController extends GetxController {
       );
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
+        final session = await _auth.account.get();
+        final uid = session.$id;
         await _auth.databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: id,
-          data: _itemDataForDb(_items[index], _auth.userId ?? '',
-              position: index),
+          data: _itemDataForDb(_items[index], uid, position: index),
         );
-      } catch (_) {}
+      } catch (e) {
+        logger.e('[Watchlist] Failed to update item', error: e);
+      }
       _showSuccessSnackbar('Updated', 'Item has been updated', Colors.blue);
     }
   }
@@ -337,7 +344,7 @@ class WatchlistController extends GetxController {
     _items.insert(newIndex, item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       for (int i = 0; i < _items.length; i++) {
         final it = _items[i];
@@ -348,7 +355,9 @@ class WatchlistController extends GetxController {
           data: {'position': i},
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      logger.e('[Watchlist] Failed to reorder items', error: e);
+    }
     HapticFeedback.selectionClick();
   }
 
@@ -357,11 +366,14 @@ class WatchlistController extends GetxController {
     _items.clear();
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
+      final session = await _auth.account.get();
+      final uid = session.$id;
       final docs = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
+        queries: [Query.equal('userId', uid)],
       );
       for (final doc in docs.documents) {
         await _auth.databases.deleteDocument(
@@ -370,7 +382,9 @@ class WatchlistController extends GetxController {
           documentId: doc.$id,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      logger.e('[Watchlist] Failed to clear items', error: e);
+    }
     _showSuccessSnackbar(
         'Cleared', '$itemCount items removed from watchlist', Colors.orange);
   }
@@ -853,9 +867,12 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             opacity: value,
             child: Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -898,7 +915,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 ],
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );
