@@ -6,8 +6,6 @@ import '../widgets/adaptive_navigation.dart';
 import '../widgets/sample_sliver_app_bar.dart';
 import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
-import '../controllers/chat_controller.dart';
-import '../widgets/chat/chat_room_card.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,7 +26,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     Get.put(WatchlistController(), permanent: true);
-    Get.put(ChatController(), permanent: true);
     _initializeAnimations();
   }
 
@@ -220,8 +217,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             _buildPredictionScoresSection(context),
             SizedBox(height: _getResponsiveSpacing(context)),
-            _buildChatRoomsSection(context),
-            SizedBox(height: _getResponsiveSpacing(context)),
             Expanded(
               child: const EnhancedWatchlistWidget(),
             ),
@@ -303,91 +298,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ],
     );
-  }
-
-  Widget _buildChatRoomsSection(BuildContext context) {
-    final chatController = Get.find<ChatController>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Chat Rooms',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: _getResponsiveFontSize(context, 18),
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            TextButton(
-              onPressed: () => Get.toNamed('/chat-rooms-list'),
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  fontSize: _getResponsiveFontSize(context, 14),
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: _getResponsiveSpacing(context) * 0.5),
-        SizedBox(
-          height: _getResponsiveHeight(context, 100),
-          child: Obx(() {
-            if (chatController.isLoading.value) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (chatController.rashiRooms.isEmpty) {
-              return Center(
-                child: Text(
-                  'No chat rooms available',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              );
-            }
-            return ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              itemCount: chatController.rashiRooms.length,
-              separatorBuilder: (_, __) =>
-                  SizedBox(width: _getResponsiveSpacing(context) * 0.6),
-              itemBuilder: (context, index) {
-                final room = chatController.rashiRooms[index];
-                return TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: Duration(milliseconds: 300 + (index * 100)),
-                  curve: Curves.easeOutBack,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: 0.8 + (0.2 * value),
-                      child: Opacity(
-                        opacity: value,
-                        child: ChatRoomCard(
-                          room: room,
-                          width: _getResponsiveChatCardWidth(context),
-                          onTap: () => Get.toNamed('/chat-room/${room.id}'),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
-  double _getResponsiveChatCardWidth(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= 1024) return 120.0;
-    if (width >= 600) return 110.0;
-    return 100.0;
   }
 
   Widget _buildPredictionCard(
