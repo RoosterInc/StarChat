@@ -22,6 +22,7 @@ class WatchlistItem {
   final Color color;
   final IconData icon;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   WatchlistItem({
     required this.id,
@@ -30,13 +31,16 @@ class WatchlistItem {
     required this.color,
     required this.icon,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    DateTime? updatedAt,
+  })  : createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   WatchlistItem copyWith({
     String? name,
     int? count,
     Color? color,
     IconData? icon,
+    DateTime? updatedAt,
   }) {
     return WatchlistItem(
       id: id,
@@ -45,6 +49,7 @@ class WatchlistItem {
       color: color ?? this.color,
       icon: icon ?? this.icon,
       createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -56,6 +61,7 @@ class WatchlistItem {
       'colorValue': color.value,
       'iconCodePoint': icon.codePoint,
       'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
@@ -67,6 +73,9 @@ class WatchlistItem {
       color: Color(json['colorValue']),
       icon: IconData(json['iconCodePoint'], fontFamily: 'MaterialIcons'),
       createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.parse(json['createdAt']),
     );
   }
 }
@@ -112,7 +121,8 @@ class WatchlistController extends GetxController {
 
   Future<void> _fetchFromDatabase() async {
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -145,7 +155,7 @@ class WatchlistController extends GetxController {
             databaseId: dbId,
             collectionId: collectionId,
             documentId: d.id,
-            data: _itemDataForDb(d, uid, order: i),
+            data: _itemDataForDb(d, uid, order: i, updatedAt: DateTime.now()),
             permissions: [
               Permission.read(Role.user(uid)),
               Permission.update(Role.user(uid)),
@@ -165,17 +175,21 @@ class WatchlistController extends GetxController {
             icon: IconData(data['iconCodePoint'] ?? Icons.star.codePoint,
                 fontFamily: 'MaterialIcons'),
             createdAt: DateTime.parse(data['createdAt']),
+            updatedAt: data['updatedAt'] != null
+                ? DateTime.parse(data['updatedAt'])
+                : DateTime.parse(data['createdAt']),
           );
         }).toList());
       }
       await _saveItemsToPrefs();
     } catch (e, st) {
-      logger.e('Error fetching watchlist from database', error: e, stackTrace: st);
+      logger.e('Error fetching watchlist from database',
+          error: e, stackTrace: st);
     }
   }
 
   Map<String, dynamic> _itemDataForDb(WatchlistItem item, String uid,
-      {int? order}) {
+      {int? order, DateTime? updatedAt}) {
     return {
       'userId': uid,
       'name': item.name,
@@ -183,6 +197,7 @@ class WatchlistController extends GetxController {
       'colorValue': item.color.value,
       'iconCodePoint': item.icon.codePoint,
       'createdAt': item.createdAt.toIso8601String(),
+      'updatedAt': (updatedAt ?? DateTime.now()).toIso8601String(),
       'order': order ?? _items.indexOf(item),
     };
   }
@@ -225,7 +240,8 @@ class WatchlistController extends GetxController {
     _items.add(item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -233,7 +249,7 @@ class WatchlistController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         documentId: item.id,
-        data: _itemDataForDb(item, uid),
+        data: _itemDataForDb(item, uid, updatedAt: DateTime.now()),
         permissions: [
           Permission.read(Role.user(uid)),
           Permission.update(Role.user(uid)),
@@ -260,7 +276,8 @@ class WatchlistController extends GetxController {
     await _saveItemsToPrefs();
 
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       await _auth.databases.deleteDocument(
         databaseId: dbId,
@@ -296,16 +313,21 @@ class WatchlistController extends GetxController {
   Future<void> updateItemCount(String id, int newCount) async {
     final index = _items.indexWhere((item) => item.id == id);
     if (index != -1) {
-      _items[index] = _items[index].copyWith(count: newCount);
+      _items[index] =
+          _items[index].copyWith(count: newCount, updatedAt: DateTime.now());
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         await _auth.databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: id,
-          data: {'count': newCount},
+          data: {
+            'count': newCount,
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         );
       } catch (e, st) {
         logger.e('Error updating item count', error: e, stackTrace: st);
@@ -323,10 +345,12 @@ class WatchlistController extends GetxController {
         count: count,
         color: color,
         icon: icon,
+        updatedAt: DateTime.now(),
       );
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         final session = await _auth.account.get();
         final uid = session.$id;
@@ -334,7 +358,8 @@ class WatchlistController extends GetxController {
           databaseId: dbId,
           collectionId: collectionId,
           documentId: id,
-          data: _itemDataForDb(_items[index], uid, order: index),
+          data: _itemDataForDb(_items[index], uid,
+              order: index, updatedAt: DateTime.now()),
         );
       } catch (e, st) {
         logger.e('Error updating watchlist item', error: e, stackTrace: st);
@@ -351,17 +376,24 @@ class WatchlistController extends GetxController {
     _items.insert(newIndex, item);
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       for (int i = 0; i < _items.length; i++) {
         final it = _items[i];
+        final updatedItem = it.copyWith(updatedAt: DateTime.now());
+        _items[i] = updatedItem;
         await _auth.databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: it.id,
-          data: {'order': i},
+          data: {
+            'order': i,
+            'updatedAt': updatedItem.updatedAt.toIso8601String(),
+          },
         );
       }
+      await _saveItemsToPrefs();
     } catch (e, st) {
       logger.e('Error reordering watchlist items', error: e, stackTrace: st);
     }
@@ -373,7 +405,8 @@ class WatchlistController extends GetxController {
     _items.clear();
     await _saveItemsToPrefs();
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -880,50 +913,51 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceVariant
-                          .withOpacity(0.5),
-                      shape: BoxShape.circle,
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceVariant
+                            .withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.playlist_add,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.playlist_add,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Your watchlist is empty',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Your watchlist is empty',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add items to keep track of your favorites',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withOpacity(0.7),
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddItemDialog(context, controller),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Your First Item'),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add items to keep track of your favorites',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.7),
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddItemDialog(context, controller),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Your First Item'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
         },
       ),
     );
