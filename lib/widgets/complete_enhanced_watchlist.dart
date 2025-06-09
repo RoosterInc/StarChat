@@ -11,6 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import '../controllers/auth_controller.dart';
 
+Color _lightenColor(Color color, [double amount = 0.3]) {
+  assert(amount >= 0 && amount <= 1);
+  return Color.lerp(color, Colors.white, amount)!;
+}
+
 // ============================================================================
 // DATA MODELS
 // ============================================================================
@@ -232,14 +237,14 @@ class WatchlistController extends GetxController {
 
   // Available colors for new items
   static const List<Color> availableColors = [
-    Color(0xFFEC407A),
-    Color(0xFFAB47BC),
-    Color(0xFF42A5F5),
-    Color(0xFF66BB6A),
-    Color(0xFFFF7043),
-    Color(0xFF26A69A),
-    Color(0xFF5C6BC0),
-    Color(0xFFFFCA28),
+    Color(0xFFFFCDD2),
+    Color(0xFFE1BEE7),
+    Color(0xFFBBDEFB),
+    Color(0xFFC8E6C9),
+    Color(0xFFFFE0B2),
+    Color(0xFFB2DFDB),
+    Color(0xFFC5CAE9),
+    Color(0xFFFFF9C4),
   ];
 
   // Available icons for new items
@@ -686,8 +691,8 @@ class SwipeableWatchlistCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
+            _lightenColor(item.color, 0.4),
             item.color,
-            item.color.withOpacity(0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1342,7 +1347,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [item.color, item.color.withOpacity(0.8)],
+                  colors: [
+                    _lightenColor(item.color, 0.4),
+                    item.color,
+                  ],
                 ),
                 shape: BoxShape.circle,
               ),
