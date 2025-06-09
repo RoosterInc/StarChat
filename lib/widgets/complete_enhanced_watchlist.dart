@@ -297,8 +297,31 @@ class WatchlistController extends GetxController {
       colorText: Colors.red.shade800,
       icon: Icon(Icons.delete_outline, color: Colors.red.shade800),
       mainButton: TextButton(
-        onPressed: () {
+        onPressed: () async {
           _items.insert(itemIndex, item);
+          await _saveItemsToPrefs();
+          final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+          final collectionId =
+              dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+          try {
+            final session = await _auth.account.get();
+            final uid = session.$id;
+            await _auth.databases.createDocument(
+              databaseId: dbId,
+              collectionId: collectionId,
+              documentId: item.id,
+              data: _itemDataForDb(item, uid,
+                  order: itemIndex, updatedAt: DateTime.now()),
+              permissions: [
+                Permission.read(Role.user(uid)),
+                Permission.update(Role.user(uid)),
+                Permission.delete(Role.user(uid)),
+              ],
+            );
+          } catch (e, st) {
+            logger.e('Error restoring item to watchlist',
+                error: e, stackTrace: st);
+          }
           Get.back();
           _showSuccessSnackbar(
               'Restored', '${item.name} has been restored', Colors.blue);
