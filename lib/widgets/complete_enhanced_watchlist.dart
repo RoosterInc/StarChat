@@ -121,7 +121,7 @@ class WatchlistController extends GetxController {
         collectionId: collectionId,
         queries: [
           Query.equal('userId', uid),
-          Query.orderAsc('position'),
+          Query.orderAsc('order'),
         ],
       );
       if (result.documents.isEmpty && _items.isEmpty) {
@@ -145,7 +145,7 @@ class WatchlistController extends GetxController {
             databaseId: dbId,
             collectionId: collectionId,
             documentId: d.id,
-            data: _itemDataForDb(d, uid, position: i),
+            data: _itemDataForDb(d, uid, order: i),
             permissions: [
               Permission.read(Role.user(uid)),
               Permission.update(Role.user(uid)),
@@ -175,7 +175,7 @@ class WatchlistController extends GetxController {
   }
 
   Map<String, dynamic> _itemDataForDb(WatchlistItem item, String uid,
-      {int? position}) {
+      {int? order}) {
     return {
       'userId': uid,
       'name': item.name,
@@ -183,7 +183,7 @@ class WatchlistController extends GetxController {
       'colorValue': item.color.value,
       'iconCodePoint': item.icon.codePoint,
       'createdAt': item.createdAt.toIso8601String(),
-      'position': position ?? _items.indexOf(item),
+      'order': order ?? _items.indexOf(item),
     };
   }
 
@@ -334,7 +334,7 @@ class WatchlistController extends GetxController {
           databaseId: dbId,
           collectionId: collectionId,
           documentId: id,
-          data: _itemDataForDb(_items[index], uid, position: index),
+          data: _itemDataForDb(_items[index], uid, order: index),
         );
       } catch (e, st) {
         logger.e('Error updating watchlist item', error: e, stackTrace: st);
@@ -359,7 +359,7 @@ class WatchlistController extends GetxController {
           databaseId: dbId,
           collectionId: collectionId,
           documentId: it.id,
-          data: {'position': i},
+          data: {'order': i},
         );
       }
     } catch (e, st) {
