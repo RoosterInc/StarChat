@@ -4,6 +4,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../controllers/auth_controller.dart';
 
 // ============================================================================
 // DATA MODELS
@@ -16,7 +21,7 @@ class WatchlistItem {
   final Color color;
   final IconData icon;
   final DateTime createdAt;
-  
+
   WatchlistItem({
     required this.id,
     required this.name,
@@ -25,7 +30,7 @@ class WatchlistItem {
     required this.icon,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
-  
+
   WatchlistItem copyWith({
     String? name,
     int? count,
@@ -70,41 +75,118 @@ class WatchlistItem {
 // ============================================================================
 
 class WatchlistController extends GetxController {
-  final RxList<WatchlistItem> _items = <WatchlistItem>[
-    WatchlistItem(
-      id: '1',
-      name: 'Ashwini',
-      count: 0,
-      color: Colors.pinkAccent.shade100,
-      icon: Icons.star,
-    ),
-    WatchlistItem(
-      id: '2',
-      name: 'Bharani',
-      count: 0,
-      color: Colors.purpleAccent.shade100,
-      icon: Icons.favorite,
-    ),
-    WatchlistItem(
-      id: '3',
-      name: 'Krittika',
-      count: 0,
-      color: Colors.blueAccent.shade100,
-      icon: Icons.flash_on,
-    ),
-    WatchlistItem(
-      id: '4',
-      name: 'Rohini',
-      count: 0,
-      color: Colors.greenAccent.shade100,
-      icon: Icons.brightness_high,
-    ),
-  ].obs;
+  final RxList<WatchlistItem> _items = <WatchlistItem>[].obs;
+  final AuthController _auth = Get.find<AuthController>();
+  static const String _watchlistCollectionKey = 'WATCHLIST_COLLECTION_ID';
 
   final RxBool _isLoading = false.obs;
 
   List<WatchlistItem> get items => _items;
   bool get isLoading => _isLoading.value;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadItems();
+  }
+
+  Future<void> _loadItems() async {
+    _isLoading.value = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getStringList('watchlist_items');
+      if (cached != null) {
+        _items.assignAll(
+            cached.map((e) => WatchlistItem.fromJson(jsonDecode(e))).toList());
+      }
+      await _fetchFromDatabase();
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> _fetchFromDatabase() async {
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    try {
+      final session = await _auth.account.get();
+      final uid = session.$id;
+      final result = await _auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderAsc('position'),
+        ],
+      );
+      if (result.documents.isEmpty && _items.isEmpty) {
+        final dummy = [
+          WatchlistItem(
+              id: ID.unique(),
+              name: 'Sample 1',
+              count: 0,
+              color: Colors.pinkAccent.shade100,
+              icon: Icons.star),
+          WatchlistItem(
+              id: ID.unique(),
+              name: 'Sample 2',
+              count: 0,
+              color: Colors.purpleAccent.shade100,
+              icon: Icons.favorite),
+        ];
+        for (int i = 0; i < dummy.length; i++) {
+          final d = dummy[i];
+          await _auth.databases.createDocument(
+            databaseId: dbId,
+            collectionId: collectionId,
+            documentId: d.id,
+            data: _itemDataForDb(d, uid, position: i),
+            permissions: [
+              Permission.read(Role.user(uid)),
+              Permission.update(Role.user(uid)),
+              Permission.delete(Role.user(uid)),
+            ],
+          );
+        }
+        _items.assignAll(dummy);
+      } else {
+        _items.assignAll(result.documents.map((doc) {
+          final data = doc.data;
+          return WatchlistItem(
+            id: doc.$id,
+            name: data['name'] ?? '',
+            count: data['count'] ?? 0,
+            color: Color(data['colorValue'] ?? 0xFFEC407A),
+            icon: IconData(data['iconCodePoint'] ?? Icons.star.codePoint,
+                fontFamily: 'MaterialIcons'),
+            createdAt: DateTime.parse(data['createdAt']),
+          );
+        }).toList());
+      }
+      await _saveItemsToPrefs();
+    } catch (_) {
+      // ignore errors when offline
+    }
+  }
+
+  Map<String, dynamic> _itemDataForDb(WatchlistItem item, String uid,
+      {int? position}) {
+    return {
+      'userId': uid,
+      'name': item.name,
+      'count': item.count,
+      'colorValue': item.color.value,
+      'iconCodePoint': item.icon.codePoint,
+      'createdAt': item.createdAt.toIso8601String(),
+      'position': position ?? _items.indexOf(item),
+    };
+  }
+
+  Future<void> _saveItemsToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _items.map((e) => jsonEncode(e.toJson())).toList();
+    await prefs.setStringList('watchlist_items', data);
+  }
 
   // Available colors for new items
   static const List<Color> availableColors = [
@@ -130,8 +212,28 @@ class WatchlistController extends GetxController {
     Icons.local_fire_department,
   ];
 
-  void addItem(WatchlistItem item) {
+  Future<void> addItem(WatchlistItem item) async {
     _items.add(item);
+    await _saveItemsToPrefs();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    try {
+      final session = await _auth.account.get();
+      final uid = session.$id;
+      await _auth.databases.createDocument(
+        databaseId: dbId,
+        collectionId: collectionId,
+        documentId: item.id,
+        data: _itemDataForDb(item, uid),
+        permissions: [
+          Permission.read(Role.user(uid)),
+          Permission.update(Role.user(uid)),
+          Permission.delete(Role.user(uid)),
+        ],
+      );
+    } catch (_) {
+      // ignore errors when offline
+    }
     _showSuccessSnackbar(
       'Added to Watchlist',
       '${item.name} has been added to your watchlist',
@@ -140,13 +242,26 @@ class WatchlistController extends GetxController {
     HapticFeedback.lightImpact();
   }
 
-  void removeItem(String id) {
+  Future<void> removeItem(String id) async {
     final itemIndex = _items.indexWhere((item) => item.id == id);
     if (itemIndex == -1) return;
-    
+
     final item = _items[itemIndex];
     _items.removeAt(itemIndex);
-    
+    await _saveItemsToPrefs();
+
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    try {
+      await _auth.databases.deleteDocument(
+        databaseId: dbId,
+        collectionId: collectionId,
+        documentId: id,
+      );
+    } catch (_) {
+      // ignore errors when offline
+    }
+
     Get.snackbar(
       'Removed from Watchlist',
       '${item.name} has been removed from your watchlist',
@@ -159,23 +274,37 @@ class WatchlistController extends GetxController {
         onPressed: () {
           _items.insert(itemIndex, item);
           Get.back();
-          _showSuccessSnackbar('Restored', '${item.name} has been restored', Colors.blue);
+          _showSuccessSnackbar(
+              'Restored', '${item.name} has been restored', Colors.blue);
         },
-        child: const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
+        child:
+            const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
     HapticFeedback.mediumImpact();
   }
 
-  void updateItemCount(String id, int newCount) {
+  Future<void> updateItemCount(String id, int newCount) async {
     final index = _items.indexWhere((item) => item.id == id);
     if (index != -1) {
       _items[index] = _items[index].copyWith(count: newCount);
+      await _saveItemsToPrefs();
+      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      try {
+        await _auth.databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: id,
+          data: {'count': newCount},
+        );
+      } catch (_) {}
       HapticFeedback.selectionClick();
     }
   }
 
-  void updateItem(String id, {String? name, int? count, Color? color, IconData? icon}) {
+  Future<void> updateItem(String id,
+      {String? name, int? count, Color? color, IconData? icon}) async {
     final index = _items.indexWhere((item) => item.id == id);
     if (index != -1) {
       _items[index] = _items[index].copyWith(
@@ -184,23 +313,66 @@ class WatchlistController extends GetxController {
         color: color,
         icon: icon,
       );
+      await _saveItemsToPrefs();
+      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+      try {
+        await _auth.databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: id,
+          data: _itemDataForDb(_items[index], _auth.userId ?? '',
+              position: index),
+        );
+      } catch (_) {}
       _showSuccessSnackbar('Updated', 'Item has been updated', Colors.blue);
     }
   }
 
-  void reorderItems(int oldIndex, int newIndex) {
+  Future<void> reorderItems(int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
     final item = _items.removeAt(oldIndex);
     _items.insert(newIndex, item);
+    await _saveItemsToPrefs();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    try {
+      for (int i = 0; i < _items.length; i++) {
+        final it = _items[i];
+        await _auth.databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: it.id,
+          data: {'position': i},
+        );
+      }
+    } catch (_) {}
     HapticFeedback.selectionClick();
   }
 
-  void clearAllItems() {
+  Future<void> clearAllItems() async {
     final itemCount = _items.length;
     _items.clear();
-    _showSuccessSnackbar('Cleared', '$itemCount items removed from watchlist', Colors.orange);
+    await _saveItemsToPrefs();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist';
+    try {
+      final docs = await _auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+      );
+      for (final doc in docs.documents) {
+        await _auth.databases.deleteDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: doc.$id,
+        );
+      }
+    } catch (_) {}
+    _showSuccessSnackbar(
+        'Cleared', '$itemCount items removed from watchlist', Colors.orange);
   }
 
   void _showSuccessSnackbar(String title, String message, Color color) {
@@ -298,7 +470,8 @@ class WatchlistAnimations {
                 borderRadius: BorderRadius.circular(20),
                 onTap: onPressed,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -458,7 +631,8 @@ class SwipeableWatchlistCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -484,7 +658,7 @@ class SwipeableWatchlistCard extends StatelessWidget {
     final color = isLeft ? Colors.blue : Colors.red;
     final icon = isLeft ? Icons.edit : Icons.delete;
     final text = isLeft ? 'Edit' : 'Remove';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -520,31 +694,33 @@ class SwipeableWatchlistCard extends StatelessWidget {
 
   Future<bool> _showDeleteConfirmation(BuildContext context) async {
     return await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Remove from Watchlist'),
-        content: Text('Are you sure you want to remove "${item.name}" from your watchlist?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Cancel'),
+          AlertDialog(
+            title: const Text('Remove from Watchlist'),
+            content: Text(
+                'Are you sure you want to remove "${item.name}" from your watchlist?'),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Get.back(result: true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Remove'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Get.back(result: true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 7) {
       return '${date.day}/${date.month}/${date.year}';
     } else if (difference.inDays > 0) {
@@ -569,7 +745,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(WatchlistController());
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -579,9 +755,9 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             Text(
               'Watch List',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             Row(
               children: [
@@ -592,11 +768,14 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                           onTap: () => _showClearAllDialog(context, controller),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             child: Icon(
                               Icons.clear_all,
                               size: 20,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -616,7 +795,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             if (controller.items.isEmpty) {
               return _buildEmptyState(context, controller);
             }
-            
+
             return ReorderableListView.builder(
               onReorder: controller.reorderItems,
               itemCount: controller.items.length,
@@ -662,7 +841,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WatchlistController controller) {
+  Widget _buildEmptyState(
+      BuildContext context, WatchlistController controller) {
     return Center(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.0, end: 1.0),
@@ -679,7 +859,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceVariant
+                          .withOpacity(0.5),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -692,15 +875,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   Text(
                     'Your watchlist is empty',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Add items to keep track of your favorites',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.7),
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -718,7 +904,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showAddItemDialog(BuildContext context, WatchlistController controller) {
+  void _showAddItemDialog(
+      BuildContext context, WatchlistController controller) {
     final nameController = TextEditingController();
     final countController = TextEditingController(text: '0');
     Color selectedColor = WatchlistController.availableColors.first;
@@ -754,7 +941,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
-                  const Text('Choose Color:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Choose Color:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -775,20 +963,27 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(color: Colors.black, width: 3)
-                                : Border.all(color: Colors.grey.shade300, width: 1),
+                                : Border.all(
+                                    color: Colors.grey.shade300, width: 1),
                             boxShadow: isSelected
-                                ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)]
+                                ? [
+                                    BoxShadow(
+                                        color: color.withOpacity(0.5),
+                                        blurRadius: 8)
+                                  ]
                                 : null,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check, color: Colors.white, size: 20)
+                              ? const Icon(Icons.check,
+                                  color: Colors.white, size: 20)
                               : null,
                         ),
                       );
                     }).toList(),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Choose Icon:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Choose Icon:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -810,14 +1005,19 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                                 : Theme.of(context).colorScheme.surfaceVariant,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+                                ? Border.all(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 2)
                                 : null,
                           ),
                           child: Icon(
                             icon,
                             color: isSelected
                                 ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                           ),
                         ),
                       );
@@ -835,7 +1035,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 onPressed: () {
                   final name = nameController.text.trim();
                   final count = int.tryParse(countController.text.trim()) ?? 0;
-                  
+
                   if (name.isNotEmpty) {
                     final newItem = WatchlistItem(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -857,12 +1057,13 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showEditItemDialog(BuildContext context, WatchlistController controller, WatchlistItem item) {
+  void _showEditItemDialog(BuildContext context, WatchlistController controller,
+      WatchlistItem item) {
     final nameController = TextEditingController(text: item.name);
     final countController = TextEditingController(text: item.count.toString());
     Color selectedColor = item.color;
     IconData selectedIcon = item.icon;
-    
+
     Get.dialog(
       StatefulBuilder(
         builder: (context, setState) {
@@ -890,7 +1091,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
-                  const Text('Color:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Color:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -916,7 +1118,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                     }).toList(),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Icon:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Icon:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -937,7 +1140,9 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                             icon,
                             color: isSelected
                                 ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                           ),
                         ),
                       );
@@ -955,7 +1160,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 onPressed: () {
                   final name = nameController.text.trim();
                   final count = int.tryParse(countController.text) ?? 0;
-                  
+
                   if (name.isNotEmpty) {
                     controller.updateItem(
                       item.id,
@@ -991,7 +1196,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1015,15 +1223,15 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             Text(
               'Count: ${item.count}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: 4),
             Text(
               'Added ${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: 24),
             Row(
@@ -1032,7 +1240,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Get.back();
-                      _showEditItemDialog(context, Get.find<WatchlistController>(), item);
+                      _showEditItemDialog(
+                          context, Get.find<WatchlistController>(), item);
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit'),
@@ -1053,11 +1262,13 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showClearAllDialog(BuildContext context, WatchlistController controller) {
+  void _showClearAllDialog(
+      BuildContext context, WatchlistController controller) {
     Get.dialog(
       AlertDialog(
         title: const Text('Clear All Items'),
-        content: const Text('Are you sure you want to remove all items from your watchlist? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to remove all items from your watchlist? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
