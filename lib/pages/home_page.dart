@@ -7,7 +7,8 @@ import '../widgets/sample_sliver_app_bar.dart';
 import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
 import '../controllers/chat_controller.dart';
-import '../widgets/chat/chat_room_card.dart';
+import '../widgets/chat/modern_chat_room_card.dart';
+import '../utils/modern_color_palettes.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -420,7 +421,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       scale: scale,
                       child: Opacity(
                         opacity: clampedValue,
-                        child: ChatRoomCard(
+                        child: ModernChatRoomCard(
                           room: room,
                           width: _getResponsiveChatCardWidth(context),
                           onTap: () => Get.toNamed('/chat-room/${room.id}'),
