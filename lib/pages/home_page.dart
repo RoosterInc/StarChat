@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         return Transform.translate(
           offset: Offset(50 * (1 - value), 0),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: ListTile(
               leading: Icon(icon),
               title: Text(title),
@@ -294,7 +294,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 curve: Curves.easeOutBack,
                 builder: (context, value, child) {
                   return Transform.scale(
-                    scale: value,
+                    scale: value.clamp(0.0, 1.0),
                     child: _buildPredictionCard(
                         context, names[index], index + 1, color),
                   );
@@ -414,10 +414,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   duration: Duration(milliseconds: 300 + (index * 100)),
                   curve: Curves.easeOutBack,
                   builder: (context, value, child) {
+                    final clampedValue = value.clamp(0.0, 1.0);
+                    final scale = 0.8 + (0.2 * clampedValue);
                     return Transform.scale(
-                      scale: 0.8 + (0.2 * value),
+                      scale: scale,
                       child: Opacity(
-                        opacity: value,
+                        opacity: clampedValue,
                         child: ChatRoomCard(
                           room: room,
                           width: _getResponsiveChatCardWidth(context),
