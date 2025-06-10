@@ -35,7 +35,6 @@ void main() {
       name: 'Test Item',
       count: 0,
       color: Colors.red,
-      icon: Icons.star,
     ));
 
     expect(controller.items.length, 1);
@@ -50,7 +49,6 @@ void main() {
       name: 'Undo Item',
       count: 0,
       color: Colors.blue,
-      icon: Icons.star,
     );
     await controller.addItem(item);
     expect(controller.items.length, 1);
@@ -72,7 +70,6 @@ void main() {
       name: 'Persisted',
       count: 0,
       color: Colors.green,
-      icon: Icons.star,
     );
     await controller.addItem(item);
 
