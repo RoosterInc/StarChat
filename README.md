@@ -26,6 +26,8 @@ APPWRITE_DATABASE_ID=StarChat_DB
 USER_PROFILES_COLLECTION_ID=user_profiles
 PROFILE_PICTURES_BUCKET_ID=profile_pics
 WATCHLIST_ITEMS_COLLECTION_ID=watchlist_items
+PLANETARY_HOUSES_COLLECTION_ID=planetary_houses
+PLANET_HOUSE_INTERPRETATIONS_COLLECTION_ID=planet_house_interpretations
 APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 
@@ -40,4 +42,25 @@ python update_collection_permissions.py
 ```
 
 Ensure the environment variables above are exported or stored in your `.env` file before running the script.
+
+## Planet Images
+
+The UI displays icons for the nine Vedic planets. Due to repository
+restrictions, the image files are not included in source control. Create the
+directory `assets/images/planets/` and place the following PNG files in it:
+
+```
+sun.png
+moon.png
+mars.png
+mercury.png
+jupiter.png
+venus.png
+saturn.png
+rahu.png
+ketu.png
+```
+
+High quality 128&times;128 transparent icons are recommended. A `.gitkeep` file
+is tracked in the folder so the path exists even without the images.
 
