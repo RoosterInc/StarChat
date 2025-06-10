@@ -360,6 +360,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Widget _buildChatRoomsSection(BuildContext context) {
     final chatController = Get.find<ChatController>();
+
+    double getOptimalHeight() {
+      final width = MediaQuery.of(context).size.width;
+      if (width >= 1024) return 200.0;
+      if (width >= 600) return 160.0;
+      return 140.0;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,8 +395,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         SizedBox(height: _getResponsiveSpacing(context) * 0.5),
         ConstrainedBox(
-          constraints:
-              BoxConstraints(maxHeight: _getResponsiveHeight(context, 90)),
+          constraints: BoxConstraints(
+            maxHeight: getOptimalHeight(),
+            minHeight: 140.0,
+          ),
           child: Obx(() {
             if (chatController.isLoading.value) {
               return const Center(child: CircularProgressIndicator());
