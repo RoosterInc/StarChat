@@ -8,6 +8,7 @@ import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
 import '../controllers/chat_controller.dart';
 import '../widgets/chat/modern_chat_room_card.dart';
+import '../widgets/responsive_sizes.dart';
 import '../utils/modern_color_palettes.dart';
 import 'empty_page.dart';
 
@@ -439,10 +440,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   double _getResponsiveChatCardWidth(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= 1024) return 120.0;
-    if (width >= 600) return 110.0;
-    return 100.0;
+    final availableWidth = MediaQuery.of(context).size.width;
+    return ResponsiveSizes.chatRoomItemWidth(context, availableWidth);
   }
 
   double _getResponsiveHeight(BuildContext context, double baseHeight) {
