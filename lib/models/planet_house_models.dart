@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/parsing_utils.dart';
 
 class PlanetHousePosition {
   final String date;
@@ -47,24 +48,23 @@ class PlanetHousePosition {
     return PlanetHousePosition(
       date: json['date'] ?? '',
       dateKey: json['date_key'] ?? '',
-      year: json['year'] ?? 0,
-      month: json['month'] ?? 0,
-      day: json['day'] ?? 0,
+      year: ParsingUtils.parseInt(json['year']),
+      month: ParsingUtils.parseInt(json['month']),
+      day: ParsingUtils.parseInt(json['day']),
       ascendantSign: json['ascendant_sign'] ?? '',
       ascendantSymbol: json['ascendant_symbol'] ?? '',
-      ascendantIndex: json['ascendant_index'] ?? 0,
+      ascendantIndex: ParsingUtils.parseInt(json['ascendant_index']),
       planet: json['planet'] ?? '',
       planetSign: json['planet_sign'] ?? '',
       planetSignSymbol: json['planet_sign_symbol'] ?? '',
-      planetDegrees: (json['planet_degrees'] ?? 0.0).toDouble(),
-      planetLongitude: (json['planet_longitude'] ?? 0.0).toDouble(),
-      houseNumber: json['house_number'] ?? 0,
+      planetDegrees: ParsingUtils.parseDouble(json['planet_degrees']),
+      planetLongitude: ParsingUtils.parseDouble(json['planet_longitude']),
+      houseNumber: ParsingUtils.parseInt(json['house_number']),
       houseName: json['house_name'] ?? '',
       houseArea: json['house_area'] ?? '',
       houseMeaning: json['house_meaning'] ?? '',
       description: json['description'] ?? '',
-      generatedAt: DateTime.parse(
-          json['generated_at'] ?? DateTime.now().toIso8601String()),
+      generatedAt: ParsingUtils.parseDateTime(json['generated_at']),
     );
   }
 
@@ -150,13 +150,13 @@ class PlanetHouseInterpretation {
     return PlanetHouseInterpretation(
       ascendantSign: json['ascendant_sign'] ?? '',
       ascendantSymbol: json['ascendant_symbol'] ?? '',
-      ascendantIndex: json['ascendant_index'] ?? 0,
+      ascendantIndex: ParsingUtils.parseInt(json['ascendant_index']),
       planet: json['planet'] ?? '',
-      houseNumber: json['house_number'] ?? 0,
+      houseNumber: ParsingUtils.parseInt(json['house_number']),
       houseName: json['house_name'] ?? '',
       houseArea: json['house_area'] ?? '',
       overallEffect: json['overall_effect'] ?? '',
-      strengthRating: json['strength_rating'] ?? 0,
+      strengthRating: ParsingUtils.parseInt(json['strength_rating']),
       positiveEffects: json['positive_effects'] ?? '',
       negativeEffects: json['negative_effects'] ?? '',
       careerImpact: json['career_impact'] ?? '',
@@ -171,8 +171,7 @@ class PlanetHouseInterpretation {
       gemstoneRecommendation: json['gemstone_recommendation'] ?? '',
       mantraRecommendation: json['mantra_recommendation'] ?? '',
       summary: json['summary'] ?? '',
-      generatedAt: DateTime.parse(
-          json['generated_at'] ?? DateTime.now().toIso8601String()),
+      generatedAt: ParsingUtils.parseDateTime(json['generated_at']),
     );
   }
 

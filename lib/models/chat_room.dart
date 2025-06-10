@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/parsing_utils.dart';
 
 class ChatRoom {
   final String id;
@@ -36,7 +37,7 @@ class ChatRoom {
         Color(json['color_secondary'] ?? 0xFFFF8E8E),
       ],
       lastMessageAt: json['last_message_at'] != null
-          ? DateTime.parse(json['last_message_at'])
+          ? ParsingUtils.parseDateTime(json['last_message_at'])
           : null,
       isActive: json['is_active'] ?? true,
     );
