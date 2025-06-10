@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/enhanced_responsive_layout.dart';
 import '../widgets/adaptive_navigation.dart';
-import '../widgets/sample_sliver_app_bar.dart';
+import '../widgets/enhanced_sliver_app_bar.dart';
+import '../controllers/enhanced_planet_house_controller.dart';
 import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
 import '../controllers/chat_controller.dart';
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     Get.put(WatchlistController(), permanent: true);
+    Get.put(EnhancedPlanetHouseController(), permanent: true);
     _initializeAnimations();
   }
 
@@ -188,7 +190,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       length: 5,
       child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          const SampleSliverAppBar(),
+          const EnhancedSliverAppBar(),
         ],
         body: TabBarView(
           children: [

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/chat_controller.dart';
+import '../controllers/enhanced_planet_house_controller.dart';
 
 class AuthBinding extends Bindings {
   @override
@@ -11,6 +12,9 @@ class AuthBinding extends Bindings {
     Get.put<AuthController>(AuthController(), permanent: true);
     if (!Get.isRegistered<ChatController>()) {
       Get.put(ChatController(), permanent: true);
+    }
+    if (!Get.isRegistered<EnhancedPlanetHouseController>()) {
+      Get.put(EnhancedPlanetHouseController(), permanent: true);
     }
   }
 }
