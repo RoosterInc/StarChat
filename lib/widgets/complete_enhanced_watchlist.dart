@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/parsing_utils.dart';
 
 Color _lightenColor(Color color, [double amount = 0.3]) {
   assert(amount >= 0 && amount <= 1);
@@ -77,10 +78,10 @@ class WatchlistItem {
       count: json['count'],
       color: Color(json['colorValue']),
       icon: IconData(json['iconCodePoint'], fontFamily: 'MaterialIcons'),
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: ParsingUtils.parseDateTime(json['createdAt']),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.parse(json['createdAt']),
+          ? ParsingUtils.parseDateTime(json['updatedAt'])
+          : ParsingUtils.parseDateTime(json['createdAt']),
     );
   }
 }
@@ -196,10 +197,10 @@ class WatchlistController extends GetxController {
             color: Color(data['colorValue'] ?? 0xFFEC407A),
             icon: IconData(data['iconCodePoint'] ?? Icons.star.codePoint,
                 fontFamily: 'MaterialIcons'),
-            createdAt: DateTime.parse(data['createdAt']),
+            createdAt: ParsingUtils.parseDateTime(data['createdAt']),
             updatedAt: data['updatedAt'] != null
-                ? DateTime.parse(data['updatedAt'])
-                : DateTime.parse(data['createdAt']),
+                ? ParsingUtils.parseDateTime(data['updatedAt'])
+                : ParsingUtils.parseDateTime(data['createdAt']),
           );
         }).toList());
       }
