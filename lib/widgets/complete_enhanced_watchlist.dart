@@ -21,12 +21,50 @@ Color _lightenColor(Color color, [double amount = 0.3]) {
 // DATA MODELS
 // ============================================================================
 
+class ChatRoomOption {
+  final String id;
+  final String name;
+  final String type;
+  final String? rashiId;
+  final String? nakshatraId;
+  final String? combinationKey;
+  final int dailyMessages;
+  final Color color;
+
+  ChatRoomOption({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.rashiId,
+    this.nakshatraId,
+    this.combinationKey,
+    required this.dailyMessages,
+    required this.color,
+  });
+
+  factory ChatRoomOption.fromJson(Map<String, dynamic> json) {
+    return ChatRoomOption(
+      id: json['\$id'] ?? json['id'],
+      name: json['name'],
+      type: json['type'],
+      rashiId: json['rashi_id'],
+      nakshatraId: json['nakshatra_id'],
+      combinationKey: json['combination_key'],
+      dailyMessages: json['daily_messages'] ?? json['total_messages_today'] ?? 0,
+      color: Color(json['color_primary'] ?? 0xFF6750A4),
+    );
+  }
+}
+
 class WatchlistItem {
   final String id;
   final String name;
   final int count;
   final Color color;
-  final IconData icon;
+  final String? rashiId;
+  final String? nakshatraId;
+  final String? combinationKey;
+  final String? chatRoomId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,7 +73,10 @@ class WatchlistItem {
     required this.name,
     required this.count,
     required this.color,
-    required this.icon,
+    this.rashiId,
+    this.nakshatraId,
+    this.combinationKey,
+    this.chatRoomId,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -45,7 +86,10 @@ class WatchlistItem {
     String? name,
     int? count,
     Color? color,
-    IconData? icon,
+    String? rashiId,
+    String? nakshatraId,
+    String? combinationKey,
+    String? chatRoomId,
     DateTime? updatedAt,
   }) {
     return WatchlistItem(
@@ -53,7 +97,10 @@ class WatchlistItem {
       name: name ?? this.name,
       count: count ?? this.count,
       color: color ?? this.color,
-      icon: icon ?? this.icon,
+      rashiId: rashiId ?? this.rashiId,
+      nakshatraId: nakshatraId ?? this.nakshatraId,
+      combinationKey: combinationKey ?? this.combinationKey,
+      chatRoomId: chatRoomId ?? this.chatRoomId,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -65,7 +112,10 @@ class WatchlistItem {
       'name': name,
       'count': count,
       'colorValue': color.value,
-      'iconCodePoint': icon.codePoint,
+      'rashiId': rashiId,
+      'nakshatraId': nakshatraId,
+      'combinationKey': combinationKey,
+      'chatRoomId': chatRoomId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -77,7 +127,10 @@ class WatchlistItem {
       name: json['name'],
       count: json['count'],
       color: Color(json['colorValue']),
-      icon: IconData(json['iconCodePoint'], fontFamily: 'MaterialIcons'),
+      rashiId: json['rashiId'],
+      nakshatraId: json['nakshatraId'],
+      combinationKey: json['combinationKey'],
+      chatRoomId: json['chatRoomId'],
       createdAt: ParsingUtils.parseDateTime(json['createdAt']),
       updatedAt: json['updatedAt'] != null
           ? ParsingUtils.parseDateTime(json['updatedAt'])
@@ -95,6 +148,9 @@ class WatchlistController extends GetxController {
   final bool testing;
 
   final RxList<WatchlistItem> _items = <WatchlistItem>[].obs;
+  final RxList<ChatRoomOption> _rashiOptions = <ChatRoomOption>[].obs;
+  final RxList<ChatRoomOption> _nakshatraOptions = <ChatRoomOption>[].obs;
+  final RxBool _isLoadingOptions = false.obs;
   final AuthController _auth = Get.find<AuthController>();
   static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
 
@@ -111,15 +167,61 @@ class WatchlistController extends GetxController {
     return 'watchlist_items_${uid ?? 'guest'}';
   }
 
+  Future<void> _loadChatRoomOptions() async {
+    if (testing) return;
+    _isLoadingOptions.value = true;
+    try {
+      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+      final rashiResult = await _auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: 'chat_rooms',
+        queries: [
+          Query.equal('type', 'rashi'),
+          Query.equal('is_active', true),
+          Query.orderAsc('order'),
+        ],
+      );
+      _rashiOptions.assignAll(
+        rashiResult.documents.map((e) => ChatRoomOption.fromJson(e.data)).toList(),
+      );
+
+      final nakshatraResult = await _auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: 'chat_rooms',
+        queries: [
+          Query.equal('type', 'nakshatra'),
+          Query.equal('is_active', true),
+          Query.orderAsc('order'),
+        ],
+      );
+      _nakshatraOptions.assignAll(
+        nakshatraResult.documents.map((e) => ChatRoomOption.fromJson(e.data)).toList(),
+      );
+    } catch (e, st) {
+      logger.e('Error loading chat room options', error: e, stackTrace: st);
+    } finally {
+      _isLoadingOptions.value = false;
+    }
+  }
+
+  List<ChatRoomOption> getNakshatraOptionsForRashi(String? rashiId) {
+    if (rashiId == null) return [];
+    return _nakshatraOptions.where((n) => n.rashiId == rashiId).toList();
+  }
+
   final RxBool _isLoading = false.obs;
 
   List<WatchlistItem> get items => _items;
+  List<ChatRoomOption> get rashiOptions => _rashiOptions;
+  List<ChatRoomOption> get nakshatraOptions => _nakshatraOptions;
   bool get isLoading => _isLoading.value;
+  bool get isLoadingOptions => _isLoadingOptions.value;
 
   @override
   void onInit() {
     super.onInit();
     _loadItems();
+    _loadChatRoomOptions();
   }
 
   Future<void> _loadItems() async {
@@ -134,6 +236,7 @@ class WatchlistController extends GetxController {
       }
       if (!testing) {
         await _fetchFromDatabase();
+        await _updateItemCounts();
       }
     } catch (e, st) {
       logger.e('Error loading watchlist items', error: e, stackTrace: st);
@@ -160,17 +263,17 @@ class WatchlistController extends GetxController {
       if (result.documents.isEmpty && _items.isEmpty) {
         final dummy = [
           WatchlistItem(
-              id: ID.unique(),
-              name: 'Sample 1',
-              count: 0,
-              color: Colors.pinkAccent.shade100,
-              icon: Icons.star),
+            id: ID.unique(),
+            name: 'Sample 1',
+            count: 0,
+            color: Colors.pinkAccent.shade100,
+          ),
           WatchlistItem(
-              id: ID.unique(),
-              name: 'Sample 2',
-              count: 0,
-              color: Colors.purpleAccent.shade100,
-              icon: Icons.favorite),
+            id: ID.unique(),
+            name: 'Sample 2',
+            count: 0,
+            color: Colors.purpleAccent.shade100,
+          ),
         ];
         for (int i = 0; i < dummy.length; i++) {
           final d = dummy[i];
@@ -195,8 +298,10 @@ class WatchlistController extends GetxController {
             name: data['name'] ?? '',
             count: data['count'] ?? 0,
             color: Color(data['colorValue'] ?? 0xFFEC407A),
-            icon: IconData(data['iconCodePoint'] ?? Icons.star.codePoint,
-                fontFamily: 'MaterialIcons'),
+            rashiId: data['rashiId'],
+            nakshatraId: data['nakshatraId'],
+            combinationKey: data['combinationKey'],
+            chatRoomId: data['chatRoomId'],
             createdAt: ParsingUtils.parseDateTime(data['createdAt']),
             updatedAt: data['updatedAt'] != null
                 ? ParsingUtils.parseDateTime(data['updatedAt'])
@@ -205,10 +310,53 @@ class WatchlistController extends GetxController {
         }).toList());
       }
       await _saveItemsToPrefs();
+      await _updateItemCounts();
     } catch (e, st) {
       logger.e('Error fetching watchlist from database',
           error: e, stackTrace: st);
     }
+  }
+
+  Future<void> _updateItemCounts() async {
+    if (testing) return;
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    for (int i = 0; i < _items.length; i++) {
+      final item = _items[i];
+      try {
+        List<String> queries = [Query.equal('is_active', true)];
+        if (item.combinationKey != null) {
+          queries.add(Query.equal('combination_key', item.combinationKey!));
+        } else if (item.chatRoomId != null) {
+          final doc = await _auth.databases.getDocument(
+            databaseId: dbId,
+            collectionId: 'chat_rooms',
+            documentId: item.chatRoomId!,
+          );
+          _items[i] = item.copyWith(count: doc.data['total_messages_today'] ?? doc.data['daily_messages'] ?? 0);
+          continue;
+        } else {
+          if (item.rashiId != null) queries.add(Query.equal('rashi_id', item.rashiId!));
+          if (item.nakshatraId != null) queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+        }
+        final res = await _auth.databases.listDocuments(
+          databaseId: dbId,
+          collectionId: 'chat_rooms',
+          queries: queries,
+        );
+        if (res.documents.isNotEmpty) {
+          final count = res.documents.first.data['total_messages_today'] ?? res.documents.first.data['daily_messages'] ?? 0;
+          _items[i] = item.copyWith(count: count);
+        }
+      } catch (e, st) {
+        logger.e('Error updating count for item ${item.name}', error: e, stackTrace: st);
+      }
+    }
+    await _saveItemsToPrefs();
+  }
+
+  Future<void> refreshItemCounts() async {
+    await _updateItemCounts();
+    _showSuccessSnackbar('Refreshed', 'Message counts updated', Colors.blue);
   }
 
   Map<String, dynamic> _itemDataForDb(WatchlistItem item, String uid,
@@ -218,7 +366,10 @@ class WatchlistController extends GetxController {
       'name': item.name,
       'count': item.count,
       'colorValue': item.color.value,
-      'iconCodePoint': item.icon.codePoint,
+      'rashiId': item.rashiId,
+      'nakshatraId': item.nakshatraId,
+      'combinationKey': item.combinationKey,
+      'chatRoomId': item.chatRoomId,
       'createdAt': item.createdAt.toIso8601String(),
       'updatedAt': (updatedAt ?? DateTime.now()).toIso8601String(),
       'order': order ?? _items.indexOf(item),
@@ -248,17 +399,6 @@ class WatchlistController extends GetxController {
     Color(0xFFFFF9C4),
   ];
 
-  // Available icons for new items
-  static const List<IconData> availableIcons = [
-    Icons.star,
-    Icons.favorite,
-    Icons.flash_on,
-    Icons.brightness_high,
-    Icons.nightlight_round,
-    Icons.wb_sunny,
-    Icons.ac_unit,
-    Icons.local_fire_department,
-  ];
 
   Future<void> addItem(WatchlistItem item) async {
     _items.add(item);
@@ -398,15 +538,11 @@ class WatchlistController extends GetxController {
     }
   }
 
-  Future<void> updateItem(String id,
-      {String? name, int? count, Color? color, IconData? icon}) async {
+  Future<void> updateItem(String id, {Color? color}) async {
     final index = _items.indexWhere((item) => item.id == id);
     if (index != -1) {
       _items[index] = _items[index].copyWith(
-        name: name,
-        count: count,
         color: color,
-        icon: icon,
         updatedAt: DateTime.now(),
       );
       await _saveItemsToPrefs();
@@ -501,6 +637,7 @@ class WatchlistController extends GetxController {
   }
 
   void _showSuccessSnackbar(String title, String message, Color color) {
+    if (Get.context == null) return;
     Get.snackbar(
       title,
       message,
@@ -513,6 +650,7 @@ class WatchlistController extends GetxController {
   }
 
   void _showErrorSnackbar(String title, String message) {
+    if (Get.context == null) return;
     Get.snackbar(
       title,
       message,
@@ -732,18 +870,6 @@ class SwipeableWatchlistCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    item.icon,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1049,10 +1175,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
 
   void _showAddItemDialog(
       BuildContext context, WatchlistController controller) {
-    final nameController = TextEditingController();
-    final countController = TextEditingController(text: '0');
+    ChatRoomOption? selectedRashi;
+    ChatRoomOption? selectedNakshatra;
     Color selectedColor = WatchlistController.availableColors.first;
-    IconData selectedIcon = WatchlistController.availableIcons.first;
+    List<ChatRoomOption> availableNakshatras = [];
 
     Get.dialog(
       StatefulBuilder(
@@ -1064,28 +1190,49 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: nameController,
+                  const Text('Select Rashi:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Obx(() => controller.isLoadingOptions
+                      ? const CircularProgressIndicator()
+                      : DropdownButtonFormField<ChatRoomOption>(
+                          value: selectedRashi,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Choose a Rashi',
+                          ),
+                          items: controller.rashiOptions
+                              .map((r) => DropdownMenuItem(value: r, child: Text(r.name)))
+                              .toList(),
+                          onChanged: (r) {
+                            setState(() {
+                              selectedRashi = r;
+                              selectedNakshatra = null;
+                              availableNakshatras = controller.getNakshatraOptionsForRashi(r?.id);
+                            });
+                            HapticFeedback.selectionClick();
+                          },
+                        )),
+                  const SizedBox(height: 16),
+                  const Text('Select Nakshatra:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<ChatRoomOption>(
+                    value: selectedNakshatra,
                     decoration: const InputDecoration(
-                      labelText: 'Name',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.label_outline),
+                      hintText: 'Choose a Nakshatra',
                     ),
-                    textCapitalization: TextCapitalization.words,
+                    items: availableNakshatras
+                        .map((n) => DropdownMenuItem(value: n, child: Text(n.name)))
+                        .toList(),
+                    onChanged: selectedRashi == null
+                        ? null
+                        : (n) {
+                            setState(() => selectedNakshatra = n);
+                            HapticFeedback.selectionClick();
+                          },
                   ),
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: countController,
-                    decoration: const InputDecoration(
-                      labelText: 'Initial Count',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.numbers),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Choose Color:',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Choose Color:', style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -1106,62 +1253,14 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(color: Colors.black, width: 3)
-                                : Border.all(
-                                    color: Colors.grey.shade300, width: 1),
+                                : Border.all(color: Colors.grey.shade300, width: 1),
                             boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                        color: color.withOpacity(0.5),
-                                        blurRadius: 8)
-                                  ]
+                                ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)]
                                 : null,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check,
-                                  color: Colors.white, size: 20)
+                              ? const Icon(Icons.check, color: Colors.white, size: 20)
                               : null,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Choose Icon:',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: WatchlistController.availableIcons.map((icon) {
-                      final isSelected = icon == selectedIcon;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => selectedIcon = icon);
-                          HapticFeedback.selectionClick();
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.surfaceVariant,
-                            shape: BoxShape.circle,
-                            border: isSelected
-                                ? Border.all(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    width: 2)
-                                : null,
-                          ),
-                          child: Icon(
-                            icon,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                          ),
                         ),
                       );
                     }).toList(),
@@ -1170,27 +1269,25 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Get.back(),
-                child: const Text('Cancel'),
-              ),
+              TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
               ElevatedButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  final count = int.tryParse(countController.text.trim()) ?? 0;
-
-                  if (name.isNotEmpty) {
-                    final newItem = WatchlistItem(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      name: name,
-                      count: count,
-                      color: selectedColor,
-                      icon: selectedIcon,
-                    );
-                    controller.addItem(newItem);
-                    Get.back();
-                  }
-                },
+                onPressed: (selectedRashi != null && selectedNakshatra != null)
+                    ? () {
+                        final name = '${selectedRashi!.name} - ${selectedNakshatra!.name}';
+                        final key = '${selectedRashi!.id}_${selectedNakshatra!.id}';
+                        final newItem = WatchlistItem(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: name,
+                          count: 0,
+                          color: selectedColor,
+                          rashiId: selectedRashi!.id,
+                          nakshatraId: selectedNakshatra!.id,
+                          combinationKey: key,
+                        );
+                        controller.addItem(newItem);
+                        Get.back();
+                      }
+                    : null,
                 child: const Text('Add'),
               ),
             ],
@@ -1202,10 +1299,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
 
   void _showEditItemDialog(BuildContext context, WatchlistController controller,
       WatchlistItem item) {
-    final nameController = TextEditingController(text: item.name);
-    final countController = TextEditingController(text: item.count.toString());
     Color selectedColor = item.color;
-    IconData selectedIcon = item.icon;
 
     Get.dialog(
       StatefulBuilder(
@@ -1217,23 +1311,6 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: countController,
-                    decoration: const InputDecoration(
-                      labelText: 'Count',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
                   const Text('Color:',
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
@@ -1260,37 +1337,6 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
-                  const Text('Icon:',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: WatchlistController.availableIcons.map((icon) {
-                      final isSelected = icon == selectedIcon;
-                      return GestureDetector(
-                        onTap: () => setState(() => selectedIcon = icon),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.surfaceVariant,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            icon,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
                 ],
               ),
             ),
@@ -1301,19 +1347,11 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  final name = nameController.text.trim();
-                  final count = int.tryParse(countController.text) ?? 0;
-
-                  if (name.isNotEmpty) {
-                    controller.updateItem(
-                      item.id,
-                      name: name,
-                      count: count,
-                      color: selectedColor,
-                      icon: selectedIcon,
-                    );
-                    Get.back();
-                  }
+                  controller.updateItem(
+                    item.id,
+                    color: selectedColor,
+                  );
+                  Get.back();
                 },
                 child: const Text('Update'),
               ),
@@ -1358,7 +1396,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(item.icon, size: 32, color: Colors.white),
+              child: const Icon(Icons.star, size: 32, color: Colors.white),
             ),
             const SizedBox(height: 16),
             Text(
