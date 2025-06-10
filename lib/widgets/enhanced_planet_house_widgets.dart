@@ -99,7 +99,9 @@ class EnhancedPlanetHouseList extends StatelessWidget {
         );
       }
       return SizedBox(
-        height: 78,
+        // Provide enough vertical space for the planet widget to
+        // avoid overflow errors when the text height varies slightly.
+        height: 86,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
