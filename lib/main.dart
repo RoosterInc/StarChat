@@ -1,4 +1,3 @@
-// lib/main.dart - Updated to use modern UI system
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
@@ -6,29 +5,31 @@ import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
 import 'pages/profile_page.dart';
-import 'pages/chat_room_page.dart';
-import 'pages/chat_rooms_list_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
+import 'pages/chat_room_page.dart';
+import 'pages/chat_rooms_list_page.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'controllers/theme_controller.dart';
+import 'controllers/theme_controller.dart'; // Import the ThemeController
 import 'controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  runApp(const StarChatApp());
+  runApp(const MyApp());
 }
 
-class StarChatApp extends StatelessWidget {
-  const StarChatApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Initialize the ThemeController
     final themeController = Get.put(ThemeController());
+    // Make UserTypeController globally available
     Get.put(UserTypeController(), permanent: true);
 
     return Obx(() => GetMaterialApp(
@@ -41,68 +42,63 @@ class StarChatApp extends StatelessWidget {
             seedColor: Colors.deepPurple,
             brightness: Brightness.dark,
           ),
-          themeMode:
-              themeController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
+          themeMode: themeController.isDarkMode.value
+              ? ThemeMode.dark
+              : ThemeMode.light, // Reactive theme
           initialBinding: AuthBinding(),
           initialRoute: '/',
           defaultTransition: Transition.cupertino,
-          transitionDuration: DesignTokens.durationNormal,
+          transitionDuration: const Duration(milliseconds: 300),
           getPages: [
             GetPage(
               name: '/',
               page: () => const SignInPage(),
               binding: AuthBinding(),
               transition: Transition.fadeIn,
-              transitionDuration: DesignTokens.durationSlow,
+              transitionDuration: const Duration(milliseconds: 400),
             ),
             GetPage(
               name: '/set_username',
               page: () => const SetUsernamePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/home',
               page: () => const HomePage(),
               binding: AuthBinding(),
               transition: Transition.fadeIn,
-              transitionDuration: DesignTokens.durationSlow,
+              transitionDuration: const Duration(milliseconds: 500),
             ),
             GetPage(
               name: '/profile',
               page: () => const ProfilePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/settings',
               page: () => const SettingsPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/sliver',
               page: () => const SliverSamplePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/chat-room/:roomId',
               page: () => const ChatRoomPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/chat-rooms-list',
               page: () => const ChatRoomsListPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
-              transitionDuration: DesignTokens.durationNormal,
             ),
           ],
           locale: Get.deviceLocale,
@@ -111,6 +107,7 @@ class StarChatApp extends StatelessWidget {
           supportedLocales: const [
             Locale('en', 'US'),
             Locale('es', 'ES'),
+            // Add other supported locales here
           ],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -120,50 +117,8 @@ class StarChatApp extends StatelessWidget {
           unknownRoute: GetPage(
             name: '/notfound',
             page: () => Scaffold(
-              body: Center(
-                child: GlassmorphicCard(
-                  padding: DesignTokens.xl(context).all,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      SizedBox(height: DesignTokens.lg(context)),
-                      Text(
-                        '404 - Page Not Found',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      SizedBox(height: DesignTokens.md(context)),
-                      AnimatedButton(
-                        onPressed: () => Get.offAllNamed('/'),
-                        child: Container(
-                          padding: DesignTokens.md(context).all,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary,
-                              ],
-                            ),
-                            borderRadius:
-                                BorderRadius.circular(DesignTokens.radiusLg(context)),
-                          ),
-                          child: Text(
-                            'Go Home',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              appBar: AppBar(title: const Text('Page Not Found')),
+              body: const Center(child: Text('404 - Page Not Found')),
             ),
           ),
         ));

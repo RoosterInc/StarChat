@@ -1,17 +1,18 @@
-// lib/pages/home_page.dart
-// Complete modernization of the home page using the design system
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/enhanced_responsive_layout.dart';
+import '../widgets/adaptive_navigation.dart';
+import '../widgets/enhanced_sliver_app_bar.dart';
+import '../widgets/simple_astrologer_fab.dart';
 import '../controllers/user_type_controller.dart';
 import '../controllers/enhanced_planet_house_controller.dart';
-import '../controllers/chat_controller.dart';
-import '../design_system/modern_ui_system.dart';
-import '../widgets/complete_enhanced_watchlist.dart';
 import '../widgets/safe_network_image.dart';
+import '../widgets/complete_enhanced_watchlist.dart';
+import '../controllers/chat_controller.dart';
 import '../widgets/chat/modern_chat_room_card.dart';
-import '../utils/modern_color_palettes.dart';
+import '../widgets/responsive_sizes.dart';
+import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,1087 +21,458 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _selectedIndex = 0;
-  late AnimationController _pageTransitionController;
-  late Animation<double> _pageTransitionAnimation;
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
+    Get.put(WatchlistController(), permanent: true);
+    Get.put(EnhancedPlanetHouseController(), permanent: true);
     _initializeAnimations();
   }
 
-  void _initializeControllers() {
-    Get.put(WatchlistController(), permanent: true);
-    Get.put(EnhancedPlanetHouseController(), permanent: true);
-  }
-
   void _initializeAnimations() {
-    _pageTransitionController = AnimationController(
-      duration: DesignTokens.durationNormal,
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _pageTransitionAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pageTransitionController,
-      curve: DesignTokens.curveEaseInOut,
-    ));
-    _pageTransitionController.forward();
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+            CurvedAnimation(
+                parent: _slideController, curve: Curves.easeOutCubic));
+    _fadeController.forward();
+    _slideController.forward();
   }
 
   @override
   void dispose() {
-    _pageTransitionController.dispose();
+    _fadeController.dispose();
+    _slideController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final userTypeController = Get.find<UserTypeController>();
+    final screenSize = MediaQuery.of(context).size;
+    final isLargeScreen = screenSize.width >= 1024;
 
+    final pages = [
+      _buildHomeBody(context),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
+      const EmptyPage(),
+    ];
+
+    return AdaptiveNavigation(
+      selectedIndex: _selectedIndex,
+      onDestinationSelected: (index) {
+        setState(() => _selectedIndex = index);
+        _slideController.reset();
+        _slideController.forward();
+      },
+      body: Scaffold(
+        drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
+        floatingActionButton: const SimpleAstrologerFAB(),
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: pages[_selectedIndex],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, AuthController authController) {
+    final userTypeController = Get.find<UserTypeController>();
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Obx(() {
+            final username = authController.username.value;
+            final userType = userTypeController.userTypeRx.value;
+            return UserAccountsDrawerHeader(
+              currentAccountPicture: Hero(
+                tag: 'profile_avatar',
+                child: CircleAvatar(
+                  child: ClipOval(
+                    child: SafeNetworkImage(
+                      imageUrl: authController.profilePictureUrl.value,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorWidget: const Icon(Icons.person, size: 40),
+                    ),
+                  ),
+                ),
+              ),
+              accountName: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  '$username ($userType)',
+                  key: ValueKey('$username-$userType'),
+                ),
+              ),
+              accountEmail: null,
+            );
+          }),
+          _buildAnimatedListTile(
+            icon: Icons.person,
+            title: 'profile'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/profile');
+            },
+            delay: 100,
+          ),
+          _buildAnimatedListTile(
+            icon: Icons.settings,
+            title: 'settings'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/settings');
+            },
+            delay: 200,
+          ),
+          _buildAnimatedListTile(
+            icon: Icons.logout,
+            title: 'logout'.tr,
+            onTap: () async {
+              Navigator.pop(context);
+              Get.closeAllSnackbars();
+              await authController.logout();
+            },
+            delay: 300,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedListTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required int delay,
+  }) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + delay),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(50 * (1 - value), 0),
+          child: Opacity(
+            opacity: value.clamp(0.0, 1.0),
+            child: ListTile(
+              leading: Icon(icon),
+              title: Text(title),
+              onTap: onTap,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHomeBody(BuildContext context) {
+    final userTypeController = Get.put(UserTypeController());
     return Obx(() {
       final isAstrologer = userTypeController.isAstrologerRx.value;
-      final destinations = _getNavigationDestinations(isAstrologer);
-
-      return AdaptiveNavigation(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
-          _pageTransitionController.reset();
-          _pageTransitionController.forward();
-          MicroInteractions.selectionHaptic();
-        },
-        destinations: destinations,
-        body: Scaffold(
-          drawer: ResponsiveUtils.isMobile(context)
-              ? _buildModernDrawer(context, authController, userTypeController)
-              : null,
-          body: AnimatedBuilder(
-            animation: _pageTransitionAnimation,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _pageTransitionAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.1),
-                    end: Offset.zero,
-                  ).animate(_pageTransitionAnimation),
-                  child: _buildPageContent(context),
-                ),
-              );
-            },
+      final tabLength = isAstrologer ? 6 : 5;
+      return DefaultTabController(
+        length: tabLength,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            const EnhancedSliverAppBar(),
+          ],
+          body: TabBarView(
+            children: [
+              EnhancedResponsiveLayout(
+                mobile: (context) => _buildContent(
+                    context, MediaQuery.of(context).size.width * 0.95),
+                tablet: (context) => _buildContent(context, 600),
+                desktop: (context) => _buildContent(context, 800),
+              ),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              if (isAstrologer) const Center(child: SizedBox()),
+            ],
           ),
-          floatingActionButton: _buildModernFAB(context, isAstrologer),
         ),
       );
     });
   }
 
-  Widget _buildPageContent(BuildContext context) {
-    if (_selectedIndex == 0) {
-      return _buildModernHomeContent(context);
-    }
-    return Center(
-      child: GlassmorphicCard(
-        padding: DesignTokens.xl(context).all,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.construction,
-              size: 48,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            SizedBox(height: DesignTokens.md(context)),
-            Text(
-              'Coming Soon',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: DesignTokens.sm(context)),
-            Text(
-              'This feature is under development',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernHomeContent(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        _buildModernAppBar(context),
-        SliverPadding(
-          padding: ResponsiveUtils.adaptiveValue(
-            context,
-            mobile: DesignTokens.md(context).all,
-            tablet: DesignTokens.lg(context).all,
-            desktop: DesignTokens.xl(context).all,
-          ),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _buildPlanetaryPositionsSection(context),
-              SizedBox(height: DesignTokens.xl(context)),
-              _buildPredictionScoresSection(context),
-              SizedBox(height: DesignTokens.xl(context)),
-              _buildChatRoomsSection(context),
-              SizedBox(height: DesignTokens.xl(context)),
-              _buildWatchlistSection(context),
-              SizedBox(height: DesignTokens.xxl(context)),
-            ]),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildModernAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: ResponsiveUtils.adaptiveValue(
-        context,
-        mobile: 120.0,
-        tablet: 140.0,
-        desktop: 160.0,
-      ),
-      floating: true,
-      pinned: true,
-      snap: true,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                Colors.transparent,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: DesignTokens.md(context).horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (ResponsiveUtils.isMobile(context))
-                    Builder(
-                      builder: (context) => AnimatedButton(
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        child: Icon(
-                          Icons.menu_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  Expanded(
-                    child: Center(
-                      child: GlassmorphicContainer(
-                        padding: DesignTokens.sm(context).all,
-                        borderRadius: BorderRadius.circular(
-                          DesignTokens.radiusXl(context),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                            SizedBox(width: DesignTokens.xs(context)),
-                            Text(
-                              'StarChat',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      AnimatedButton(
-                        onPressed: () => Get.toNamed('/settings'),
-                        child: Icon(
-                          Icons.settings_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlanetaryPositionsSection(BuildContext context) {
-    final controller = Get.find<EnhancedPlanetHouseController>();
-
-    return GlassmorphicCard(
-      padding: DesignTokens.lg(context).all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget _buildContent(BuildContext context, double width) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(_getResponsivePadding(context)),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: width),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: DesignTokens.sm(context).all,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.secondary,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    DesignTokens.radiusMd(context),
-                  ),
-                ),
-                child: Icon(
-                  Icons.public,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  size: 20,
-                ),
+              _buildPredictionScoresSection(context),
+              SizedBox(height: _getResponsiveSpacing(context)),
+              _buildChatRoomsSection(context),
+              SizedBox(height: _getResponsiveSpacing(context)),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: const EnhancedWatchlistWidget(),
               ),
-              SizedBox(width: DesignTokens.md(context)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Planetary Positions',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Today\'s cosmic alignment',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AnimatedButton(
-                onPressed: () => controller.forceRefreshData(),
-                child: Icon(
-                  Icons.refresh_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+              SizedBox(height: _getResponsiveSpacing(context)),
             ],
           ),
-          SizedBox(height: DesignTokens.lg(context)),
-          Obx(() {
-            if (controller.isLoading && !controller.hasData) {
-              return SizedBox(
-                height: 80,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 9,
-                  separatorBuilder: (_, __) => SizedBox(width: DesignTokens.md(context)),
-                  itemBuilder: (_, __) => SkeletonLoader(
-                    width: 60,
-                    height: 80,
-                    borderRadius: BorderRadius.circular(
-                      DesignTokens.radiusMd(context),
-                    ),
-                  ),
-                ),
-              );
-            }
-
-            if (controller.planetHouseData.isEmpty) {
-              return Center(
-                child: Text(
-                  'No planetary data available',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              );
-            }
-
-            return SizedBox(
-              height: 100,
-              child: StaggeredListView(
-                scrollDirection: Axis.horizontal,
-                children: controller.planetHouseData.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final planet = entry.value;
-                  return _buildPlanetCard(context, planet, index);
-                }).toList(),
-              ),
-            );
-          }),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildPlanetCard(BuildContext context, dynamic planet, int index) {
-    return Container(
-      width: ResponsiveUtils.fluidSize(context, min: 70, max: 90),
-      margin: EdgeInsets.only(right: DesignTokens.sm(context)),
-      child: GlassmorphicContainer(
-        padding: DesignTokens.sm(context).all,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: ModernColorPalettes.getGradientForIndex(index),
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: ModernColorPalettes.getGradientForIndex(index)[0]
-                        .withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  planet.position?.planet?.substring(0, 1) ?? '?',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: DesignTokens.xs(context)),
-            Text(
-              planet.position?.planet ?? 'Unknown',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
+  double _getResponsivePadding(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 16.0;
+    if (width >= 600) return 14.0;
+    return 12.0;
+  }
+
+  double _getResponsiveSpacing(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 28.0;
+    if (width >= 600) return 22.0;
+    return 18.0;
+  }
+
+  double _getResponsiveFontSize(BuildContext context, double baseSize) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseSize * 1.1;
+    if (width >= 600) return baseSize * 1.05;
+    return baseSize;
   }
 
   Widget _buildPredictionScoresSection(BuildContext context) {
-    final rashiNames = [
-      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+    final names = [
+      'Aries',
+      'Taurus',
+      'Gemini',
+      'Cancer',
+      'Leo',
+      'Virgo',
+      'Libra',
+      'Scorpio',
+      'Sagittarius',
+      'Capricorn',
+      'Aquarius',
+      'Pisces',
     ];
-
-    return GlassmorphicCard(
-      padding: DesignTokens.lg(context).all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: DesignTokens.sm(context).all,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.tertiary,
-                      Theme.of(context).colorScheme.primary,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    DesignTokens.radiusMd(context),
-                  ),
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  color: Theme.of(context).colorScheme.onTertiary,
-                  size: 20,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Prediction Scores',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: _getResponsiveFontSize(context, 18),
               ),
-              SizedBox(width: DesignTokens.md(context)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Prediction Scores',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Check your daily luck',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        ),
+        SizedBox(height: _getResponsiveSpacing(context) * 0.5),
+        ConstrainedBox(
+          constraints:
+              BoxConstraints(maxHeight: _getResponsiveHeight(context, 80)),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: names.length,
+            separatorBuilder: (_, __) =>
+                SizedBox(width: _getResponsiveSpacing(context) * 0.4),
+            itemBuilder: (context, index) {
+              final color = Colors.primaries[index % Colors.primaries.length];
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 200 + (index * 50)),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value.clamp(0.0, 1.0),
+                    child: _buildPredictionCard(
+                        context, names[index], index + 1, color),
+                  );
+                },
+              );
+            },
           ),
-          SizedBox(height: DesignTokens.lg(context)),
-          SizedBox(
-            height: 120,
-            child: StaggeredListView(
-              scrollDirection: Axis.horizontal,
-              children: rashiNames.asMap().entries.map((entry) {
-                final index = entry.key;
-                final name = entry.value;
-                final color = ModernColorPalettes.getGradientForIndex(index)[0];
-                return _buildPredictionCard(context, name, index + 1, color);
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildPredictionCard(
       BuildContext context, String name, int number, Color color) {
     return GestureDetector(
-      onTap: () => _showPredictionDialog(context, name),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: DesignTokens.sm(context).all,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.7)],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+      onTap: () => _showPredictionDialog(name),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: _getResponsiveHeight(context, 25),
+              backgroundColor: color,
+              child: Text(
+                '$number',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: _getResponsiveFontSize(context, 16),
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            child: Text(
-              '$number',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
               ),
             ),
-          ),
-          SizedBox(height: DesignTokens.sm(context)),
-          Text(
-            name,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
+            SizedBox(height: _getResponsiveSpacing(context) * 0.25),
+            Text(
+              name,
+              style: TextStyle(fontSize: _getResponsiveFontSize(context, 12)),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPredictionDialog(String name) {
+    Get.dialog(
+      AlertDialog(
+        title: Text(name),
+        content: const Text('R\u0101si details coming soon'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('OK'),
           ),
         ],
       ),
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionCurve: Curves.easeInOut,
     );
   }
 
   Widget _buildChatRoomsSection(BuildContext context) {
     final chatController = Get.find<ChatController>();
 
-    return GlassmorphicCard(
-      padding: DesignTokens.lg(context).all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: DesignTokens.sm(context).all,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.secondary,
-                          Theme.of(context).colorScheme.tertiary,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        DesignTokens.radiusMd(context),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.chat_bubble_rounded,
-                      color: Theme.of(context).colorScheme.onSecondary,
-                      size: 20,
-                    ),
-                  ),
-                  SizedBox(width: DesignTokens.md(context)),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chat Rooms',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        'Join the conversation',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              AnimatedButton(
-                onPressed: () => Get.toNamed('/chat-rooms-list'),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: DesignTokens.md(context),
-                    vertical: DesignTokens.sm(context),
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      DesignTokens.radiusLg(context),
-                    ),
-                  ),
-                  child: Text(
-                    'View All',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: DesignTokens.lg(context)),
-          Obx(() {
-            if (chatController.isLoading.value) {
-              return SizedBox(
-                height: 140,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 3,
-                  separatorBuilder: (_, __) => SizedBox(width: DesignTokens.md(context)),
-                  itemBuilder: (_, __) => SkeletonLoader(
-                    width: ResponsiveUtils.fluidSize(context, min: 160, max: 200),
-                    height: 140,
-                    borderRadius: BorderRadius.circular(
-                      DesignTokens.radiusLg(context),
-                    ),
-                  ),
-                ),
-              );
-            }
+    double getOptimalHeight() {
+      final width = MediaQuery.of(context).size.width;
+      if (width >= 1024) return 200.0;
+      if (width >= 600) return 160.0;
+      return 140.0;
+    }
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Chat Rooms',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: _getResponsiveFontSize(context, 18),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            TextButton(
+              onPressed: () => Get.toNamed('/chat-rooms-list'),
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  fontSize: _getResponsiveFontSize(context, 14),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: _getResponsiveSpacing(context) * 0.5),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: getOptimalHeight(),
+            minHeight: 140.0,
+          ),
+          child: Obx(() {
+            if (chatController.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
             if (chatController.rashiRooms.isEmpty) {
               return Center(
                 child: Text(
                   'No chat rooms available',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               );
             }
-
-            return SizedBox(
-              height: 140,
-              child: StaggeredListView(
-                scrollDirection: Axis.horizontal,
-                children: chatController.rashiRooms.take(6).toList().asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final room = entry.value;
-                  return Container(
-                    width: ResponsiveUtils.fluidSize(context, min: 160, max: 200),
-                    margin: EdgeInsets.only(right: DesignTokens.md(context)),
-                    child: ModernChatRoomCard(
-                      room: room,
-                      width: double.infinity,
-                      onTap: () => Get.toNamed('/chat-room/${room.id}'),
-                    ),
-                  );
-                }).toList(),
-              ),
+            return ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              itemCount: chatController.rashiRooms.length,
+              separatorBuilder: (_, __) =>
+                  SizedBox(width: _getResponsiveSpacing(context) * 0.6),
+              itemBuilder: (context, index) {
+                final room = chatController.rashiRooms[index];
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 300 + (index * 100)),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    final clampedValue = value.clamp(0.0, 1.0);
+                    final scale = 0.8 + (0.2 * clampedValue);
+                    return Transform.scale(
+                      scale: scale,
+                      child: Opacity(
+                        opacity: clampedValue,
+                        child: ModernChatRoomCard(
+                          room: room,
+                          width: _getResponsiveChatCardWidth(context),
+                          onTap: () => Get.toNamed('/chat-room/${room.id}'),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             );
           }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWatchlistSection(BuildContext context) {
-    return GlassmorphicCard(
-      padding: DesignTokens.lg(context).all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: DesignTokens.sm(context).all,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.tertiary,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    DesignTokens.radiusMd(context),
-                  ),
-                ),
-                child: Icon(
-                  Icons.bookmark_rounded,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  size: 20,
-                ),
-              ),
-              SizedBox(width: DesignTokens.md(context)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Watchlist',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Track your favorites',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: DesignTokens.lg(context)),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.3,
-            child: const EnhancedWatchlistWidget(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModernDrawer(BuildContext context, AuthController authController,
-      UserTypeController userTypeController) {
-    return Drawer(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.surface.withOpacity(0.95),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                padding: DesignTokens.xl(context).all,
-                child: Obx(() {
-                  final username = authController.username.value;
-                  return Column(
-                    children: [
-                      Hero(
-                        tag: 'profile_avatar',
-                        child: GlassmorphicContainer(
-                          width: 80,
-                          height: 80,
-                          borderRadius: BorderRadius.circular(
-                            DesignTokens.radiusLg(context),
-                          ),
-                          child: ClipOval(
-                            child: SafeNetworkImage(
-                              imageUrl: authController.profilePictureUrl.value,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorWidget: Icon(
-                                Icons.person,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                size: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: DesignTokens.sm(context)),
-                      Text(
-                        username.isEmpty ? 'User' : username,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: DesignTokens.md(context).all,
-                  children: [
-                    _buildDrawerItem(
-                      context,
-                      Icons.person_rounded,
-                      'profile'.tr,
-                      () => Get.toNamed('/profile'),
-                    ),
-                    _buildDrawerItem(
-                      context,
-                      Icons.settings_rounded,
-                      'settings'.tr,
-                      () => Get.toNamed('/settings'),
-                    ),
-                    const Divider(),
-                    _buildDrawerItem(
-                      context,
-                      Icons.logout_rounded,
-                      'logout'.tr,
-                      () async {
-                        Navigator.pop(context);
-                        await authController.logout();
-                      },
-                      isDestructive: true,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    VoidCallback onTap, {
-    bool isDestructive = false,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: DesignTokens.sm(context)),
-      child: AnimatedButton(
-        onPressed: onTap,
-        child: GlassmorphicContainer(
-          padding: DesignTokens.md(context).all,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: isDestructive
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).colorScheme.primary,
-              ),
-              SizedBox(width: DesignTokens.md(context)),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isDestructive
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernFAB(BuildContext context, bool isAstrologer) {
-    if (!isAstrologer) return const SizedBox.shrink();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton.extended(
-          onPressed: () => _showCreateOptions(context),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('Create'),
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
-          ),
         ),
       ],
     );
   }
 
-  List<NavigationDestination> _getNavigationDestinations(bool isAstrologer) {
-    if (isAstrologer) {
-      return const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home_rounded),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.assignment_outlined),
-          selectedIcon: Icon(Icons.assignment_rounded),
-          label: 'Requests',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.help_outline_rounded),
-          selectedIcon: Icon(Icons.help_rounded),
-          label: 'Questions',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.event_outlined),
-          selectedIcon: Icon(Icons.event_rounded),
-          label: 'Events',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.message_outlined),
-          selectedIcon: Icon(Icons.message_rounded),
-          label: 'Messages',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.auto_awesome_outlined),
-          selectedIcon: Icon(Icons.auto_awesome_rounded),
-          label: 'Predictions',
-        ),
-      ];
-    } else {
-      return const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home_rounded),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.feed_outlined),
-          selectedIcon: Icon(Icons.feed_rounded),
-          label: 'Feed',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.event_outlined),
-          selectedIcon: Icon(Icons.event_rounded),
-          label: 'Events',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.auto_awesome_outlined),
-          selectedIcon: Icon(Icons.auto_awesome_rounded),
-          label: 'Predictions',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.message_outlined),
-          selectedIcon: Icon(Icons.message_rounded),
-          label: 'Messages',
-        ),
-      ];
-    }
+  double _getResponsiveChatCardWidth(BuildContext context) {
+    final availableWidth = MediaQuery.of(context).size.width;
+    return ResponsiveSizes.chatRoomItemWidth(context, availableWidth);
   }
 
-  void _showPredictionDialog(BuildContext context, String rashiName) {
-    Get.dialog(
-      Dialog(
-        backgroundColor: Colors.transparent,
-        child: GlassmorphicContainer(
-          padding: DesignTokens.xl(context).all,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusXl(context)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                rashiName,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: DesignTokens.md(context)),
-              Text(
-                'Detailed predictions coming soon!',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: DesignTokens.lg(context)),
-              AnimatedButton(
-                onPressed: () => Get.back(),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: DesignTokens.lg(context),
-                    vertical: DesignTokens.md(context),
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      DesignTokens.radiusLg(context),
-                    ),
-                  ),
-                  child: Text(
-                    'Close',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showCreateOptions(BuildContext context) {
-    Get.bottomSheet(
-      Container(
-        padding: DesignTokens.xl(context).all,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(DesignTokens.radiusXl(context)),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            SizedBox(height: DesignTokens.lg(context)),
-            Text(
-              'Create New Content',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: DesignTokens.lg(context)),
-            Row(
-              children: [
-                Expanded(
-                  child: AnimatedButton(
-                    onPressed: () {
-                      Get.back();
-                      Get.snackbar('Create Prediction', 'Feature coming soon!');
-                    },
-                    child: GlassmorphicContainer(
-                      padding: DesignTokens.lg(context).all,
-                      borderRadius: BorderRadius.circular(
-                        DesignTokens.radiusLg(context),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 32,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          SizedBox(height: DesignTokens.sm(context)),
-                          Text(
-                            'Prediction',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: DesignTokens.md(context)),
-                Expanded(
-                  child: AnimatedButton(
-                    onPressed: () {
-                      Get.back();
-                      Get.snackbar('Create Post', 'Feature coming soon!');
-                    },
-                    child: GlassmorphicContainer(
-                      padding: DesignTokens.lg(context).all,
-                      borderRadius: BorderRadius.circular(
-                        DesignTokens.radiusLg(context),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.article_rounded,
-                            size: 32,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          SizedBox(height: DesignTokens.sm(context)),
-                          Text(
-                            'Post',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: DesignTokens.lg(context)),
-          ],
-        ),
-      ),
-    );
+  double _getResponsiveHeight(BuildContext context, double baseHeight) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseHeight * 1.1;
+    if (width >= 600) return baseHeight * 1.05;
+    return baseHeight;
   }
 }
