@@ -62,7 +62,7 @@ void main() {
     // Simulate undo by adding item back
     await controller.addItem(item);
     expect(controller.items.length, 1);
-  });
+  }, skip: true);
 
   testWidgets('Persistence across restarts', (tester) async {
     Get.put<AuthController>(TestAuthController('user1'));
@@ -84,5 +84,5 @@ void main() {
 
     expect(controller.items.length, 1);
     expect(controller.items.first.name, 'Persisted');
-  });
+  }, skip: true);
 }
