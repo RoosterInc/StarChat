@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:myapp/widgets/complete_enhanced_watchlist.dart';
 import 'package:myapp/controllers/auth_controller.dart';
@@ -11,6 +12,7 @@ class TestAuthController extends AuthController {
   TestAuthController(this.uid);
   @override
   void onInit() {
+    super.onInit();
     userId = uid;
   }
 
@@ -23,6 +25,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    dotenv.testLoad(fileInput: '');
     Get.testMode = true;
   });
 
