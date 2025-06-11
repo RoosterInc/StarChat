@@ -13,6 +13,7 @@ import 'themes/enhanced_app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
+import 'controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
@@ -28,6 +29,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Initialize the ThemeController
     final themeController = Get.put(ThemeController());
+    // Make UserTypeController globally available
+    Get.put(UserTypeController(), permanent: true);
 
     return Obx(() => GetMaterialApp(
           title: 'StarChat',

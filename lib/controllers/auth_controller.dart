@@ -192,6 +192,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> sendOTP() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     String email = emailController.text.trim();
 
     if (!isValidEmail(email)) {
@@ -953,6 +954,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> submitUsername() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final name = usernameController.text.trim();
     logger.i("[Auth] submitUsername: Starting submission for username '$name'");
 
