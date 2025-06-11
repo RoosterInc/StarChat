@@ -58,6 +58,7 @@ class AuthController extends GetxController {
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
   static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
   static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
+  static const String _usernamesHistoryCollectionKey = 'USER_NAMES_HISTORY_COLLECTION_ID';
   static const String _bucketIdKey = 'PROFILE_PICTURES_BUCKET_ID';
 
   @override
@@ -477,7 +478,6 @@ class AuthController extends GetxController {
         collectionId: collectionId,
         queries: [
           Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
           Query.limit(1),
         ],
       );
@@ -645,7 +645,7 @@ class AuthController extends GetxController {
 
     isCheckingUsername.value = true;
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
     try {
       if (name != _currentCheckingUsername || name != usernameText.value) {
         return false;
@@ -653,7 +653,7 @@ class AuthController extends GetxController {
 
       final result = await databases.listDocuments(
         databaseId: dbId,
-        collectionId: collectionId,
+        collectionId: historyCollectionId,
         queries: [Query.equal('username', name)],
       );
 
@@ -695,18 +695,48 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> _addUsernameToHistory(String uid, String name, {String subscriptionType = 'Free'}) async {
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+    try {
+      await databases.createDocument(
+        databaseId: dbId,
+        collectionId: historyCollectionId,
+        documentId: ID.unique(),
+        data: {
+          'username': name,
+          'userId': uid,
+          'createdAt': DateTime.now().toUtc().toIso8601String(),
+          'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+          'subscriptionType': subscriptionType,
+        },
+        permissions: [
+          Permission.read(Role.user(uid)),
+          Permission.update(Role.user(uid)),
+          Permission.delete(Role.user(uid)),
+        ],
+      );
+      logger.i('Successfully added username "$name" to history for user $uid');
+    } catch (e) {
+      logger.e('Error adding username to history', error: e);
+    }
+  }
+
   Future<void> _saveUsername(String dbId, String collectionId, String uid,
       String name, SharedPreferences prefs) async {
     try {
+      await _addUsernameToHistory(uid, name);
+
       final existing = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
           Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
           Query.limit(1),
         ],
       );
+      final now = DateTime.now().toUtc().toIso8601String();
+
       if (existing.documents.isNotEmpty) {
         await databases.updateDocument(
           databaseId: dbId,
@@ -714,7 +744,7 @@ class AuthController extends GetxController {
           documentId: existing.documents.first.$id,
           data: {
             'username': name,
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+            'UpdateAt': now,
           },
         );
       } else {
@@ -728,8 +758,8 @@ class AuthController extends GetxController {
             'profilePicture': '',
             'firstName': '',
             'lastName': '',
-            'createdAt': DateTime.now().toUtc().toIso8601String(),
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+            'createdAt': now,
+            'UpdateAt': now,
           },
           permissions: [
             Permission.read(Role.user(uid)),
@@ -869,16 +899,18 @@ class AuthController extends GetxController {
         collectionId: collectionId,
         queries: [
           Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
           Query.limit(1),
         ],
       );
       if (result.documents.isNotEmpty) {
-        final docId = result.documents.first.$id;
-        await databases.deleteDocument(
+        await databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
-          documentId: docId,
+          documentId: result.documents.first.$id,
+          data: {
+            'username': '',
+            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+          },
         );
       }
       username.value = "";
@@ -997,7 +1029,6 @@ class AuthController extends GetxController {
         collectionId: collectionId,
         queries: [
           Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
           Query.limit(1),
         ],
       );
@@ -1017,6 +1048,29 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getUsernameHistory() async {
+    try {
+      final session = await account.get();
+      final uid = session.$id;
+      final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+      final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: historyCollectionId,
+        queries: [
+          Query.equal('userId', uid),
+          Query.orderDesc('createdAt'),
+        ],
+      );
+
+      return result.documents.map((doc) => doc.data).toList();
+    } catch (e) {
+      logger.e('Error fetching username history', error: e);
+      return [];
     }
   }
 }
