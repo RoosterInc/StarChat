@@ -101,34 +101,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildDrawer(BuildContext context, AuthController authController) {
+    final userTypeController = Get.find<UserTypeController>();
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          Obx(() => UserAccountsDrawerHeader(
-                currentAccountPicture: Hero(
-                  tag: 'profile_avatar',
-                  child: CircleAvatar(
-                    child: ClipOval(
-                      child: SafeNetworkImage(
-                        imageUrl: authController.profilePictureUrl.value,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorWidget: const Icon(Icons.person, size: 40),
-                      ),
+          Obx(() {
+            final username = authController.username.value;
+            final userType = userTypeController.userTypeRx.value;
+            return UserAccountsDrawerHeader(
+              currentAccountPicture: Hero(
+                tag: 'profile_avatar',
+                child: CircleAvatar(
+                  child: ClipOval(
+                    child: SafeNetworkImage(
+                      imageUrl: authController.profilePictureUrl.value,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorWidget: const Icon(Icons.person, size: 40),
                     ),
                   ),
                 ),
-                accountName: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    authController.username.value,
-                    key: ValueKey(authController.username.value),
-                  ),
+              ),
+              accountName: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  '$username ($userType)',
+                  key: ValueKey('$username-$userType'),
                 ),
-                accountEmail: null,
-              )),
+              ),
+              accountEmail: null,
+            );
+          }),
           _buildAnimatedListTile(
             icon: Icons.person,
             title: 'profile'.tr,
