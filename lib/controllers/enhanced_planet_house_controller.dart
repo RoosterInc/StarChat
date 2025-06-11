@@ -3,14 +3,13 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 import 'dart:convert';
 import '../models/planet_house_models.dart';
 import 'auth_controller.dart';
 
 class EnhancedPlanetHouseController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
-  final logger = Logger();
 
   final RxList<PlanetHouseData> _planetHouseData = <PlanetHouseData>[].obs;
   final RxBool _isLoading = false.obs;

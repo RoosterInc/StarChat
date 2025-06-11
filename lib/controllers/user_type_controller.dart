@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 
 /// Manages the current user's type and related helpers.
 ///
@@ -34,7 +34,7 @@ class UserTypeController extends GetxController {
   /// Expose the storage key for other classes (e.g. [AuthController])
   static String get storageKey => _userTypeKey;
 
-  final Logger _logger = Logger();
+  final _logger = logger;
 
   @override
   void onInit() {
@@ -69,7 +69,8 @@ class UserTypeController extends GetxController {
   }
 
   /// Updates user type and persists if requested.
-  Future<void> _setUserTypeInternal(String type, {bool saveToStorage = true}) async {
+  Future<void> _setUserTypeInternal(String type,
+      {bool saveToStorage = true}) async {
     if (!_validUserTypes.contains(type)) {
       _logger.w('[UserType] invalid type: $type');
       return;
@@ -145,7 +146,14 @@ class UserTypeController extends GetxController {
   /// Returns tab configuration depending on current user type.
   List<String> getTabsForCurrentUser() {
     if (_isAstrologer.value) {
-      return ['Home', 'Requests', 'Questions', 'Events', 'Messages', 'Predictions'];
+      return [
+        'Home',
+        'Requests',
+        'Questions',
+        'Events',
+        'Messages',
+        'Predictions'
+      ];
     }
     return ['Home', 'Feed', 'Events', 'Predictions', 'Messages'];
   }

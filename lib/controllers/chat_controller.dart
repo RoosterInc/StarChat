@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 import '../utils/modern_color_palettes.dart';
 
 import '../models/chat_room.dart';
@@ -11,7 +11,6 @@ import 'auth_controller.dart';
 
 class ChatController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
-  final logger = Logger();
 
   final RxList<ChatRoom> rashiRooms = <ChatRoom>[].obs;
   final RxList<ChatRoom> joinedRooms = <ChatRoom>[].obs;
@@ -117,7 +116,7 @@ class ChatController extends GetxController {
       rashiData.asMap().entries.map((entry) {
         final index = entry.key;
         final data = entry.value;
-        
+
         return ChatRoom(
           id: (index + 1).toString(),
           name: data['name'] as String,
@@ -128,8 +127,9 @@ class ChatController extends GetxController {
         );
       }).toList(),
     );
-    
-    logger.i('Created modern mock rashi rooms with sophisticated color palettes');
+
+    logger
+        .i('Created modern mock rashi rooms with sophisticated color palettes');
   }
 
   ChatRoom? getRoomById(String roomId) {
@@ -171,10 +171,11 @@ class GlassmorphismUtils {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: gradientColors ?? [
-                Colors.white.withOpacity(isDark ? 0.1 : 0.2),
-                Colors.white.withOpacity(isDark ? 0.05 : 0.1),
-              ],
+              colors: gradientColors ??
+                  [
+                    Colors.white.withOpacity(isDark ? 0.1 : 0.2),
+                    Colors.white.withOpacity(isDark ? 0.05 : 0.1),
+                  ],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(

@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/parsing_utils.dart';
 
@@ -214,8 +214,6 @@ class WatchlistController extends GetxController {
   static const String _rashiCacheKey = 'cached_rashi_options_v1';
   static const String _nakshatraCacheKey = 'cached_nakshatra_options_v1';
   static const String _masterDataVersionKey = 'master_data_version_v1';
-
-  final logger = Logger();
 
   List<WatchlistItem> get items => _items;
   List<RashiOption> get rashiOptions => _rashiOptions;
