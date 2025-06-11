@@ -7,6 +7,7 @@ import 'package:image_cropper/image_cropper.dart';
 
 import '../controllers/auth_controller.dart';
 import '../widgets/safe_network_image.dart';
+import '../controllers/user_type_controller.dart';
 
 class ProfilePage extends GetView<AuthController> {
   const ProfilePage({super.key});
@@ -22,6 +23,7 @@ class ProfilePage extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
+    final userTypeController = Get.find<UserTypeController>();
     return Scaffold(
       appBar: AppBar(
         title: Text('profile'.tr),
@@ -64,6 +66,32 @@ class ProfilePage extends GetView<AuthController> {
                 onPressed: _changePicture,
                 child: Text('change_picture'.tr),
               ),
+              const SizedBox(height: 16),
+              Obx(() => Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('User Type:'),
+                      const SizedBox(width: 8),
+                      DropdownButton<String>(
+                        value: userTypeController.userTypeRx.value,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'General User',
+                            child: Text('General User'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Astrologer',
+                            child: Text('Astrologer'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.updateUserType(value);
+                          }
+                        },
+                      ),
+                    ],
+                  )),
             ],
           ),
         ),
