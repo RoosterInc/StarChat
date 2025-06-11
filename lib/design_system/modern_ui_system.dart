@@ -310,14 +310,15 @@ class MD3ThemeSystem {
     );
   }
 
-  static NavigationBarTheme _createNavigationBarTheme(ColorScheme colorScheme) {
-    return NavigationBarTheme(
+  static NavigationBarThemeData _createNavigationBarTheme(
+      ColorScheme colorScheme) {
+    return NavigationBarThemeData(
       backgroundColor: colorScheme.surface,
       indicatorColor: colorScheme.secondaryContainer,
       elevation: 3,
       shadowColor: colorScheme.shadow,
       surfaceTintColor: colorScheme.surfaceTint,
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
+      labelTextStyle: MaterialStateProperty.resolveWith<TextStyle?>((states) {
         if (states.contains(MaterialState.selected)) {
           return TextStyle(
             fontSize: 12,
