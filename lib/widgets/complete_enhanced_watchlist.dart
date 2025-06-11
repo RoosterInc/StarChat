@@ -574,12 +574,13 @@ class WatchlistController extends GetxController {
       'name': item.name,
       'count': item.count,
       'colorValue': item.color.value,
-      'combinationKey': item.combinationKey,
-      'chatRoomId': item.chatRoomId,
       'watchlistKey': item.watchlistKey,
       'createdAt': item.createdAt.toIso8601String(),
       'updatedAt': (updatedAt ?? DateTime.now()).toIso8601String(),
       'order': order ?? _items.indexOf(item),
+      // Provide default values for optional schema fields
+      'iconCodePoint': 0xe885,
+      'iconFontFamily': 'MaterialIcons',
     };
   }
 
