@@ -9,7 +9,7 @@ import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
 import 'pages/chat_room_page.dart';
 import 'pages/chat_rooms_list_page.dart';
-import 'design_system/modern_ui_system.dart';
+import 'themes/enhanced_app_theme.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
@@ -34,14 +34,8 @@ class MyApp extends StatelessWidget {
 
     return Obx(() => GetMaterialApp(
           title: 'StarChat',
-          theme: MD3ThemeSystem.createTheme(
-            seedColor: Colors.deepPurple,
-            brightness: Brightness.light,
-          ),
-          darkTheme: MD3ThemeSystem.createTheme(
-            seedColor: Colors.deepPurple,
-            brightness: Brightness.dark,
-          ),
+          theme: EnhancedAppTheme.lightTheme,
+          darkTheme: EnhancedAppTheme.darkTheme,
           themeMode: themeController.isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light, // Reactive theme
