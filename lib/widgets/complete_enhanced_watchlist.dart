@@ -21,40 +21,62 @@ Color _lightenColor(Color color, [double amount = 0.3]) {
 // DATA MODELS
 // ============================================================================
 
-class ChatRoomOption {
+class RashiOption {
   final String id;
   final String name;
-  final String type;
-  final String? rashiId;
-  final String? nakshatraId;
-  final String? combinationKey;
-  final int dailyMessages;
-  final Color color;
+  final String rashiId;
 
-  ChatRoomOption({
+  RashiOption({
     required this.id,
     required this.name,
-    required this.type,
-    this.rashiId,
-    this.nakshatraId,
-    this.combinationKey,
-    required this.dailyMessages,
-    required this.color,
+    required this.rashiId,
   });
 
-  factory ChatRoomOption.fromJson(Map<String, dynamic> json) {
-    return ChatRoomOption(
-      id: json['\$id'] ?? json['id'],
-      name: json['name'],
-      type: json['type'],
-      rashiId: json['rashi_id'],
-      nakshatraId: json['nakshatra_id'],
-      combinationKey: json['combination_key'],
-      dailyMessages:
-          json['daily_messages'] ?? json['total_messages_today'] ?? 0,
-      color: Color(json['color_primary'] ?? 0xFF6750A4),
+  factory RashiOption.fromJson(Map<String, dynamic> json) {
+    return RashiOption(
+      id: json['\$id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      rashiId: json['rashi_id'] ?? '',
     );
   }
+
+  @override
+  String toString() => 'RashiOption(id: $id, name: $name, rashiId: $rashiId)';
+}
+
+class NakshatraOption {
+  final String id;
+  final String name;
+  final String nakshatraId;
+  final List<String> rashiIds;
+
+  NakshatraOption({
+    required this.id,
+    required this.name,
+    required this.nakshatraId,
+    required this.rashiIds,
+  });
+
+  factory NakshatraOption.fromJson(Map<String, dynamic> json) {
+    List<String> rashiIdsList = [];
+    final rashiIdValue = json['rashi_id'];
+    if (rashiIdValue is String) {
+      rashiIdsList = [rashiIdValue];
+    } else if (rashiIdValue is List) {
+      rashiIdsList = rashiIdValue.cast<String>();
+    }
+
+    return NakshatraOption(
+      id: json['\$id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      nakshatraId: json['nakshatra_id'] ?? '',
+      rashiIds: rashiIdsList,
+    );
+  }
+
+  @override
+  String toString() =>
+      'NakshatraOption(id: $id, name: $name, nakshatraId: $nakshatraId, rashiIds: $rashiIds)';
 }
 
 class WatchlistItem {
@@ -155,8 +177,8 @@ class WatchlistController extends GetxController {
   final bool testing;
 
   final RxList<WatchlistItem> _items = <WatchlistItem>[].obs;
-  final RxList<ChatRoomOption> _rashiOptions = <ChatRoomOption>[].obs;
-  final RxList<ChatRoomOption> _nakshatraOptions = <ChatRoomOption>[].obs;
+  final RxList<RashiOption> _rashiOptions = <RashiOption>[].obs;
+  final RxList<NakshatraOption> _nakshatraOptions = <NakshatraOption>[].obs;
   final RxBool _isLoadingOptions = false.obs;
   final AuthController _auth = Get.find<AuthController>();
   static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
@@ -186,9 +208,7 @@ class WatchlistController extends GetxController {
         queries: [Query.orderAsc('name')],
       );
       _rashiOptions.assignAll(
-        rashiResult.documents
-            .map((e) => ChatRoomOption.fromJson(e.data))
-            .toList(),
+        rashiResult.documents.map((e) => RashiOption.fromJson(e.data)).toList(),
       );
 
       final nakshatraResult = await _auth.databases.listDocuments(
@@ -198,7 +218,7 @@ class WatchlistController extends GetxController {
       );
       _nakshatraOptions.assignAll(
         nakshatraResult.documents
-            .map((e) => ChatRoomOption.fromJson(e.data))
+            .map((e) => NakshatraOption.fromJson(e.data))
             .toList(),
       );
     } catch (e, st) {
@@ -208,16 +228,20 @@ class WatchlistController extends GetxController {
     }
   }
 
-  List<ChatRoomOption> getNakshatraOptionsForRashi(String? rashiId) {
-    if (rashiId == null) return [];
-    return _nakshatraOptions.where((n) => n.rashiId == rashiId).toList();
+  List<NakshatraOption> getNakshatraOptionsForRashi(String? rashiId) {
+    if (rashiId == null) {
+      return [];
+    }
+    return _nakshatraOptions
+        .where((n) => n.rashiIds.contains(rashiId))
+        .toList();
   }
 
   final RxBool _isLoading = false.obs;
 
   List<WatchlistItem> get items => _items;
-  List<ChatRoomOption> get rashiOptions => _rashiOptions;
-  List<ChatRoomOption> get nakshatraOptions => _nakshatraOptions;
+  List<RashiOption> get rashiOptions => _rashiOptions;
+  List<NakshatraOption> get nakshatraOptions => _nakshatraOptions;
   bool get isLoading => _isLoading.value;
   bool get isLoadingOptions => _isLoadingOptions.value;
 
@@ -416,7 +440,7 @@ class WatchlistController extends GetxController {
   ];
 
   Future<void> addThreeWatchlistItems(
-      ChatRoomOption rashi, ChatRoomOption nakshatra, Color color) async {
+      RashiOption rashi, NakshatraOption nakshatra, Color color) async {
     final session = await _auth.account.get();
     final uid = session.$id;
 
@@ -427,7 +451,7 @@ class WatchlistController extends GetxController {
         count: 0,
         color: color,
         rashiId: rashi.rashiId,
-        watchlistKey: rashi.rashiId ?? '',
+        watchlistKey: rashi.rashiId,
       ),
       WatchlistItem(
         id: ID.unique(),
@@ -435,7 +459,7 @@ class WatchlistController extends GetxController {
         count: 0,
         color: color,
         nakshatraId: nakshatra.nakshatraId,
-        watchlistKey: nakshatra.nakshatraId ?? '',
+        watchlistKey: nakshatra.nakshatraId,
       ),
       WatchlistItem(
         id: ID.unique(),
@@ -1267,10 +1291,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
 
   void _showAddItemDialog(
       BuildContext context, WatchlistController controller) {
-    ChatRoomOption? selectedRashi;
-    ChatRoomOption? selectedNakshatra;
+    RashiOption? selectedRashi;
+    NakshatraOption? selectedNakshatra;
     Color selectedColor = WatchlistController.availableColors.first;
-    List<ChatRoomOption> availableNakshatras = [];
+    List<NakshatraOption> availableNakshatras = [];
 
     Get.dialog(
       StatefulBuilder(
@@ -1287,7 +1311,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   const SizedBox(height: 8),
                   Obx(() => controller.isLoadingOptions
                       ? const CircularProgressIndicator()
-                      : DropdownButtonFormField<ChatRoomOption>(
+                      : DropdownButtonFormField<RashiOption>(
                           value: selectedRashi,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
@@ -1295,7 +1319,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                           ),
                           items: controller.rashiOptions
                               .map((r) => DropdownMenuItem(
-                                  value: r, child: Text(r.name)))
+                                  value: r,
+                                  child: Text('${r.name} (${r.rashiId})')))
                               .toList(),
                           onChanged: (r) {
                             setState(() {
@@ -1311,15 +1336,16 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   const Text('Select Nakshatra:',
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
-                  DropdownButtonFormField<ChatRoomOption>(
+                  DropdownButtonFormField<NakshatraOption>(
                     value: selectedNakshatra,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: 'Choose a Nakshatra',
                     ),
                     items: availableNakshatras
-                        .map((n) =>
-                            DropdownMenuItem(value: n, child: Text(n.name)))
+                        .map((n) => DropdownMenuItem(
+                            value: n,
+                            child: Text('${n.name} (${n.nakshatraId})')))
                         .toList(),
                     onChanged: selectedRashi == null
                         ? null
