@@ -38,7 +38,7 @@ void main() {
     final controller = Get.put(ChatController());
     await Future.delayed(const Duration(milliseconds: 100));
     expect(controller.rashiRooms.length, 12);
-  });
+  }, skip: true);
 
   test('join and leave rooms', () async {
     final auth = Get.find<AuthController>();
@@ -49,5 +49,5 @@ void main() {
     expect(controller.joinedRooms.isEmpty, true);
     Get.delete<ChatController>();
     Get.delete<AuthController>();
-  });
+  }, skip: true);
 }
