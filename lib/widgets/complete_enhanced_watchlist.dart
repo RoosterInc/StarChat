@@ -504,10 +504,12 @@ class WatchlistController extends GetxController {
                   0);
           continue;
         } else {
-          if (item.rashiId != null)
+          if (item.rashiId != null) {
             queries.add(Query.equal('rashi_id', item.rashiId!));
-          if (item.nakshatraId != null)
+          }
+          if (item.nakshatraId != null) {
             queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+          }
         }
         final res = await _auth.databases.listDocuments(
           databaseId: dbId,

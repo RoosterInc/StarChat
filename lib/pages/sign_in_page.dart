@@ -99,8 +99,8 @@ class _SignInPageState extends State<SignInPage> {
         if (!didPop) {
           Get.dialog(
             AlertDialog(
-              title: Text('Go Back?'),
-              content: Text('Do you want to go back to email input?'),
+              title: const Text('Go Back?'),
+              content: const Text('Do you want to go back to email input?'),
               actions: [
                 TextButton(
                   onPressed: () {

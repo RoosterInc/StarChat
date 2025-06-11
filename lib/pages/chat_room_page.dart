@@ -36,7 +36,7 @@ class ChatRoomPage extends GetView<ChatController> {
           Expanded(
             child: Container(
               color:
-                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                  Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -46,7 +46,7 @@ class ChatRoomPage extends GetView<ChatController> {
                       size: 64,
                       color: Theme.of(context)
                           .colorScheme
-                          .onSurfaceVariant
+                          .onSurface
                           .withOpacity(0.5),
                     ),
                     const SizedBox(height: 16),
@@ -54,7 +54,7 @@ class ChatRoomPage extends GetView<ChatController> {
                       'Chat messages will appear here',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                                Theme.of(context).colorScheme.onSurface,
                           ),
                     ),
                     const SizedBox(height: 8),
@@ -63,7 +63,7 @@ class ChatRoomPage extends GetView<ChatController> {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme
-                                .onSurfaceVariant
+                                .onSurface
                                 .withOpacity(0.7),
                           ),
                     ),

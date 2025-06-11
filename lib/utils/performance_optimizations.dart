@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 /// Performance optimization utilities and best practices.
 class PerformanceOptimizations {
   static Widget optimizedNetworkImage({
+    required BuildContext context,
     required String imageUrl,
     double? width,
     double? height,
@@ -19,8 +18,7 @@ class PerformanceOptimizations {
       fit: fit,
       cacheWidth: width?.round(),
       cacheHeight: height?.round(),
-      scale: MediaQueryData.fromWindow(WidgetsBinding.instance.window)
-          .devicePixelRatio,
+      scale: MediaQueryData.fromView(View.of(context)).devicePixelRatio,
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return placeholder ??

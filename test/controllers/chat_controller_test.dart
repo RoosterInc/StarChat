@@ -18,6 +18,7 @@ class FakeDatabases {
 class TestAuthController extends AuthController {
   @override
   void onInit() {
+    super.onInit();
     databases = FakeDatabases() as dynamic;
   }
 
@@ -41,7 +42,6 @@ void main() {
   }, skip: true);
 
   test('join and leave rooms', () async {
-    final auth = Get.find<AuthController>();
     final controller = Get.find<ChatController>();
     await controller.joinRoom('1');
     expect(controller.joinedRooms.length, 1);

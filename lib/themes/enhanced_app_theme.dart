@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 class EnhancedAppTheme {
   // Brand colors
   static const Color _primarySeedColor = Color(0xFF6750A4);
-  static const Color _secondarySeedColor = Color(0xFF625B71);
-  static const Color _tertiarySeedColor = Color(0xFF7D5260);
 
   // Light and dark color schemes
   static final ColorScheme _lightColorScheme = ColorScheme.fromSeed(
