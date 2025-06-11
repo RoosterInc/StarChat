@@ -13,6 +13,7 @@ class TestAuthController extends AuthController {
   void onInit() {
     userId = uid;
   }
+
   @override
   Future<void> checkExistingSession() async {}
 }
@@ -35,6 +36,7 @@ void main() {
       name: 'Test Item',
       count: 0,
       color: Colors.red,
+      watchlistKey: 'k1',
     ));
 
     expect(controller.items.length, 1);
@@ -49,6 +51,7 @@ void main() {
       name: 'Undo Item',
       count: 0,
       color: Colors.blue,
+      watchlistKey: 'k2',
     );
     await controller.addItem(item);
     expect(controller.items.length, 1);
@@ -70,6 +73,7 @@ void main() {
       name: 'Persisted',
       count: 0,
       color: Colors.green,
+      watchlistKey: 'k3',
     );
     await controller.addItem(item);
 
