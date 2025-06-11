@@ -1,15 +1,13 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../themes/app_theme.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
   final isLoading = false.obs;
   static const String _themeKey = 'isDarkMode';
   static const bool _defaultTheme = false;
-
-  final logger = Logger();
 
   @override
   void onInit() {

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -39,8 +39,6 @@ class AuthController extends GetxController {
   late TextEditingController otpController;
 
   String? userId;
-
-  final logger = Logger();
 
   // Timers and related variables
   final canResendOTP = true.obs;
@@ -499,8 +497,9 @@ class AuthController extends GetxController {
             profilePictureUrl.value = data['profilePicture'];
           }
           if (fetchedTypeRaw != null) {
-            final mappedType =
-                fetchedTypeRaw == 'Regular User' ? 'General User' : fetchedTypeRaw;
+            final mappedType = fetchedTypeRaw == 'Regular User'
+                ? 'General User'
+                : fetchedTypeRaw;
             try {
               final userTypeController = Get.find<UserTypeController>();
               await userTypeController.applyUserType(mappedType);
@@ -1305,5 +1304,4 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
-
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:logger/logger.dart';
+import '../utils/logger.dart';
 import 'auth_controller.dart';
 
 class SplashController extends GetxController
@@ -11,8 +11,6 @@ class SplashController extends GetxController
 
   final isLoading = true.obs;
   final loadingText = 'checking_session'.obs;
-
-  final logger = Logger();
 
   @override
   void onInit() {
