@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'simple_dynamic_tabs.dart';
 
 class SampleSliverAppBar extends StatelessWidget {
   const SampleSliverAppBar({super.key});
@@ -31,16 +32,7 @@ class SampleSliverAppBar extends StatelessWidget {
         child: Material(
           elevation: 1,
           color: colorScheme.surface,
-          child: const TabBar(
-            isScrollable: false,
-            tabs: [
-              Tab(text: 'Home'),
-              Tab(text: 'Feed'),
-              Tab(text: 'Events'),
-              Tab(text: 'Preds'),
-              Tab(text: 'Msgs'),
-            ],
-          ),
+          child: const SimpleDynamicTabs(),
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(

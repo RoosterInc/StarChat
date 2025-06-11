@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/enhanced_planet_house_controller.dart';
 import '../widgets/enhanced_planet_house_widgets.dart';
+import 'simple_dynamic_tabs.dart';
 
 class EnhancedSliverAppBar extends StatelessWidget {
   const EnhancedSliverAppBar({super.key});
@@ -22,16 +23,7 @@ class EnhancedSliverAppBar extends StatelessWidget {
         child: Material(
           elevation: 1,
           color: colorScheme.surface,
-          child: const TabBar(
-            isScrollable: false,
-            tabs: [
-              Tab(text: 'Home'),
-              Tab(text: 'Feed'),
-              Tab(text: 'Events'),
-              Tab(text: 'Preds'),
-              Tab(text: 'Msgs'),
-            ],
-          ),
+          child: const SimpleDynamicTabs(),
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(

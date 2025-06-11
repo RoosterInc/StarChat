@@ -29,6 +29,8 @@ class AuthController extends GetxController {
   final emailError = ''.obs;
   final otpError = ''.obs;
   final usernameError = ''.obs;
+  final userType = 'General User'.obs;
+  final isAstrologer = false.obs;
   Timer? _usernameDebounce;
   static const Duration usernameDebounceDuration = Duration(milliseconds: 500);
   String? _currentCheckingUsername;
@@ -1245,5 +1247,25 @@ class AuthController extends GetxController {
       logger.e('Error fetching username history', error: e);
       return [];
     }
+  }
+
+  Future<void> updateUserType(String newUserType) async {
+    if (!['General User', 'Astrologer'].contains(newUserType)) {
+      return;
+    }
+
+    userType.value = newUserType;
+    isAstrologer.value = newUserType == 'Astrologer';
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userType', newUserType);
+
+    Get.snackbar(
+      'Success',
+      'User type updated to newUserType',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green.shade100,
+      colorText: Colors.green.shade800,
+    );
   }
 }

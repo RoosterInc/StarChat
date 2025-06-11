@@ -4,6 +4,8 @@ import '../controllers/auth_controller.dart';
 import '../widgets/enhanced_responsive_layout.dart';
 import '../widgets/adaptive_navigation.dart';
 import '../widgets/enhanced_sliver_app_bar.dart';
+import '../widgets/simple_astrologer_fab.dart';
+import '../controllers/user_type_controller.dart';
 import '../controllers/enhanced_planet_house_controller.dart';
 import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
@@ -86,6 +88,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       },
       body: Scaffold(
         drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
+        floatingActionButton: const SimpleAstrologerFAB(),
         body: FadeTransition(
           opacity: _fadeAnimation,
           child: SlideTransition(
@@ -186,28 +189,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildHomeBody(BuildContext context) {
-    return DefaultTabController(
-      length: 5,
-      child: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          const EnhancedSliverAppBar(),
-        ],
-        body: TabBarView(
-          children: [
-            EnhancedResponsiveLayout(
-              mobile: (context) => _buildContent(
-                  context, MediaQuery.of(context).size.width * 0.95),
-              tablet: (context) => _buildContent(context, 600),
-              desktop: (context) => _buildContent(context, 800),
-            ),
-            const Center(child: SizedBox()),
-            const Center(child: SizedBox()),
-            const Center(child: SizedBox()),
-            const Center(child: SizedBox()),
+    final userTypeController = Get.put(UserTypeController());
+    return Obx(() {
+      final isAstrologer = userTypeController.isAstrologer.value;
+      final tabLength = isAstrologer ? 6 : 5;
+      return DefaultTabController(
+        length: tabLength,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            const EnhancedSliverAppBar(),
           ],
+          body: TabBarView(
+            children: [
+              EnhancedResponsiveLayout(
+                mobile: (context) => _buildContent(
+                    context, MediaQuery.of(context).size.width * 0.95),
+                tablet: (context) => _buildContent(context, 600),
+                desktop: (context) => _buildContent(context, 800),
+              ),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              const Center(child: SizedBox()),
+              if (isAstrologer) const Center(child: SizedBox()),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildContent(BuildContext context, double width) {
