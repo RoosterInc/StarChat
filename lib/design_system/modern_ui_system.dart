@@ -635,8 +635,8 @@ class _StaggeredListItemState extends State<StaggeredListItem>
 
 class GlassmorphicContainer extends StatelessWidget {
   final Widget? child;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
   final double blur;
   final double opacity;
   final Color? color;
@@ -648,8 +648,8 @@ class GlassmorphicContainer extends StatelessWidget {
   const GlassmorphicContainer({
     Key? key,
     this.child,
-    this.width = double.infinity,
-    this.height = double.infinity,
+    this.width,
+    this.height,
     this.blur = 10.0,
     this.opacity = 0.1,
     this.color,
