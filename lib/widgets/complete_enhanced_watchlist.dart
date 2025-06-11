@@ -436,41 +436,7 @@ class WatchlistController extends GetxController {
         ],
       );
 
-      if (result.documents.isEmpty && _items.isEmpty) {
-        // Create some default items
-        final dummy = [
-          WatchlistItem(
-            id: ID.unique(),
-            name: 'Sample Rashi',
-            count: 0,
-            color: Colors.pinkAccent.shade100,
-            watchlistKey: 'r1',
-          ),
-          WatchlistItem(
-            id: ID.unique(),
-            name: 'Sample Nakshatra',
-            count: 0,
-            color: Colors.purpleAccent.shade100,
-            watchlistKey: 'n1',
-          ),
-        ];
-
-        for (int i = 0; i < dummy.length; i++) {
-          final d = dummy[i];
-          await _auth.databases.createDocument(
-            databaseId: dbId,
-            collectionId: collectionId,
-            documentId: d.id,
-            data: _itemDataForDb(d, uid, order: i, updatedAt: DateTime.now()),
-            permissions: [
-              Permission.read(Role.user(uid)),
-              Permission.update(Role.user(uid)),
-              Permission.delete(Role.user(uid)),
-            ],
-          );
-        }
-        _items.assignAll(dummy);
-      } else {
+      if (result.documents.isNotEmpty) {
         _items.assignAll(result.documents.map((doc) {
           final data = doc.data;
           final watchlistKey =
@@ -508,6 +474,8 @@ class WatchlistController extends GetxController {
                 : ParsingUtils.parseDateTime(data['createdAt']),
           );
         }).toList());
+      } else {
+        _items.clear();
       }
       await _saveItemsToPrefs();
       await _updateItemCounts();
