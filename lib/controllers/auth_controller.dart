@@ -58,7 +58,8 @@ class AuthController extends GetxController {
   static const String _projectIdKey = 'APPWRITE_PROJECT_ID';
   static const String _databaseIdKey = 'APPWRITE_DATABASE_ID';
   static const String _profilesCollectionKey = 'USER_PROFILES_COLLECTION_ID';
-  static const String _usernamesHistoryCollectionKey = 'USER_NAMES_HISTORY_COLLECTION_ID';
+  static const String _usernamesHistoryCollectionKey =
+      'USER_NAMES_HISTORY_COLLECTION_ID';
   static const String _bucketIdKey = 'PROFILE_PICTURES_BUCKET_ID';
 
   @override
@@ -645,7 +646,8 @@ class AuthController extends GetxController {
 
     isCheckingUsername.value = true;
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+    final historyCollectionId =
+        dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
     try {
       if (name != _currentCheckingUsername || name != usernameText.value) {
         return false;
@@ -695,9 +697,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _addUsernameToHistory(String uid, String name, {String subscriptionType = 'Free'}) async {
+  Future<void> _addUsernameToHistory(String uid, String name,
+      {String subscriptionType = 'Free'}) async {
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+    final historyCollectionId =
+        dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
     try {
       await databases.createDocument(
         databaseId: dbId,
@@ -832,6 +836,8 @@ class AuthController extends GetxController {
     }
     usernameError.value = '';
     hasCheckedUsername.value = false;
+    _currentCheckingUsername = name;
+    usernameText.value = name;
     await _checkUsernameAvailability(name);
   }
 
@@ -859,6 +865,8 @@ class AuthController extends GetxController {
     }
     usernameError.value = '';
     isLoading.value = true;
+    _currentCheckingUsername = name;
+    usernameText.value = name;
     final available = await _checkUsernameAvailability(name);
     if (!available) {
       isLoading.value = false;
@@ -963,7 +971,6 @@ class AuthController extends GetxController {
     }
   }
 
-
   Future<void> logout() async {
     isLoading.value = true;
     String? uid;
@@ -1056,7 +1063,8 @@ class AuthController extends GetxController {
       final session = await account.get();
       final uid = session.$id;
       final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-      final historyCollectionId = dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+      final historyCollectionId =
+          dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
 
       final result = await databases.listDocuments(
         databaseId: dbId,
