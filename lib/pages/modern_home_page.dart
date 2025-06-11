@@ -1,0 +1,1165 @@
+// lib/pages/modern_home_page.dart
+// Complete modernization of the home page using the design system
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
+import '../controllers/user_type_controller.dart';
+import '../controllers/enhanced_planet_house_controller.dart';
+import '../controllers/chat_controller.dart';
+import '../design_system/modern_ui_system.dart';
+import '../widgets/complete_enhanced_watchlist.dart';
+import '../widgets/safe_network_image.dart';
+import '../widgets/chat/modern_chat_room_card.dart';
+import '../utils/modern_color_palettes.dart';
+
+class ModernHomePage extends StatefulWidget {
+  const ModernHomePage({super.key});
+
+  @override
+  State<ModernHomePage> createState() => _ModernHomePageState();
+}
+
+class _ModernHomePageState extends State<ModernHomePage>
+    with TickerProviderStateMixin {
+  int _selectedIndex = 0;
+  late AnimationController _pageTransitionController;
+  late Animation<double> _pageTransitionAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+    _initializeAnimations();
+  }
+
+  void _initializeControllers() {
+    Get.put(WatchlistController(), permanent: true);
+    Get.put(EnhancedPlanetHouseController(), permanent: true);
+  }
+
+  void _initializeAnimations() {
+    _pageTransitionController = AnimationController(
+      duration: DesignTokens.durationNormal,
+      vsync: this,
+    );
+    _pageTransitionAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pageTransitionController,
+      curve: DesignTokens.curveEaseInOut,
+    ));
+    _pageTransitionController.forward();
+  }
+
+  @override
+  void dispose() {
+    _pageTransitionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+    final userTypeController = Get.find<UserTypeController>();
+
+    return Obx(() {
+      final isAstrologer = userTypeController.isAstrologerRx.value;
+      final destinations = _getNavigationDestinations(isAstrologer);
+
+      return AdaptiveNavigation(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() => _selectedIndex = index);
+          _pageTransitionController.reset();
+          _pageTransitionController.forward();
+          MicroInteractions.selectionHaptic();
+        },
+        destinations: destinations,
+        body: Scaffold(
+          drawer: ResponsiveUtils.isMobile(context)
+              ? _buildModernDrawer(context, authController, userTypeController)
+              : null,
+          body: AnimatedBuilder(
+            animation: _pageTransitionAnimation,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _pageTransitionAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, 0.1),
+                    end: Offset.zero,
+                  ).animate(_pageTransitionAnimation),
+                  child: _buildPageContent(context),
+                ),
+              );
+            },
+          ),
+          floatingActionButton: _buildModernFAB(context, isAstrologer),
+        ),
+      );
+    });
+  }
+
+  Widget _buildPageContent(BuildContext context) {
+    if (_selectedIndex == 0) {
+      return _buildModernHomeContent(context);
+    }
+    // Return other pages for different indices
+    return Center(
+      child: GlassmorphicCard(
+        padding: DesignTokens.xl(context).all,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.construction,
+              size: 48,
+              color: context.colorScheme.primary,
+            ),
+            SizedBox(height: DesignTokens.md(context)),
+            Text(
+              'Coming Soon',
+              style: context.textTheme.headlineSmall,
+            ),
+            SizedBox(height: DesignTokens.sm(context)),
+            Text(
+              'This feature is under development',
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernHomeContent(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        _buildModernAppBar(context),
+        SliverPadding(
+          padding: ResponsiveUtils.adaptiveValue(
+            context,
+            mobile: DesignTokens.md(context).all,
+            tablet: DesignTokens.lg(context).all,
+            desktop: DesignTokens.xl(context).all,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildPlanetaryPositionsSection(context),
+              SizedBox(height: DesignTokens.xl(context)),
+              _buildPredictionScoresSection(context),
+              SizedBox(height: DesignTokens.xl(context)),
+              _buildChatRoomsSection(context),
+              SizedBox(height: DesignTokens.xl(context)),
+              _buildWatchlistSection(context),
+              SizedBox(height: DesignTokens.xxl(context)),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernAppBar(BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: ResponsiveUtils.adaptiveValue(
+        context,
+        mobile: 120.0,
+        tablet: 140.0,
+        desktop: 160.0,
+      ),
+      floating: true,
+      pinned: true,
+      snap: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                context.colorScheme.primary.withOpacity(0.1),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: DesignTokens.md(context).horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (ResponsiveUtils.isMobile(context))
+                    Builder(
+                      builder: (context) => AnimatedButton(
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        child: Icon(
+                          Icons.menu_rounded,
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Center(
+                      child: GlassmorphicContainer(
+                        padding: DesignTokens.sm(context).all,
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radiusXl(context),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              color: context.colorScheme.primary,
+                              size: 20,
+                            ),
+                            SizedBox(width: DesignTokens.xs(context)),
+                            Text(
+                              'StarChat',
+                              style: context.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: context.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      AnimatedButton(
+                        onPressed: () => Get.toNamed('/settings'),
+                        child: Icon(
+                          Icons.settings_rounded,
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanetaryPositionsSection(BuildContext context) {
+    final controller = Get.find<EnhancedPlanetHouseController>();
+
+    return GlassmorphicCard(
+      padding: DesignTokens.lg(context).all,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: DesignTokens.sm(context).all,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.colorScheme.primary,
+                      context.colorScheme.secondary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    DesignTokens.radiusMd(context),
+                  ),
+                ),
+                child: Icon(
+                  Icons.public,
+                  color: context.colorScheme.onPrimary,
+                  size: 20,
+                ),
+              ),
+              SizedBox(width: DesignTokens.md(context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Planetary Positions',
+                      style: context.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Today\'s cosmic alignment',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedButton(
+                onPressed: () => controller.forceRefreshData(),
+                child: Icon(
+                  Icons.refresh_rounded,
+                  color: context.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: DesignTokens.lg(context)),
+          Obx(() {
+            if (controller.isLoading && !controller.hasData) {
+              return SizedBox(
+                height: 80,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 9,
+                  separatorBuilder: (_, __) =>
+                      SizedBox(width: DesignTokens.md(context)),
+                  itemBuilder: (_, __) => SkeletonLoader(
+                    width: 60,
+                    height: 80,
+                    borderRadius: BorderRadius.circular(
+                      DesignTokens.radiusMd(context),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (controller.planetHouseData.isEmpty) {
+              return Center(
+                child: Text(
+                  'No planetary data available',
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }
+
+            return SizedBox(
+              height: 100,
+              child: StaggeredListView(
+                scrollDirection: Axis.horizontal,
+                children:
+                    controller.planetHouseData.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final planet = entry.value;
+                  return _buildPlanetCard(context, planet, index);
+                }).toList(),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanetCard(BuildContext context, dynamic planet, int index) {
+    return Container(
+      width: ResponsiveUtils.fluidSize(context, min: 70, max: 90),
+      margin: EdgeInsets.only(right: DesignTokens.sm(context)),
+      child: GlassmorphicContainer(
+        padding: DesignTokens.sm(context).all,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: ModernColorPalettes.getGradientForIndex(index),
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: ModernColorPalettes.getGradientForIndex(index)[0]
+                        .withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  planet.position?.planet?.substring(0, 1) ?? '?',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: DesignTokens.xs(context)),
+            Text(
+              planet.position?.planet ?? 'Unknown',
+              style: context.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPredictionScoresSection(BuildContext context) {
+    final rashiNames = [
+      'Aries',
+      'Taurus',
+      'Gemini',
+      'Cancer',
+      'Leo',
+      'Virgo',
+      'Libra',
+      'Scorpio',
+      'Sagittarius',
+      'Capricorn',
+      'Aquarius',
+      'Pisces'
+    ];
+
+    return GlassmorphicCard(
+      padding: DesignTokens.lg(context).all,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: DesignTokens.sm(context).all,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.colorScheme.tertiary,
+                      context.colorScheme.primary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    DesignTokens.radiusMd(context),
+                  ),
+                ),
+                child: Icon(
+                  Icons.analytics_rounded,
+                  color: context.colorScheme.onPrimary,
+                  size: 20,
+                ),
+              ),
+              SizedBox(width: DesignTokens.md(context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Prediction Scores',
+                      style: context.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Daily rashi insights',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: DesignTokens.lg(context)),
+          SizedBox(
+            height: ResponsiveUtils.fluidSize(context, min: 90, max: 110),
+            child: StaggeredListView(
+              scrollDirection: Axis.horizontal,
+              staggerDelay: const Duration(milliseconds: 50),
+              children: rashiNames.asMap().entries.map((entry) {
+                final index = entry.key;
+                final name = entry.value;
+                return _buildPredictionScoreCard(context, name, index);
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPredictionScoreCard(
+      BuildContext context, String name, int index) {
+    final colors = ModernColorPalettes.getGradientForIndex(index);
+
+    return Container(
+      width: ResponsiveUtils.fluidSize(context, min: 80, max: 100),
+      margin: EdgeInsets.only(right: DesignTokens.md(context)),
+      child: AnimatedButton(
+        onPressed: () => _showPredictionDialog(context, name),
+        child: GlassmorphicContainer(
+          padding: DesignTokens.md(context).all,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: colors),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors[0].withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: context.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: DesignTokens.sm(context)),
+              Text(
+                name,
+                style: context.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatRoomsSection(BuildContext context) {
+    final chatController = Get.find<ChatController>();
+
+    return GlassmorphicCard(
+      padding: DesignTokens.lg(context).all,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: DesignTokens.sm(context).all,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          context.colorScheme.secondary,
+                          context.colorScheme.tertiary,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radiusMd(context),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.chat_bubble_rounded,
+                      color: context.colorScheme.onSecondary,
+                      size: 20,
+                    ),
+                  ),
+                  SizedBox(width: DesignTokens.md(context)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Chat Rooms',
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Join the conversation',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              AnimatedButton(
+                onPressed: () => Get.toNamed('/chat-rooms-list'),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        context.colorScheme.primary,
+                        context.colorScheme.secondary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(
+                      DesignTokens.radiusLg(context),
+                    ),
+                  ),
+                  child: Text(
+                    'View All',
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: DesignTokens.lg(context)),
+          Obx(() {
+            if (chatController.isLoading.value) {
+              return SizedBox(
+                height: 140,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 3,
+                  separatorBuilder: (_, __) =>
+                      SizedBox(width: DesignTokens.md(context)),
+                  itemBuilder: (_, __) => SkeletonLoader(
+                    width:
+                        ResponsiveUtils.fluidSize(context, min: 160, max: 200),
+                    height: 140,
+                    borderRadius: BorderRadius.circular(
+                      DesignTokens.radiusLg(context),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (chatController.rashiRooms.isEmpty) {
+              return Center(
+                child: Text(
+                  'No chat rooms available',
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }
+
+            return SizedBox(
+              height: 140,
+              child: StaggeredListView(
+                scrollDirection: Axis.horizontal,
+                children: chatController.rashiRooms
+                    .take(6)
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map((entry) {
+                  final index = entry.key;
+                  final room = entry.value;
+                  return Container(
+                    width:
+                        ResponsiveUtils.fluidSize(context, min: 160, max: 200),
+                    margin: EdgeInsets.only(right: DesignTokens.md(context)),
+                    child: ModernChatRoomCard(
+                      room: room,
+                      width: double.infinity,
+                      onTap: () => Get.toNamed('/chat-room/${room.id}'),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWatchlistSection(BuildContext context) {
+    return GlassmorphicCard(
+      padding: DesignTokens.lg(context).all,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: DesignTokens.sm(context).all,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.colorScheme.primary,
+                      context.colorScheme.tertiary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    DesignTokens.radiusMd(context),
+                  ),
+                ),
+                child: Icon(
+                  Icons.bookmark_rounded,
+                  color: context.colorScheme.onPrimary,
+                  size: 20,
+                ),
+              ),
+              SizedBox(width: DesignTokens.md(context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Watchlist',
+                      style: context.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Track your favorites',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: DesignTokens.lg(context)),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: const EnhancedWatchlistWidget(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernDrawer(BuildContext context, AuthController authController,
+      UserTypeController userTypeController) {
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              context.colorScheme.surface,
+              context.colorScheme.surface.withOpacity(0.95),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: DesignTokens.xl(context).all,
+                child: Obx(() {
+                  final username = authController.username.value;
+                  final userType = userTypeController.userTypeRx.value;
+                  return Column(
+                    children: [
+                      GlassmorphicContainer(
+                        width: 80,
+                        height: 80,
+                        borderRadius: BorderRadius.circular(40),
+                        child: ClipOval(
+                          child: SafeNetworkImage(
+                            imageUrl: authController.profilePictureUrl.value,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorWidget: Icon(
+                              Icons.person_rounded,
+                              size: 40,
+                              color: context.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: DesignTokens.md(context)),
+                      Text(
+                        username.isNotEmpty ? username : 'User',
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: DesignTokens.xs(context)),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.sm(context),
+                          vertical: DesignTokens.xs(context),
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              context.colorScheme.primaryContainer,
+                              context.colorScheme.secondaryContainer,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            DesignTokens.radiusLg(context),
+                          ),
+                        ),
+                        child: Text(
+                          userType,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: context.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: DesignTokens.md(context).horizontal,
+                  children: [
+                    _buildDrawerItem(
+                      context,
+                      Icons.person_rounded,
+                      'profile'.tr,
+                      () {
+                        Navigator.pop(context);
+                        Get.toNamed('/profile');
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      Icons.settings_rounded,
+                      'settings'.tr,
+                      () {
+                        Navigator.pop(context);
+                        Get.toNamed('/settings');
+                      },
+                    ),
+                    const Divider(),
+                    _buildDrawerItem(
+                      context,
+                      Icons.logout_rounded,
+                      'logout'.tr,
+                      () async {
+                        Navigator.pop(context);
+                        await authController.logout();
+                      },
+                      isDestructive: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: DesignTokens.sm(context)),
+      child: AnimatedButton(
+        onPressed: onTap,
+        child: GlassmorphicContainer(
+          padding: DesignTokens.md(context).all,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isDestructive
+                    ? context.colorScheme.error
+                    : context.colorScheme.primary,
+              ),
+              SizedBox(width: DesignTokens.md(context)),
+              Text(
+                title,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDestructive
+                      ? context.colorScheme.error
+                      : context.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernFAB(BuildContext context, bool isAstrologer) {
+    if (!isAstrologer) return const SizedBox.shrink();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton.extended(
+          onPressed: () => _showCreateOptions(context),
+          backgroundColor: context.colorScheme.primary,
+          foregroundColor: context.colorScheme.onPrimary,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Create'),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg(context)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<NavigationDestination> _getNavigationDestinations(bool isAstrologer) {
+    if (isAstrologer) {
+      return const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home_rounded),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.assignment_outlined),
+          selectedIcon: Icon(Icons.assignment_rounded),
+          label: 'Requests',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.help_outline_rounded),
+          selectedIcon: Icon(Icons.help_rounded),
+          label: 'Questions',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.event_outlined),
+          selectedIcon: Icon(Icons.event_rounded),
+          label: 'Events',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.message_outlined),
+          selectedIcon: Icon(Icons.message_rounded),
+          label: 'Messages',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.auto_awesome_outlined),
+          selectedIcon: Icon(Icons.auto_awesome_rounded),
+          label: 'Predictions',
+        ),
+      ];
+    } else {
+      return const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home_rounded),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.feed_outlined),
+          selectedIcon: Icon(Icons.feed_rounded),
+          label: 'Feed',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.event_outlined),
+          selectedIcon: Icon(Icons.event_rounded),
+          label: 'Events',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.auto_awesome_outlined),
+          selectedIcon: Icon(Icons.auto_awesome_rounded),
+          label: 'Predictions',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.message_outlined),
+          selectedIcon: Icon(Icons.message_rounded),
+          label: 'Messages',
+        ),
+      ];
+    }
+  }
+
+  void _showPredictionDialog(BuildContext context, String rashiName) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: GlassmorphicContainer(
+          padding: DesignTokens.xl(context).all,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl(context)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                rashiName,
+                style: context.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: DesignTokens.md(context)),
+              Text(
+                'Detailed predictions coming soon!',
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: DesignTokens.lg(context)),
+              AnimatedButton(
+                onPressed: () => Get.back(),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.lg(context),
+                    vertical: DesignTokens.md(context),
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        context.colorScheme.primary,
+                        context.colorScheme.secondary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(
+                      DesignTokens.radiusLg(context),
+                    ),
+                  ),
+                  child: Text(
+                    'Close',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCreateOptions(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: DesignTokens.xl(context).all,
+        decoration: BoxDecoration(
+          color: context.colorScheme.surface,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(DesignTokens.radiusXl(context)),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: DesignTokens.lg(context)),
+            Text(
+              'Create New Content',
+              style: context.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: DesignTokens.lg(context)),
+            Row(
+              children: [
+                Expanded(
+                  child: AnimatedButton(
+                    onPressed: () {
+                      Get.back();
+                      Get.snackbar('Create Prediction', 'Feature coming soon!');
+                    },
+                    child: GlassmorphicContainer(
+                      padding: DesignTokens.lg(context).all,
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radiusLg(context),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 32,
+                            color: context.colorScheme.primary,
+                          ),
+                          SizedBox(height: DesignTokens.sm(context)),
+                          Text(
+                            'Prediction',
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: DesignTokens.md(context)),
+                Expanded(
+                  child: AnimatedButton(
+                    onPressed: () {
+                      Get.back();
+                      Get.snackbar('Create Post', 'Feature coming soon!');
+                    },
+                    child: GlassmorphicContainer(
+                      padding: DesignTokens.lg(context).all,
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radiusLg(context),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.article_rounded,
+                            size: 32,
+                            color: context.colorScheme.secondary,
+                          ),
+                          SizedBox(height: DesignTokens.sm(context)),
+                          Text(
+                            'Post',
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: DesignTokens.lg(context)),
+          ],
+        ),
+      ),
+    );
+  }
+}
