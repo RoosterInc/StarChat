@@ -19,11 +19,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  runApp(const MyApp());
+  runApp(const ModernStarChatApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ModernStarChatApp extends StatelessWidget {
+  const ModernStarChatApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,33 +48,35 @@ class MyApp extends StatelessWidget {
           initialBinding: AuthBinding(),
           initialRoute: '/',
           defaultTransition: Transition.cupertino,
-          transitionDuration: const Duration(milliseconds: 300),
+          transitionDuration: DesignTokens.durationNormal,
           getPages: [
             GetPage(
               name: '/',
-              page: () => const SignInPage(),
+              page: () => const ModernSignInPage(),
               binding: AuthBinding(),
               transition: Transition.fadeIn,
-              transitionDuration: const Duration(milliseconds: 400),
+              transitionDuration: DesignTokens.durationSlow,
             ),
             GetPage(
               name: '/set_username',
-              page: () => const SetUsernamePage(),
+              page: () => const ModernSetUsernamePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
+              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/home',
-              page: () => const HomePage(),
+              page: () => const ModernHomePage(),
               binding: AuthBinding(),
               transition: Transition.fadeIn,
-              transitionDuration: const Duration(milliseconds: 500),
+              transitionDuration: DesignTokens.durationSlow,
             ),
             GetPage(
               name: '/profile',
-              page: () => const ProfilePage(),
+              page: () => const ModernProfilePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
+              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/settings',
@@ -87,18 +89,21 @@ class MyApp extends StatelessWidget {
               page: () => const SliverSamplePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
+              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/chat-room/:roomId',
-              page: () => const ChatRoomPage(),
+              page: () => const ModernChatRoomPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
+              transitionDuration: DesignTokens.durationNormal,
             ),
             GetPage(
               name: '/chat-rooms-list',
-              page: () => const ChatRoomsListPage(),
+              page: () => const ModernChatRoomsListPage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
+              transitionDuration: DesignTokens.durationNormal,
             ),
           ],
           locale: Get.deviceLocale,
@@ -117,8 +122,51 @@ class MyApp extends StatelessWidget {
           unknownRoute: GetPage(
             name: '/notfound',
             page: () => Scaffold(
-              appBar: AppBar(title: const Text('Page Not Found')),
-              body: const Center(child: Text('404 - Page Not Found')),
+              body: Center(
+                child: GlassmorphicCard(
+                  padding: DesignTokens.xl(context).all,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      SizedBox(height: DesignTokens.lg(context)),
+                      Text(
+                        '404 - Page Not Found',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      SizedBox(height: DesignTokens.md(context)),
+                      AnimatedButton(
+                        onPressed: () => Get.offAllNamed('/'),
+                        child: Container(
+                          padding: DesignTokens.md(context).all,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.secondary,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radiusLg(context),
+                            ),
+                          ),
+                          child: Text(
+                            'Go Home',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ));
