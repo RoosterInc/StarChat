@@ -125,7 +125,7 @@ class AuthController extends GetxController {
         justLoggedOut.value = false;
         logger.i(
             "[Auth] checkExistingSession: 'justLoggedOut' flag was true. Navigating to sign-in.");
-        await Get.offAllNamed('/');
+        Get.offAllNamed('/');
         return;
       }
 
@@ -143,7 +143,7 @@ class AuthController extends GetxController {
             "[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
           logger.i("[Auth] checkExistingSession: Navigating to /home");
-          await Get.offAllNamed('/home');
+          Get.offAllNamed('/home');
         } else {
           logger.i(
               "[Auth] checkExistingSession: Already on an authenticated route (${Get.currentRoute}), not navigating from checkExistingSession.");
@@ -153,7 +153,7 @@ class AuthController extends GetxController {
             "[Auth] checkExistingSession: User does NOT have username. Current route: ${Get.currentRoute}");
         if (Get.currentRoute != '/set_username') {
           logger.i("[Auth] checkExistingSession: Navigating to /set_username");
-          await Get.offAllNamed('/set_username');
+          Get.offAllNamed('/set_username');
         } else {
           logger.i(
               "[Auth] checkExistingSession: Already on /set_username, not navigating.");
@@ -163,7 +163,7 @@ class AuthController extends GetxController {
       logger.e(
           "[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
       if (e.code == 401) {
-        await Get.offAllNamed('/');
+        Get.offAllNamed('/');
       }
     } catch (e) {
       logger.e("[Auth] checkExistingSession: Caught general error: $e");
@@ -315,7 +315,7 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await account.get();
-      await Get.offAllNamed('/home');
+      Get.offAllNamed('/home');
       clearControllers();
       isOTPSent.value = false;
       await Future.delayed(const Duration(milliseconds: 100));
@@ -341,9 +341,9 @@ class AuthController extends GetxController {
         otpError.value = '';
         bool hasUsername = await ensureUsername();
         if (hasUsername) {
-          await Get.offAllNamed('/home');
+          Get.offAllNamed('/home');
         } else {
-          await Get.offAllNamed('/set_username');
+          Get.offAllNamed('/set_username');
         }
         clearControllers();
         isOTPSent.value = false;
