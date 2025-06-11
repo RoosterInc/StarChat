@@ -23,20 +23,20 @@ class SimpleDynamicTabs extends StatelessWidget {
   List<Tab> _getTabsForUserType(bool isAstrologer) {
     if (isAstrologer) {
       return const [
-        Tab(text: 'Home', icon: Icon(Icons.home, size: 16)),
-        Tab(text: 'Requests', icon: Icon(Icons.assignment, size: 16)),
-        Tab(text: 'Questions', icon: Icon(Icons.help_outline, size: 16)),
-        Tab(text: 'Events', icon: Icon(Icons.event, size: 16)),
-        Tab(text: 'Messages', icon: Icon(Icons.message, size: 16)),
-        Tab(text: 'Predictions', icon: Icon(Icons.auto_awesome, size: 16)),
+        Tab(text: 'Home'),
+        Tab(text: 'Requests'),
+        Tab(text: 'Questions'),
+        Tab(text: 'Events'),
+        Tab(text: 'Messages'),
+        Tab(text: 'Predictions'),
       ];
     } else {
       return const [
-        Tab(text: 'Home', icon: Icon(Icons.home, size: 16)),
-        Tab(text: 'Feed', icon: Icon(Icons.dynamic_feed, size: 16)),
-        Tab(text: 'Events', icon: Icon(Icons.event, size: 16)),
-        Tab(text: 'Predictions', icon: Icon(Icons.auto_awesome, size: 16)),
-        Tab(text: 'Messages', icon: Icon(Icons.message, size: 16)),
+        Tab(text: 'Home'),
+        Tab(text: 'Feed'),
+        Tab(text: 'Events'),
+        Tab(text: 'Predictions'),
+        Tab(text: 'Messages'),
       ];
     }
   }
