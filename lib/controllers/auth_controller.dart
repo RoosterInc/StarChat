@@ -1019,11 +1019,11 @@ class AuthController extends GetxController {
       isLoading.value = false;
       logger.i("[Auth] submitUsername: Successfully saved username '$name'");
 
-      if (Get.previousRoute.isEmpty) {
-        Get.offAllNamed('/home');
-      } else {
-        Get.back();
-      }
+      // Always proceed to the home screen after successfully saving the
+      // username. Previously the navigation depended on `Get.previousRoute`,
+      // which could keep the user on the username page if the route history
+      // wasn't cleared correctly.
+      Get.offAllNamed('/home');
     } catch (e) {
       isLoading.value = false;
       logger.e("[Auth] submitUsername: Error during username save: $e");
