@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'user_type_controller.dart';
 
 class AuthController extends GetxController {
   final Client client = Client();
@@ -489,12 +490,21 @@ class AuthController extends GetxController {
       if (result.documents.isNotEmpty) {
         final data = result.documents.first.data;
         final fetchedUsername = data['username'];
+        final fetchedTypeRaw = data['userType'];
         logger.i(
             "[Auth] ensureUsername: Document found. Username from DB: '$fetchedUsername'. Profile Pic URL: '${data['profilePicture']}'");
         if (fetchedUsername != null && fetchedUsername != '') {
           username.value = fetchedUsername;
           if (data['profilePicture'] != null && data['profilePicture'] != '') {
             profilePictureUrl.value = data['profilePicture'];
+          }
+          if (fetchedTypeRaw != null) {
+            final mappedType =
+                fetchedTypeRaw == 'Regular User' ? 'General User' : fetchedTypeRaw;
+            try {
+              final userTypeController = Get.find<UserTypeController>();
+              await userTypeController.applyUserType(mappedType);
+            } catch (_) {}
           }
           await prefs.setString('username', username.value);
           logger.i(
@@ -827,6 +837,7 @@ class AuthController extends GetxController {
           'userId': uid,
           'username': name,
           'profilePicture': '',
+          'userType': 'General User',
           'firstName': '',
           'lastName': '',
           'createdAt': now,
@@ -1151,9 +1162,15 @@ class AuthController extends GetxController {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('username');
+        await prefs.remove(UserTypeController.storageKey);
         if (uid != null) {
           await prefs.remove('watchlist_items_$uid');
         }
+        // Reset local user type to default on logout
+        try {
+          final userTypeController = Get.find<UserTypeController>();
+          await userTypeController.applyUserType('General User');
+        } catch (_) {}
       } catch (e) {
         logger.e('Error clearing cached username from SharedPreferences',
             error: e);
@@ -1246,6 +1263,46 @@ class AuthController extends GetxController {
     } catch (e) {
       logger.e('Error fetching username history', error: e);
       return [];
+    }
+  }
+
+  /// Update the user type on the server and locally.
+  Future<void> updateUserType(String type) async {
+    isLoading.value = true;
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    try {
+      final session = await account.get();
+      final uid = session.$id;
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('userId', uid),
+          Query.limit(1),
+        ],
+      );
+      if (result.documents.isNotEmpty) {
+        final docId = result.documents.first.$id;
+        await databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: docId,
+          data: {
+            'userType': type,
+            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      }
+
+      final userTypeController = Get.find<UserTypeController>();
+      await userTypeController.updateUserType(type);
+    } catch (e) {
+      logger.e('Error updating user type', error: e);
+      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
     }
   }
 

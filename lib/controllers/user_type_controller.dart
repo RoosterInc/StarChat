@@ -31,6 +31,9 @@ class UserTypeController extends GetxController {
   static const String _defaultUserType = 'General User';
   static const List<String> _validUserTypes = ['General User', 'Astrologer'];
 
+  /// Expose the storage key for other classes (e.g. [AuthController])
+  static String get storageKey => _userTypeKey;
+
   final Logger _logger = Logger();
 
   @override
@@ -102,6 +105,15 @@ class UserTypeController extends GetxController {
     } finally {
       _isLoading.value = false;
     }
+  }
+
+  /// Sets the user type without any UI notifications. Intended for
+  /// synchronization with server values (e.g. during login).
+  Future<void> applyUserType(String type) async {
+    if (!_validUserTypes.contains(type)) {
+      type = _defaultUserType;
+    }
+    await _setUserTypeInternal(type, saveToStorage: true);
   }
 
   /// Convenience method to toggle between the two known types.
