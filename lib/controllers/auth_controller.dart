@@ -634,24 +634,43 @@ class AuthController extends GetxController {
   }
 
   Future<bool> _checkUsernameAvailability(String name) async {
+    // Validate input consistency
     if (name != _currentCheckingUsername || name != usernameText.value) {
+      logger.i(
+          "[Auth] _checkUsernameAvailability: Name mismatch, aborting check. Input: '$name', Current: '$_currentCheckingUsername', Text: '${usernameText.value}'");
       return false;
     }
 
     if (name.isEmpty) {
       usernameAvailable.value = false;
       isCheckingUsername.value = false;
+      logger
+          .i("[Auth] _checkUsernameAvailability: Empty name, returning false");
       return false;
     }
 
     isCheckingUsername.value = true;
+    logger.i(
+        "[Auth] _checkUsernameAvailability: Starting availability check for username: '$name'");
+
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final historyCollectionId =
         dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+
+    logger.i(
+        "[Auth] _checkUsernameAvailability: Using dbId: '$dbId', historyCollectionId: '$historyCollectionId'");
+
     try {
+      // Double-check input consistency before query
       if (name != _currentCheckingUsername || name != usernameText.value) {
+        logger.i(
+            "[Auth] _checkUsernameAvailability: Name changed during check, aborting");
         return false;
       }
+
+      // Check against user_names_history collection for availability
+      logger.i(
+          "[Auth] _checkUsernameAvailability: Querying user_names_history for username: '$name'");
 
       final result = await databases.listDocuments(
         databaseId: dbId,
@@ -659,16 +678,32 @@ class AuthController extends GetxController {
         queries: [Query.equal('username', name)],
       );
 
+      logger.i(
+          "[Auth] _checkUsernameAvailability: Query completed. Found ${result.documents.length} documents with username '$name'");
+
+      // Final input consistency check
       if (name != _currentCheckingUsername || name != usernameText.value) {
+        logger.i(
+            "[Auth] _checkUsernameAvailability: Name changed after query, aborting");
         return false;
       }
+
+      // Username is available if no records found in history
       usernameAvailable.value = result.documents.isEmpty;
+
       if (usernameAvailable.value) {
         usernameError.value = '';
+        logger.i(
+            "[Auth] _checkUsernameAvailability: Username '$name' is AVAILABLE");
+      } else {
+        logger.i(
+            "[Auth] _checkUsernameAvailability: Username '$name' is TAKEN (found in history)");
       }
+
       return usernameAvailable.value;
     } on AppwriteException catch (e) {
-      logger.e('AppwriteException checking username', error: e);
+      logger.e(
+          "[Auth] _checkUsernameAvailability: AppwriteException. Code: ${e.code}, Message: ${e.message}");
       final message = e.message ?? 'username_check_error'.tr;
       usernameError.value = message;
       Get.snackbar(
@@ -680,7 +715,7 @@ class AuthController extends GetxController {
       usernameAvailable.value = false;
       return false;
     } catch (e) {
-      logger.e('Unknown error checking username', error: e);
+      logger.e("[Auth] _checkUsernameAvailability: Unknown error: $e");
       Get.snackbar(
         'error'.tr,
         'unexpected_error'.tr,
@@ -694,6 +729,8 @@ class AuthController extends GetxController {
       isCheckingUsername.value = false;
       hasCheckedUsername.value = true;
       _currentCheckingUsername = null;
+      logger.i(
+          "[Auth] _checkUsernameAvailability: Finished checking username '$name'");
     }
   }
 
@@ -702,35 +739,59 @@ class AuthController extends GetxController {
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
     final historyCollectionId =
         dotenv.env[_usernamesHistoryCollectionKey] ?? 'user_names_history';
+
+    logger.i(
+        "[Auth] _addUsernameToHistory: Adding username '$name' to history for user '$uid'");
+    logger.i(
+        "[Auth] _addUsernameToHistory: Using dbId: '$dbId', historyCollectionId: '$historyCollectionId'");
+
     try {
-      await databases.createDocument(
+      final docData = {
+        'username': name,
+        'userId': uid,
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+        'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+        'subscriptionType': subscriptionType,
+      };
+
+      logger.i(
+          "[Auth] _addUsernameToHistory: Creating document with data: $docData");
+
+      final doc = await databases.createDocument(
         databaseId: dbId,
         collectionId: historyCollectionId,
         documentId: ID.unique(),
-        data: {
-          'username': name,
-          'userId': uid,
-          'createdAt': DateTime.now().toUtc().toIso8601String(),
-          'UpdateAt': DateTime.now().toUtc().toIso8601String(),
-          'subscriptionType': subscriptionType,
-        },
+        data: docData,
         permissions: [
           Permission.read(Role.user(uid)),
           Permission.update(Role.user(uid)),
           Permission.delete(Role.user(uid)),
         ],
       );
-      logger.i('Successfully added username "$name" to history for user $uid');
+
+      logger.i(
+          "[Auth] _addUsernameToHistory: Successfully added username '$name' to history. Document ID: ${doc.$id}");
     } catch (e) {
-      logger.e('Error adding username to history', error: e);
+      logger.e(
+          "[Auth] _addUsernameToHistory: Error adding username to history: $e");
+      // Re-throw the error so the calling method can handle it
+      throw e;
     }
   }
 
   Future<void> _saveUsername(String dbId, String collectionId, String uid,
       String name, SharedPreferences prefs) async {
+    logger.i(
+        "[Auth] _saveUsername: Starting save process for username '$name' and user '$uid'");
+    logger.i(
+        "[Auth] _saveUsername: Using dbId: '$dbId', collectionId: '$collectionId'");
+
     try {
+      logger.i("[Auth] _saveUsername: STEP 1 - Adding username to history");
       await _addUsernameToHistory(uid, name);
 
+      logger.i(
+          "[Auth] _saveUsername: STEP 2 - Checking for existing user profile");
       final existing = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
@@ -739,43 +800,81 @@ class AuthController extends GetxController {
           Query.limit(1),
         ],
       );
+
       final now = DateTime.now().toUtc().toIso8601String();
 
       if (existing.documents.isNotEmpty) {
+        logger.i(
+            "[Auth] _saveUsername: STEP 3A - Updating existing user profile");
+        final docId = existing.documents.first.$id;
+
         await databases.updateDocument(
           databaseId: dbId,
           collectionId: collectionId,
-          documentId: existing.documents.first.$id,
+          documentId: docId,
           data: {
             'username': name,
             'UpdateAt': now,
           },
         );
+        logger.i(
+            "[Auth] _saveUsername: Successfully updated existing user profile with username '$name'");
       } else {
-        await databases.createDocument(
+        logger.i("[Auth] _saveUsername: STEP 3B - Creating new user profile");
+
+        final profileData = {
+          'userId': uid,
+          'username': name,
+          'profilePicture': '',
+          'firstName': '',
+          'lastName': '',
+          'createdAt': now,
+          'UpdateAt': now,
+        };
+
+        logger.i(
+            "[Auth] _saveUsername: Creating profile with data: $profileData");
+
+        final doc = await databases.createDocument(
           databaseId: dbId,
           collectionId: collectionId,
           documentId: ID.unique(),
-          data: {
-            'userId': uid,
-            'username': name,
-            'profilePicture': '',
-            'firstName': '',
-            'lastName': '',
-            'createdAt': now,
-            'UpdateAt': now,
-          },
+          data: profileData,
           permissions: [
             Permission.read(Role.user(uid)),
             Permission.update(Role.user(uid)),
             Permission.delete(Role.user(uid)),
           ],
         );
+        logger.i(
+            "[Auth] _saveUsername: Successfully created new user profile. Document ID: ${doc.$id}");
       }
+
+      logger.i("[Auth] _saveUsername: STEP 4 - Updating local state and cache");
       username.value = name;
       await prefs.setString('username', name);
+
+      logger.i(
+          "[Auth] _saveUsername: Successfully completed save process for username '$name'");
     } catch (e) {
-      logger.e('Error saving username', error: e);
+      logger.e("[Auth] _saveUsername: Error in save process: $e");
+
+      if (e is AppwriteException) {
+        if (e.code == 409 ||
+            e.message?.contains('duplicate') == true ||
+            e.message?.contains('unique') == true) {
+          logger.e(
+              "[Auth] _saveUsername: Username '$name' is already taken (duplicate key error)");
+          throw Exception('USERNAME_TAKEN');
+        } else {
+          logger.e(
+              "[Auth] _saveUsername: AppwriteException during save. Code: ${e.code}, Message: ${e.message}");
+          throw Exception('SAVE_ERROR: ${e.message}');
+        }
+      } else {
+        logger.e("[Auth] _saveUsername: Unknown error during save: $e");
+        throw Exception('SAVE_ERROR: $e');
+      }
     }
   }
 
@@ -853,6 +952,8 @@ class AuthController extends GetxController {
 
   Future<void> submitUsername() async {
     final name = usernameController.text.trim();
+    logger.i("[Auth] submitUsername: Starting submission for username '$name'");
+
     if (!isValidUsername(name)) {
       usernameError.value = 'invalid_username_message'.tr;
       Get.snackbar(
@@ -863,33 +964,97 @@ class AuthController extends GetxController {
       );
       return;
     }
-    usernameError.value = '';
-    isLoading.value = true;
-    _currentCheckingUsername = name;
-    usernameText.value = name;
-    final available = await _checkUsernameAvailability(name);
-    if (!available) {
-      isLoading.value = false;
-      usernameError.value = 'username_taken'.tr;
-      Get.snackbar(
-        'error'.tr,
-        usernameError.value,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 10),
-      );
-      return;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
-    final session = await account.get();
-    final uid = session.$id;
-    await _saveUsername(dbId, collectionId, uid, name, prefs);
-    isLoading.value = false;
-    if (Get.previousRoute.isEmpty) {
-      Get.offAllNamed('/home');
+
+    if (!hasCheckedUsername.value || !usernameAvailable.value) {
+      logger.i(
+          "[Auth] submitUsername: No recent availability check or username not available, checking now");
+      usernameError.value = '';
+      isLoading.value = true;
+
+      try {
+        final available = await _checkUsernameAvailability(name);
+        if (!available) {
+          isLoading.value = false;
+          usernameError.value = 'username_taken'.tr;
+          Get.snackbar(
+            'error'.tr,
+            usernameError.value,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 10),
+          );
+          return;
+        }
+      } catch (e) {
+        isLoading.value = false;
+        logger.e("[Auth] submitUsername: Error during availability check: $e");
+        usernameError.value = 'username_check_error'.tr;
+        Get.snackbar(
+          'error'.tr,
+          usernameError.value,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 10),
+        );
+        return;
+      }
     } else {
-      Get.back();
+      logger.i(
+          "[Auth] submitUsername: Username '$name' was already checked and is available, proceeding with save");
+      isLoading.value = true;
+    }
+
+    usernameError.value = '';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+      final collectionId =
+          dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+      final session = await account.get();
+      final uid = session.$id;
+
+      logger.i(
+          "[Auth] submitUsername: Calling _saveUsername for user '$uid' with username '$name'");
+      await _saveUsername(dbId, collectionId, uid, name, prefs);
+
+      isLoading.value = false;
+      logger.i("[Auth] submitUsername: Successfully saved username '$name'");
+
+      if (Get.previousRoute.isEmpty) {
+        Get.offAllNamed('/home');
+      } else {
+        Get.back();
+      }
+    } catch (e) {
+      isLoading.value = false;
+      logger.e("[Auth] submitUsername: Error during username save: $e");
+
+      if (e.toString().contains('USERNAME_TAKEN')) {
+        usernameError.value = 'username_taken'.tr;
+        usernameAvailable.value = false;
+        hasCheckedUsername.value = false;
+        Get.snackbar(
+          'error'.tr,
+          usernameError.value,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 10),
+        );
+      } else if (e.toString().contains('SAVE_ERROR')) {
+        usernameError.value = 'Failed to save username. Please try again.';
+        Get.snackbar(
+          'error'.tr,
+          usernameError.value,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 10),
+        );
+      } else {
+        usernameError.value = 'unexpected_error'.tr;
+        Get.snackbar(
+          'error'.tr,
+          usernameError.value,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 10),
+        );
+      }
     }
   }
 
