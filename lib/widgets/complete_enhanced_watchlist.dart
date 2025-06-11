@@ -16,7 +16,7 @@ import '../utils/parsing_utils.dart';
 Color _getAdaptiveTextColor(Color backgroundColor) {
   // Calculate the perceptive luminance
   double luminance = backgroundColor.computeLuminance();
-  
+
   // Use white text for dark backgrounds, dark text for light backgrounds
   return luminance > 0.5 ? Colors.black87 : Colors.white;
 }
@@ -62,7 +62,8 @@ class RashiOption {
   }
 
   @override
-  String toString() => 'RashiOption(id: $id, name: $name, rashiId: $rashiId, symbol: $symbol)';
+  String toString() =>
+      'RashiOption(id: $id, name: $name, rashiId: $rashiId, symbol: $symbol)';
 }
 
 class NakshatraOption {
@@ -208,7 +209,7 @@ class WatchlistController extends GetxController {
   final RxBool _isLoadingOptions = false.obs;
   final RxBool _isLoading = false.obs;
   final AuthController _auth = Get.find<AuthController>();
-  
+
   static const String _watchlistCollectionKey = 'WATCHLIST_ITEMS_COLLECTION_ID';
   static const String _rashiCacheKey = 'cached_rashi_options_v1';
   static const String _nakshatraCacheKey = 'cached_nakshatra_options_v1';
@@ -252,20 +253,21 @@ class WatchlistController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       final cachedRashi = prefs.getStringList(_rashiCacheKey);
       final cachedNakshatra = prefs.getStringList(_nakshatraCacheKey);
-      
+
       if (cachedRashi != null && cachedNakshatra != null) {
         logger.i('Loading Rashi/Nakshatra data from cache');
         _rashiOptions.assignAll(
           cachedRashi.map((e) => RashiOption.fromJson(jsonDecode(e))).toList(),
         );
         _nakshatraOptions.assignAll(
-          cachedNakshatra.map((e) => NakshatraOption.fromJson(jsonDecode(e))).toList(),
+          cachedNakshatra
+              .map((e) => NakshatraOption.fromJson(jsonDecode(e)))
+              .toList(),
         );
       }
 
       // Always try to fetch fresh data from database
       await _fetchMasterDataFromDatabase();
-      
     } catch (e, st) {
       logger.e('Error loading options', error: e, stackTrace: st);
       if (_rashiOptions.isEmpty || _nakshatraOptions.isEmpty) {
@@ -286,45 +288,53 @@ class WatchlistController extends GetxController {
         collectionId: 'rasi_master',
         queries: [Query.orderAsc('name'), Query.limit(50)],
       );
-      
-      final rashiList = rashiResult.documents.map((e) => RashiOption.fromJson(e.data)).toList();
+
+      final rashiList = rashiResult.documents
+          .map((e) => RashiOption.fromJson(e.data))
+          .toList();
       if (rashiList.isNotEmpty) {
         _rashiOptions.assignAll(rashiList);
         logger.i('Loaded ${rashiList.length} Rashi options from database');
       }
 
-      // Fetch Nakshatra data  
+      // Fetch Nakshatra data
       final nakshatraResult = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: 'nakshatra_master',
         queries: [Query.orderAsc('name'), Query.limit(100)],
       );
-      
-      final nakshatraList = nakshatraResult.documents.map((e) => NakshatraOption.fromJson(e.data)).toList();
+
+      final nakshatraList = nakshatraResult.documents
+          .map((e) => NakshatraOption.fromJson(e.data))
+          .toList();
       if (nakshatraList.isNotEmpty) {
         _nakshatraOptions.assignAll(nakshatraList);
-        logger.i('Loaded ${nakshatraList.length} Nakshatra options from database');
+        logger.i(
+            'Loaded ${nakshatraList.length} Nakshatra options from database');
       }
 
       // Cache the fresh data
       await _cacheMasterData();
-      
     } catch (e, st) {
-      logger.e('Error fetching master data from database', error: e, stackTrace: st);
+      logger.e('Error fetching master data from database',
+          error: e, stackTrace: st);
     }
   }
 
   Future<void> _cacheMasterData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
-      final rashiJson = _rashiOptions.map((e) => jsonEncode(e.toJson())).toList();
-      final nakshatraJson = _nakshatraOptions.map((e) => jsonEncode(e.toJson())).toList();
-      
+
+      final rashiJson =
+          _rashiOptions.map((e) => jsonEncode(e.toJson())).toList();
+      final nakshatraJson =
+          _nakshatraOptions.map((e) => jsonEncode(e.toJson())).toList();
+
       await prefs.setStringList(_rashiCacheKey, rashiJson);
       await prefs.setStringList(_nakshatraCacheKey, nakshatraJson);
-      await prefs.setString(_masterDataVersionKey, DateTime.now().toIso8601String());
-      
+      await prefs.setString(
+          _masterDataVersionKey, DateTime.now().toIso8601String());
+
       logger.i('Cached master data successfully');
     } catch (e, st) {
       logger.e('Error caching master data', error: e, stackTrace: st);
@@ -343,11 +353,36 @@ class WatchlistController extends GetxController {
     ]);
 
     _nakshatraOptions.assignAll([
-      NakshatraOption(id: '1', name: 'Ashwini', nakshatraId: 'n1', rashiId: 'r1', symbol: '★'),
-      NakshatraOption(id: '2', name: 'Bharani', nakshatraId: 'n2', rashiId: 'r1', symbol: '⚘'),
-      NakshatraOption(id: '3', name: 'Krittika', nakshatraId: 'n3_r1', rashiId: 'r1', symbol: '⚔'),
-      NakshatraOption(id: '4', name: 'Krittika', nakshatraId: 'n3_r2', rashiId: 'r2', symbol: '⚔'),
-      NakshatraOption(id: '5', name: 'Rohini', nakshatraId: 'n4', rashiId: 'r2', symbol: '🌸'),
+      NakshatraOption(
+          id: '1',
+          name: 'Ashwini',
+          nakshatraId: 'n1',
+          rashiId: 'r1',
+          symbol: '★'),
+      NakshatraOption(
+          id: '2',
+          name: 'Bharani',
+          nakshatraId: 'n2',
+          rashiId: 'r1',
+          symbol: '⚘'),
+      NakshatraOption(
+          id: '3',
+          name: 'Krittika',
+          nakshatraId: 'n3_r1',
+          rashiId: 'r1',
+          symbol: '⚔'),
+      NakshatraOption(
+          id: '4',
+          name: 'Krittika',
+          nakshatraId: 'n3_r2',
+          rashiId: 'r2',
+          symbol: '⚔'),
+      NakshatraOption(
+          id: '5',
+          name: 'Rohini',
+          nakshatraId: 'n4',
+          rashiId: 'r2',
+          symbol: '🌸'),
     ]);
   }
 
@@ -356,7 +391,7 @@ class WatchlistController extends GetxController {
     if (rashiId == null || rashiId.isEmpty) {
       return [];
     }
-    
+
     return _nakshatraOptions
         .where((nakshatra) => nakshatra.rashiId == rashiId)
         .toList();
@@ -385,12 +420,13 @@ class WatchlistController extends GetxController {
 
   Future<void> _fetchFromDatabase() async {
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
-    
+    final collectionId =
+        dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
-      
+
       final result = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
@@ -418,7 +454,7 @@ class WatchlistController extends GetxController {
             watchlistKey: 'n1',
           ),
         ];
-        
+
         for (int i = 0; i < dummy.length; i++) {
           final d = dummy[i];
           await _auth.databases.createDocument(
@@ -437,16 +473,35 @@ class WatchlistController extends GetxController {
       } else {
         _items.assignAll(result.documents.map((doc) {
           final data = doc.data;
+          final watchlistKey =
+              data['watchlistKey'] ?? data['watchlist_key'] ?? '';
+          String? rashiId = data['rashiId'];
+          String? nakshatraId = data['nakshatraId'];
+
+          if (rashiId == null &&
+              nakshatraId == null &&
+              watchlistKey.isNotEmpty) {
+            final parts = watchlistKey.split('-');
+            if (parts.length == 2) {
+              rashiId = parts[0];
+              nakshatraId = parts[1];
+            } else if (watchlistKey.startsWith('r')) {
+              rashiId = watchlistKey;
+            } else if (watchlistKey.startsWith('n')) {
+              nakshatraId = watchlistKey;
+            }
+          }
+
           return WatchlistItem(
             id: doc.$id,
             name: data['name'] ?? '',
             count: data['count'] ?? 0,
             color: Color(data['colorValue'] ?? 0xFFEC407A),
-            rashiId: data['rashiId'],
-            nakshatraId: data['nakshatraId'],
+            rashiId: rashiId,
+            nakshatraId: nakshatraId,
             combinationKey: data['combinationKey'],
             chatRoomId: data['chatRoomId'],
-            watchlistKey: data['watchlistKey'] ?? data['watchlist_key'] ?? '',
+            watchlistKey: watchlistKey,
             createdAt: ParsingUtils.parseDateTime(data['createdAt']),
             updatedAt: data['updatedAt'] != null
                 ? ParsingUtils.parseDateTime(data['updatedAt'])
@@ -457,7 +512,8 @@ class WatchlistController extends GetxController {
       await _saveItemsToPrefs();
       await _updateItemCounts();
     } catch (e, st) {
-      logger.e('Error fetching watchlist from database', error: e, stackTrace: st);
+      logger.e('Error fetching watchlist from database',
+          error: e, stackTrace: st);
     }
   }
 
@@ -518,8 +574,6 @@ class WatchlistController extends GetxController {
       'name': item.name,
       'count': item.count,
       'colorValue': item.color.value,
-      'rashiId': item.rashiId,
-      'nakshatraId': item.nakshatraId,
       'combinationKey': item.combinationKey,
       'chatRoomId': item.chatRoomId,
       'watchlistKey': item.watchlistKey,
@@ -555,7 +609,6 @@ class WatchlistController extends GetxController {
   // Fixed addThreeWatchlistItems method - now properly saves to database
   Future<void> addThreeWatchlistItems(
       RashiOption rashi, NakshatraOption nakshatra, Color color) async {
-    
     try {
       final session = await _auth.account.get();
       final uid = session.$id;
@@ -594,8 +647,9 @@ class WatchlistController extends GetxController {
 
       // Save to database (removed testing check)
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
-      
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+
       for (int i = 0; i < items.length; i++) {
         final it = items[i];
         try {
@@ -614,7 +668,8 @@ class WatchlistController extends GetxController {
           );
           logger.i('Successfully added item ${it.name} to database');
         } catch (e, st) {
-          logger.e('Error adding item ${it.name} to database', error: e, stackTrace: st);
+          logger.e('Error adding item ${it.name} to database',
+              error: e, stackTrace: st);
           // Don't remove from local list if database fails - user can try sync later
         }
       }
@@ -624,7 +679,6 @@ class WatchlistController extends GetxController {
           'Added ${rashi.name}, ${nakshatra.name}, and their combination',
           Colors.green);
       HapticFeedback.lightImpact();
-      
     } catch (e, st) {
       logger.e('Error adding items to watchlist', error: e, stackTrace: st);
       _showErrorSnackbar('Error', 'Failed to add items to watchlist');
@@ -634,10 +688,11 @@ class WatchlistController extends GetxController {
   Future<void> addItem(WatchlistItem item) async {
     _items.add(item);
     await _saveItemsToPrefs();
-    
+
     if (!testing) {
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         final session = await _auth.account.get();
         final uid = session.$id;
@@ -675,7 +730,8 @@ class WatchlistController extends GetxController {
 
     if (!testing) {
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         await _auth.databases.deleteDocument(
           databaseId: dbId,
@@ -683,7 +739,8 @@ class WatchlistController extends GetxController {
           documentId: id,
         );
       } catch (e, st) {
-        logger.e('Error removing item from watchlist', error: e, stackTrace: st);
+        logger.e('Error removing item from watchlist',
+            error: e, stackTrace: st);
         _showErrorSnackbar('Error', 'Failed to remove item');
       }
     }
@@ -703,7 +760,8 @@ class WatchlistController extends GetxController {
           bool success = true;
           if (!testing) {
             final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-            final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+            final collectionId =
+                dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
             try {
               final session = await _auth.account.get();
               final uid = session.$id;
@@ -721,17 +779,20 @@ class WatchlistController extends GetxController {
               );
             } catch (e, st) {
               success = false;
-              logger.e('Error restoring item to watchlist', error: e, stackTrace: st);
+              logger.e('Error restoring item to watchlist',
+                  error: e, stackTrace: st);
             }
           }
           Get.back();
           if (success) {
-            _showSuccessSnackbar('Restored', '${item.name} has been restored', Colors.blue);
+            _showSuccessSnackbar(
+                'Restored', '${item.name} has been restored', Colors.blue);
           } else {
             _showErrorSnackbar('Error', 'Failed to restore item');
           }
         },
-        child: const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
+        child:
+            const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
     HapticFeedback.mediumImpact();
@@ -740,10 +801,12 @@ class WatchlistController extends GetxController {
   Future<void> updateItemCount(String id, int newCount) async {
     final index = _items.indexWhere((item) => item.id == id);
     if (index != -1) {
-      _items[index] = _items[index].copyWith(count: newCount, updatedAt: DateTime.now());
+      _items[index] =
+          _items[index].copyWith(count: newCount, updatedAt: DateTime.now());
       await _saveItemsToPrefs();
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         await _auth.databases.updateDocument(
           databaseId: dbId,
@@ -771,7 +834,8 @@ class WatchlistController extends GetxController {
       await _saveItemsToPrefs();
       if (!testing) {
         final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-        final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+        final collectionId =
+            dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
         try {
           final session = await _auth.account.get();
           final uid = session.$id;
@@ -800,7 +864,8 @@ class WatchlistController extends GetxController {
     await _saveItemsToPrefs();
     if (!testing) {
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         for (int i = 0; i < _items.length; i++) {
           final it = _items[i];
@@ -831,7 +896,8 @@ class WatchlistController extends GetxController {
     await _saveItemsToPrefs();
     if (!testing) {
       final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final collectionId = dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
+      final collectionId =
+          dotenv.env[_watchlistCollectionKey] ?? 'watchlist_items';
       try {
         final session = await _auth.account.get();
         final uid = session.$id;
@@ -852,7 +918,8 @@ class WatchlistController extends GetxController {
         _showErrorSnackbar('Error', 'Failed to clear items');
       }
     }
-    _showSuccessSnackbar('Cleared', '$itemCount items removed from watchlist', Colors.orange);
+    _showSuccessSnackbar(
+        'Cleared', '$itemCount items removed from watchlist', Colors.orange);
   }
 
   void _showSuccessSnackbar(String title, String message, Color color) {
@@ -965,7 +1032,8 @@ class WatchlistAnimations {
                 borderRadius: BorderRadius.circular(20),
                 onTap: onPressed,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1124,7 +1192,8 @@ class SwipeableWatchlistCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -1188,7 +1257,8 @@ class SwipeableWatchlistCard extends StatelessWidget {
     return await Get.dialog<bool>(
           AlertDialog(
             title: const Text('Remove from Watchlist'),
-            content: Text('Are you sure you want to remove "${item.name}" from your watchlist?'),
+            content: Text(
+                'Are you sure you want to remove "${item.name}" from your watchlist?'),
             actions: [
               TextButton(
                 onPressed: () => Get.back(result: false),
@@ -1259,11 +1329,14 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                           onTap: () => _showClearAllDialog(context, controller),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             child: Icon(
                               Icons.clear_all,
                               size: 20,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -1329,7 +1402,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WatchlistController controller) {
+  Widget _buildEmptyState(
+      BuildContext context, WatchlistController controller) {
     return Center(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.0, end: 1.0),
@@ -1341,14 +1415,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             child: Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
               child: SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceVariant
+                            .withOpacity(0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -1361,14 +1439,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                     Text(
                       'Your watchlist is empty',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Add items to keep track of your favorites',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.7),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -1388,7 +1470,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showAddItemDialog(BuildContext context, WatchlistController controller) {
+  void _showAddItemDialog(
+      BuildContext context, WatchlistController controller) {
     RashiOption? selectedRashi;
     NakshatraOption? selectedNakshatra;
     Color selectedColor = WatchlistController.availableColors.first;
@@ -1404,7 +1487,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Select Rashi:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Select Rashi:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Obx(() => controller.isLoadingOptions
                       ? const CircularProgressIndicator()
@@ -1417,20 +1501,23 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                           items: controller.rashiOptions
                               .map((r) => DropdownMenuItem(
                                   value: r,
-                                  child: Text('${r.symbol} ${r.name} (${r.rashiId})')))
+                                  child: Text(
+                                      '${r.symbol} ${r.name} (${r.rashiId})')))
                               .toList(),
                           onChanged: (r) {
                             setState(() {
                               selectedRashi = r;
                               selectedNakshatra = null;
                               // Fixed filtering logic
-                              availableNakshatras = controller.getNakshatraOptionsForRashi(r?.rashiId);
+                              availableNakshatras = controller
+                                  .getNakshatraOptionsForRashi(r?.rashiId);
                             });
                             HapticFeedback.selectionClick();
                           },
                         )),
                   const SizedBox(height: 16),
-                  const Text('Select Nakshatra:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Select Nakshatra:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<NakshatraOption>(
                     value: selectedNakshatra,
@@ -1441,7 +1528,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                     items: availableNakshatras
                         .map((n) => DropdownMenuItem(
                             value: n,
-                            child: Text('${n.symbol} ${n.name} (${n.nakshatraId})')))
+                            child: Text(
+                                '${n.symbol} ${n.name} (${n.nakshatraId})')))
                         .toList(),
                     onChanged: selectedRashi == null
                         ? null
@@ -1451,7 +1539,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                           },
                   ),
                   const SizedBox(height: 16),
-                  const Text('Choose Color:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Choose Color:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -1472,13 +1561,19 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(color: Colors.black, width: 3)
-                                : Border.all(color: Colors.grey.shade300, width: 1),
+                                : Border.all(
+                                    color: Colors.grey.shade300, width: 1),
                             boxShadow: isSelected
-                                ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)]
+                                ? [
+                                    BoxShadow(
+                                        color: color.withOpacity(0.5),
+                                        blurRadius: 8)
+                                  ]
                                 : null,
                           ),
                           child: isSelected
-                              ? Icon(Icons.check, color: _getAdaptiveTextColor(color), size: 20)
+                              ? Icon(Icons.check,
+                                  color: _getAdaptiveTextColor(color), size: 20)
                               : null,
                         ),
                       );
@@ -1489,18 +1584,21 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 16),
                       child: Text(
                         'No nakshatras found for ${selectedRashi!.name}. Please try a different rashi.',
-                        style: TextStyle(color: Colors.orange.shade700, fontSize: 12),
+                        style: TextStyle(
+                            color: Colors.orange.shade700, fontSize: 12),
                       ),
                     ),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Get.back(), child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: (selectedRashi != null && selectedNakshatra != null)
                     ? () {
-                        controller.addThreeWatchlistItems(selectedRashi!, selectedNakshatra!, selectedColor);
+                        controller.addThreeWatchlistItems(
+                            selectedRashi!, selectedNakshatra!, selectedColor);
                         Get.back();
                       }
                     : null,
@@ -1513,8 +1611,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showEditItemDialog(
-      BuildContext context, WatchlistController controller, WatchlistItem item) {
+  void _showEditItemDialog(BuildContext context, WatchlistController controller,
+      WatchlistItem item) {
     Color selectedColor = item.color;
 
     Get.dialog(
@@ -1527,7 +1625,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Color:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Color:',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -1546,7 +1645,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                                 : null,
                           ),
                           child: isSelected
-                              ? Icon(Icons.check, color: _getAdaptiveTextColor(color))
+                              ? Icon(Icons.check,
+                                  color: _getAdaptiveTextColor(color))
                               : null,
                         ),
                       );
@@ -1576,7 +1676,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
 
   void _showItemDetails(BuildContext context, WatchlistItem item) {
     final textColor = _getAdaptiveTextColor(item.color);
-    
+
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(24),
@@ -1591,7 +1691,10 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1640,7 +1743,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Get.back();
-                      _showEditItemDialog(context, Get.find<WatchlistController>(), item);
+                      _showEditItemDialog(
+                          context, Get.find<WatchlistController>(), item);
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit'),
@@ -1661,7 +1765,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showClearAllDialog(BuildContext context, WatchlistController controller) {
+  void _showClearAllDialog(
+      BuildContext context, WatchlistController controller) {
     Get.dialog(
       AlertDialog(
         title: const Text('Clear All Items'),
