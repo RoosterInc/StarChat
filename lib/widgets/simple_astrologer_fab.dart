@@ -17,7 +17,7 @@ class _SimpleAstrologerFABState extends State<SimpleAstrologerFAB> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (!userTypeController.isAstrologer.value) {
+      if (!userTypeController.isAstrologerRx.value) {
         return const SizedBox.shrink();
       }
 

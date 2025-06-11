@@ -191,7 +191,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildHomeBody(BuildContext context) {
     final userTypeController = Get.put(UserTypeController());
     return Obx(() {
-      final isAstrologer = userTypeController.isAstrologer.value;
+      final isAstrologer = userTypeController.isAstrologerRx.value;
       final tabLength = isAstrologer ? 6 : 5;
       return DefaultTabController(
         length: tabLength,

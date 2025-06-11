@@ -10,7 +10,7 @@ class SimpleDynamicTabs extends StatelessWidget {
     final userTypeController = Get.put(UserTypeController());
 
     return Obx(() {
-      final isAstrologer = userTypeController.isAstrologer.value;
+      final isAstrologer = userTypeController.isAstrologerRx.value;
       final tabs = _getTabsForUserType(isAstrologer);
 
       return TabBar(
