@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../themes/app_theme.dart';
+import 'package:flutter/material.dart';
+import '../design_system/modern_ui_system.dart';
 import '../utils/logger.dart';
 
 class ThemeController extends GetxController {
@@ -53,11 +54,11 @@ class ThemeController extends GetxController {
 
   void _applyTheme(bool isDark) {
     try {
-      if (isDark) {
-        Get.changeTheme(AppTheme.darkTheme);
-      } else {
-        Get.changeTheme(AppTheme.lightTheme);
-      }
+        final newTheme = MD3ThemeSystem.createTheme(
+          seedColor: Colors.deepPurple,
+          brightness: isDark ? Brightness.dark : Brightness.light,
+        );
+        Get.changeTheme(newTheme);
       logger.i('Theme applied successfully: ${isDark ? 'dark' : 'light'}');
     } catch (e) {
       logger.e('Error applying theme: $e');
