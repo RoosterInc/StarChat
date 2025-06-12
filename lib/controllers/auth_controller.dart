@@ -38,9 +38,6 @@ class AuthController extends GetxController {
   late TextEditingController emailController;
   late TextEditingController otpController;
 
-  final birthRashiId = ''.obs;
-  final birthNakshatraId = ''.obs;
-
   String? userId;
 
   // Timers and related variables
@@ -92,8 +89,6 @@ class AuthController extends GetxController {
     emailError.value = '';
     otpError.value = '';
     usernameError.value = '';
-    birthRashiId.value = '';
-    birthNakshatraId.value = '';
     cancelTimers();
     super.onClose();
   }
@@ -492,8 +487,6 @@ class AuthController extends GetxController {
         final data = result.documents.first.data;
         final fetchedUsername = data['username'];
         final fetchedTypeRaw = data['userType'];
-        birthRashiId.value = data['birth_rashi'] ?? '';
-        birthNakshatraId.value = data['birth_nakshatra'] ?? '';
         logger.i(
             "[Auth] ensureUsername: Document found. Username from DB: '$fetchedUsername'. Profile Pic URL: '${data['profilePicture']}'");
         if (fetchedUsername != null && fetchedUsername != '') {
@@ -526,8 +519,6 @@ class AuthController extends GetxController {
       await prefs.remove('username');
       username.value = '';
       profilePictureUrl.value = '';
-      birthRashiId.value = '';
-      birthNakshatraId.value = '';
       logger.i(
           "[Auth] ensureUsername: Returning false (no username found on server for this session/UID, or it was empty).");
       return false;
@@ -796,16 +787,8 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _saveUsername(
-      String dbId,
-      String collectionId,
-      String uid,
-      String name,
-      SharedPreferences prefs,
-      {
-      String? rashiId,
-      String? nakshatraId,
-      }) async {
+  Future<void> _saveUsername(String dbId, String collectionId, String uid,
+      String name, SharedPreferences prefs) async {
     logger.i(
         "[Auth] _saveUsername: Starting save process for username '$name' and user '$uid'");
     logger.i(
@@ -839,8 +822,6 @@ class AuthController extends GetxController {
           documentId: docId,
           data: {
             'username': name,
-            'birth_rashi': rashiId ?? '',
-            'birth_nakshatra': nakshatraId ?? '',
             'UpdateAt': now,
           },
         );
@@ -856,8 +837,6 @@ class AuthController extends GetxController {
           'userType': 'General User',
           'firstName': '',
           'lastName': '',
-          'birth_rashi': rashiId ?? '',
-          'birth_nakshatra': nakshatraId ?? '',
           'createdAt': now,
           'UpdateAt': now,
         };
@@ -883,8 +862,6 @@ class AuthController extends GetxController {
       logger.i("[Auth] _saveUsername: STEP 4 - Updating local state and cache");
       username.value = name;
       await prefs.setString('username', name);
-      birthRashiId.value = rashiId ?? '';
-      birthNakshatraId.value = nakshatraId ?? '';
 
       logger.i(
           "[Auth] _saveUsername: Successfully completed save process for username '$name'");
@@ -1047,15 +1024,7 @@ class AuthController extends GetxController {
 
       logger.i(
           "[Auth] submitUsername: Calling _saveUsername for user '$uid' with username '$name'");
-      await _saveUsername(
-        dbId,
-        collectionId,
-        uid,
-        name,
-        prefs,
-        rashiId: birthRashiId.value,
-        nakshatraId: birthNakshatraId.value,
-      );
+      await _saveUsername(dbId, collectionId, uid, name, prefs);
 
       isLoading.value = false;
       logger.i("[Auth] submitUsername: Successfully saved username '$name'");
