@@ -33,9 +33,8 @@ class AppTranslations extends Translations {
           'check_internet': 'Please check your internet connection.',
           'otp_expired': 'OTP Expired',
           'otp_expired_message': 'Your OTP has expired. Please request a new one.',
-        'logout': 'Logout',
-        'lets_go': "Let's go",
-        'home_page': 'Home Page',
+          'logout': 'Logout',
+          'home_page': 'Home Page',
           'signed_in': 'You are now signed in!',
           'signed_in_as': 'Signed in as @username',
           'delete_account': 'Delete Account',
@@ -145,7 +144,6 @@ class AppTranslations extends Translations {
         'push_notifications': 'Notificaciones',
         'version': 'Versión',
         'logout_confirm': '¿Seguro que quieres cerrar sesión?',
-        'lets_go': 'Vamos',
         },
       };
 }
