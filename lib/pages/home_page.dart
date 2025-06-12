@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/enhanced_responsive_layout.dart';
-import '../widgets/adaptive_navigation.dart';
+import '../design_system/modern_ui_system.dart';
 import '../widgets/enhanced_sliver_app_bar.dart';
 import '../widgets/simple_astrologer_fab.dart';
 import '../controllers/user_type_controller.dart';
@@ -22,6 +22,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  static const navigationDestinations = [
+    NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
+        label: 'Home'),
+    NavigationDestination(
+        icon: Icon(Icons.dashboard_outlined),
+        selectedIcon: Icon(Icons.dashboard),
+        label: 'Dashboard'),
+    NavigationDestination(
+        icon: Icon(Icons.search_outlined),
+        selectedIcon: Icon(Icons.search),
+        label: 'Search'),
+    NavigationDestination(
+        icon: Icon(Icons.favorite_outline),
+        selectedIcon: Icon(Icons.favorite),
+        label: 'Match'),
+    NavigationDestination(
+        icon: Icon(Icons.notifications_none),
+        selectedIcon: Icon(Icons.notifications),
+        label: 'Notifications'),
+    NavigationDestination(
+        icon: Icon(Icons.storefront_outlined),
+        selectedIcon: Icon(Icons.storefront),
+        label: 'Marketplace'),
+  ];
   int _selectedIndex = 0;
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -85,6 +111,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _slideController.reset();
         _slideController.forward();
       },
+      destinations: navigationDestinations,
       body: Scaffold(
         drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
         floatingActionButton: const SimpleAstrologerFAB(),
