@@ -139,12 +139,12 @@ class AuthController extends GetxController {
       if (hasUsername) {
         logger.i(
             "[Auth] checkExistingSession: User has username. Current route: ${Get.currentRoute}");
-        if (Get.currentRoute == '/' || Get.currentRoute == '/set_username') {
-          logger.i("[Auth] checkExistingSession: Navigating to /home");
+        if (Get.currentRoute != '/home') {
+          logger.i("[Auth] checkExistingSession: Navigating to /home from ${Get.currentRoute}");
           Get.offAllNamed('/home');
         } else {
           logger.i(
-              "[Auth] checkExistingSession: Already on an authenticated route (${Get.currentRoute}), not navigating from checkExistingSession.");
+              "[Auth] checkExistingSession: Already on /home, not navigating from checkExistingSession.");
         }
       } else {
         logger.i(
