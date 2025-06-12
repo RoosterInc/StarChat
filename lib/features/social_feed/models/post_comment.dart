@@ -37,4 +37,18 @@ class PostComment {
       replyCount: json['reply_count'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'post_id': postId,
+      'user_id': userId,
+      'username': username,
+      'user_avatar': userAvatar,
+      'parent_id': parentId,
+      'content': content,
+      'media_urls': mediaUrls,
+      'like_count': likeCount,
+      'reply_count': replyCount,
+    };
+  }
 }
