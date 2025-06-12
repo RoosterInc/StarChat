@@ -23,7 +23,7 @@ class TestAuthController extends AuthController {
   }
 
   @override
-  Future<void> checkExistingSession() async {}
+  Future<void> checkExistingSession({bool navigateOnMissing = true}) async {}
 }
 
 void main() {
