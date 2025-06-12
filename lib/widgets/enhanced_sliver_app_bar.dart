@@ -5,6 +5,7 @@ import '../widgets/enhanced_planet_house_widgets.dart';
 import 'simple_dynamic_tabs.dart';
 import '../controllers/master_data_controller.dart';
 import 'complete_enhanced_watchlist.dart';
+import '../design_system/modern_ui_system.dart';
 
 class EnhancedSliverAppBar extends StatelessWidget {
   const EnhancedSliverAppBar({super.key});
@@ -19,7 +20,12 @@ class EnhancedSliverAppBar extends StatelessWidget {
     }
     return SliverAppBar(
       pinned: true,
-      expandedHeight: 200,
+      expandedHeight: ResponsiveUtils.adaptiveValue(
+        context,
+        mobile: 200,
+        tablet: 220,
+        desktop: 240,
+      ),
       collapsedHeight: 0,
       toolbarHeight: 0,
       automaticallyImplyLeading: false,
@@ -39,7 +45,7 @@ class EnhancedSliverAppBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: DesignTokens.md(context).horizontal,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -50,11 +56,14 @@ class EnhancedSliverAppBar extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.spacing(context, 12),
+                        vertical: DesignTokens.sm(context),
+                      ),
                       decoration: BoxDecoration(
                         color: colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius:
+                            BorderRadius.circular(DesignTokens.radiusLg(context)),
                         border: Border.all(
                             color: colorScheme.primary.withOpacity(0.3)),
                       ),
@@ -62,7 +71,7 @@ class EnhancedSliverAppBar extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.all_inclusive, color: iconColor, size: 20),
-                          const SizedBox(width: 8),
+                          SizedBox(width: DesignTokens.sm(context)),
                           Text('StarChat',
                               style: TextStyle(
                                   color: iconColor,
@@ -88,9 +97,9 @@ class EnhancedSliverAppBar extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: DesignTokens.sm(context)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: DesignTokens.md(context).horizontal,
                 child: Obx(() {
                   final controller = Get.find<EnhancedPlanetHouseController>();
                   final data = Get.find<MasterDataController>();
@@ -110,16 +119,16 @@ class EnhancedSliverAppBar extends StatelessWidget {
                   );
                 }),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
+              Padding(
+                padding: DesignTokens.md(context).horizontal,
+                child: const Text(
                   'Current Planetary Positions',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
-              const SizedBox(height: 8),
-              const EnhancedPlanetHouseList(),
-              const SizedBox(height: 4),
+              SizedBox(height: DesignTokens.sm(context)),
+              Expanded(child: const EnhancedPlanetHouseList()),
+              SizedBox(height: DesignTokens.xs(context)),
             ],
           ),
         ),
