@@ -23,7 +23,12 @@ class ReactionBar extends StatelessWidget {
           isButton: true,
           child: AnimatedButton(
             onPressed: onLike,
-            child: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+            child: Icon(
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              color: isLiked
+                  ? context.colorScheme.primary
+                  : context.iconTheme.color,
+            ),
           ),
         ),
         SizedBox(width: DesignTokens.sm(context)),
