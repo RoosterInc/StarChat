@@ -16,10 +16,10 @@ class SplashScreen extends GetView<SplashController> {
             fit: BoxFit.cover,
           ),
         ),
-        padding: const EdgeInsets.all(16),
+        alignment: Alignment.center,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Spacer(),
             Text(
               'app_name'.tr,
               style: const TextStyle(
@@ -28,7 +28,7 @@ class SplashScreen extends GetView<SplashController> {
                 color: Colors.white,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 16),
             Obx(() {
               if (controller.isLoading.value) {
                 return const CircularProgressIndicator(
@@ -36,16 +36,10 @@ class SplashScreen extends GetView<SplashController> {
                 );
               }
               return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
                 onPressed: () => Get.offAllNamed('/'),
                 child: Text('lets_go'.tr),
               );
             }),
-            const SizedBox(height: 32),
           ],
         ),
       ),
