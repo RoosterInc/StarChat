@@ -9,7 +9,6 @@ import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
 import 'pages/chat_room_page.dart';
 import 'pages/chat_rooms_list_page.dart';
-import 'pages/logout_splash_page.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -54,13 +53,6 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/',
               page: () => const SignInPage(),
-              binding: AuthBinding(),
-              transition: Transition.fadeIn,
-              transitionDuration: const Duration(milliseconds: 400),
-            ),
-            GetPage(
-              name: '/logged-out',
-              page: () => const LogoutSplashPage(),
               binding: AuthBinding(),
               transition: Transition.fadeIn,
               transitionDuration: const Duration(milliseconds: 400),
