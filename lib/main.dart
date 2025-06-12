@@ -19,15 +19,31 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
 import 'controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:appwrite/appwrite.dart';
+
+Future<String> _determineInitialRoute() async {
+  final client = Client()
+    ..setEndpoint(dotenv.env['APPWRITE_ENDPOINT'] ?? '')
+    ..setProject(dotenv.env['APPWRITE_PROJECT_ID'] ?? '');
+  final account = Account(client);
+  try {
+    await account.get();
+    return '/home';
+  } catch (_) {
+    return '/splash';
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  runApp(const MyApp());
+  final initialRoute = await _determineInitialRoute();
+  runApp(MyApp(initialRoute: initialRoute));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +66,7 @@ class MyApp extends StatelessWidget {
               ? ThemeMode.dark
               : ThemeMode.light, // Reactive theme
           initialBinding: AuthBinding(),
-          initialRoute: '/splash',
+          initialRoute: initialRoute,
           defaultTransition: Transition.cupertino,
           transitionDuration: const Duration(milliseconds: 300),
           getPages: [
