@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
+import 'bindings/chat_room_binding.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
@@ -9,6 +10,8 @@ import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
 import 'pages/chat_room_page.dart';
 import 'pages/chat_rooms_list_page.dart';
+import 'features/social_feed/screens/compose_post_page.dart';
+import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
 import 'bindings/splash_binding.dart';
 import 'design_system/modern_ui_system.dart';
@@ -107,8 +110,23 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/chat-room/:roomId',
               page: () => const ChatRoomPage(),
-              binding: AuthBinding(),
+              binding: ChatRoomBinding(),
               transition: Transition.rightToLeft,
+            ),
+            GetPage(
+              name: '/compose-post/:roomId',
+              page: () => ComposePostPage(roomId: Get.parameters['roomId']!),
+              binding: ChatRoomBinding(),
+            ),
+            GetPage(
+              name: '/post/:postId',
+              page: () => const EmptyPage(),
+              binding: AuthBinding(),
+            ),
+            GetPage(
+              name: '/comments/:postId',
+              page: () => const EmptyPage(),
+              binding: AuthBinding(),
             ),
             GetPage(
               name: '/chat-rooms-list',
