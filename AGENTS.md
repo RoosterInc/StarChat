@@ -5,7 +5,7 @@ Mandatory Requirements Checklist
 Before implementing any feature, ensure you adhere to the following requirements:
 
 Design System Compliance:
-Always use the modern ui system design system.
+Always use the modern ui system design system (modern_ui_system.dart).
 Never hardcode dimensions, colors, or spacing values.
 Always use DesignTokens for spacing, colors, and sizing.
 Always use responsive utilities for layouts.
