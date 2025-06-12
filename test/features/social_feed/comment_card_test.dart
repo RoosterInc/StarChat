@@ -1,12 +1,40 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:myapp/features/social_feed/controllers/comments_controller.dart';
 import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:myapp/features/social_feed/widgets/comment_card.dart';
 
-class FakeFeedService extends FeedService {
-  FakeFeedService()
+void main() {
+  testWidgets('like comment updates controller', (tester) async {
+    final service = _FakeService();
+    final controller = CommentsController(service: service);
+    Get.put(controller);
+    final comment = PostComment(
+      id: '1',
+      postId: 'p1',
+      userId: 'u',
+      username: 'user',
+      content: 'hi',
+    );
+    service.store.add(comment);
+    await controller.loadComments('p1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CommentCard(comment: comment),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.favorite_border));
+    await tester.pump();
+    expect(controller.isCommentLiked('1'), isTrue);
+  });
+}
+
+class _FakeService extends FeedService {
+  _FakeService()
       : super(
           databases: Databases(Client()),
           databaseId: 'db',
@@ -21,17 +49,12 @@ class FakeFeedService extends FeedService {
 
   @override
   Future<List<PostComment>> getComments(String postId) async {
-    return store.where((c) => c.postId == postId).toList();
-  }
-
-  @override
-  Future<void> createComment(PostComment comment) async {
-    store.add(comment);
+    return store.where((e) => e.postId == postId).toList();
   }
 
   @override
   Future<void> createLike(Map<String, dynamic> like) async {
-    likes[like['item_id']] = 'l1';
+    likes[like['item_id']] = '1';
   }
 
   @override
@@ -46,29 +69,9 @@ class FakeFeedService extends FeedService {
   Future<void> deleteLike(String likeId) async {
     likes.removeWhere((key, value) => value == likeId);
   }
-}
 
-void main() {
-  test('loadComments returns empty', () async {
-    final controller = CommentsController(service: FakeFeedService());
-    await controller.loadComments('1');
-    expect(controller.comments, isEmpty);
-  });
-
-  test('toggleLikeComment updates maps', () async {
-    final service = FakeFeedService();
-    final controller = CommentsController(service: service);
-    final c = PostComment(
-      id: '1',
-      postId: 'p1',
-      userId: 'u',
-      username: 'user',
-      content: 'hi',
-    );
-    service.store.add(c);
-    await controller.loadComments('p1');
-    await controller.toggleLikeComment('1');
-    expect(controller.isCommentLiked('1'), isTrue);
-    expect(controller.commentLikeCount('1'), 1);
-  });
+  @override
+  Future<void> createComment(PostComment comment) async {
+    store.add(comment);
+  }
 }

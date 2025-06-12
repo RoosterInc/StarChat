@@ -7,58 +7,54 @@ import '../screens/post_detail_page.dart';
 import 'media_gallery.dart';
 import 'reaction_bar.dart';
 
-class PostCard extends StatefulWidget {
+class PostCard extends StatelessWidget {
   final FeedPost post;
   const PostCard({super.key, required this.post});
 
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
-
-class _PostCardState extends State<PostCard> {
-  bool isLiked = false;
-
-  void _handleLike() {
-    final controller = Get.find<FeedController>();
-    controller.likePost(widget.post.id);
-    setState(() => isLiked = !isLiked);
+  void _handleLike(FeedController controller) {
+    controller.toggleLikePost(post.id);
   }
 
   void _handleComment() {
-    Get.to(() => PostDetailPage(post: widget.post));
+    Get.to(() => PostDetailPage(post: post));
   }
 
-  void _handleRepost() {
-    final controller = Get.find<FeedController>();
-    controller.repostPost(widget.post.id);
+  void _handleRepost(FeedController controller) {
+    controller.repostPost(post.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    return GlassmorphicCard(
-      padding: DesignTokens.md(context).all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.post.username,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          SizedBox(height: DesignTokens.sm(context)),
-          Text(widget.post.content),
-          if (widget.post.mediaUrls.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.only(top: DesignTokens.sm(context)),
-              child: MediaGallery(urls: widget.post.mediaUrls),
+    final controller = Get.find<FeedController>();
+    return Obx(
+      () => GlassmorphicCard(
+        padding: DesignTokens.md(context).all,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              post.username,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-          SizedBox(height: DesignTokens.sm(context)),
-          ReactionBar(
-            onLike: _handleLike,
-            onComment: _handleComment,
-            onRepost: _handleRepost,
-            isLiked: isLiked,
-          ),
-        ],
+            SizedBox(height: DesignTokens.sm(context)),
+            Text(post.content),
+            if (post.mediaUrls.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                child: MediaGallery(urls: post.mediaUrls),
+              ),
+            SizedBox(height: DesignTokens.sm(context)),
+            ReactionBar(
+              onLike: () => _handleLike(controller),
+              onComment: _handleComment,
+              onRepost: () => _handleRepost(controller),
+              isLiked: controller.isPostLiked(post.id),
+              likeCount: controller.postLikeCount(post.id),
+              commentCount: post.commentCount,
+              repostCount: controller.postRepostCount(post.id),
+            ),
+          ],
+        ),
       ),
     );
   }

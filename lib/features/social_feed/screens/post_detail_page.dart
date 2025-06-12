@@ -38,16 +38,18 @@ class _PostDetailPageState extends State<PostDetailPage> {
         child: Column(
           children: [
             Expanded(
-              child: OptimizedListView(
-                itemCount: commentsController.comments.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) return PostCard(post: widget.post);
-                  final comment = commentsController.comments[index - 1];
-                  return Padding(
-                    padding: EdgeInsets.only(top: DesignTokens.sm(context)),
-                    child: CommentCard(comment: comment),
-                  );
-                },
+              child: Obx(
+                () => OptimizedListView(
+                  itemCount: commentsController.comments.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) return PostCard(post: widget.post);
+                    final comment = commentsController.comments[index - 1];
+                    return Padding(
+                      padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                      child: CommentCard(comment: comment),
+                    );
+                  },
+                ),
               ),
             ),
             SizedBox(height: DesignTokens.sm(context)),
