@@ -22,9 +22,9 @@ class EnhancedSliverAppBar extends StatelessWidget {
       pinned: true,
       expandedHeight: ResponsiveUtils.adaptiveValue(
         context,
-        mobile: 200,
-        tablet: 220,
-        desktop: 240,
+        mobile: DesignTokens.xl(context) * 8,
+        tablet: DesignTokens.xl(context) * 9,
+        desktop: DesignTokens.xl(context) * 10,
       ),
       collapsedHeight: 0,
       toolbarHeight: 0,

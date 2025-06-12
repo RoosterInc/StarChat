@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../models/planet_house_models.dart';
 import '../controllers/enhanced_planet_house_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class EnhancedPlanetHouseWidget extends StatelessWidget {
   final PlanetHouseData planetData;
@@ -27,7 +28,7 @@ class EnhancedPlanetHouseWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildStrengthBar(context),
-          const SizedBox(height: 6),
+          SizedBox(height: DesignTokens.spacing(context, 6)),
           Container(
             width: size,
             height: size,
@@ -43,7 +44,7 @@ class EnhancedPlanetHouseWidget extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: DesignTokens.spacing(context, 6)),
           Text(
             planetData.housePositionText,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
@@ -57,9 +58,9 @@ class EnhancedPlanetHouseWidget extends StatelessWidget {
     final strength = planetData.strengthRating / 10.0;
     return Container(
       width: size * 0.8,
-      height: 4,
+      height: DesignTokens.spacing(context, 4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(DesignTokens.spacing(context, 2)),
         color: Colors.grey.shade300,
       ),
       alignment: Alignment.centerLeft,
@@ -68,7 +69,7 @@ class EnhancedPlanetHouseWidget extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: planetData.strengthColor,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(DesignTokens.spacing(context, 2)),
           ),
         ),
       ),
@@ -84,12 +85,13 @@ class EnhancedPlanetHouseList extends StatelessWidget {
     final controller = Get.find<EnhancedPlanetHouseController>();
     return Obx(() {
       if (controller.isLoading && !controller.hasData) {
-        return const SizedBox(
-            height: 80, child: Center(child: CircularProgressIndicator()));
+        return SizedBox(
+            height: DesignTokens.spacing(context, 80),
+            child: const Center(child: CircularProgressIndicator()));
       }
       if (controller.error.isNotEmpty && !controller.hasData) {
         return SizedBox(
-          height: 80,
+          height: DesignTokens.spacing(context, 80),
           child: Center(
             child: TextButton(
               onPressed: controller.forceRefreshData,
@@ -99,14 +101,13 @@ class EnhancedPlanetHouseList extends StatelessWidget {
         );
       }
       return SizedBox(
-        // Provide enough vertical space for the planet widget to
-        // avoid overflow errors when the text height varies slightly.
-        height: 86,
+        height: DesignTokens.spacing(context, 86),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: DesignTokens.md(context).horizontal,
           itemCount: controller.planetHouseData.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          separatorBuilder: (_, __) =>
+              SizedBox(width: DesignTokens.spacing(context, 12)),
           itemBuilder: (context, index) {
             final item = controller.planetHouseData[index];
             return EnhancedPlanetHouseWidget(
