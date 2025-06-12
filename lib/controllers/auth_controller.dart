@@ -78,8 +78,6 @@ class AuthController extends GetxController {
     account = Account(client);
     databases = Databases(client);
     storage = Storage(client);
-
-    checkExistingSession();
   }
 
   @override
@@ -95,7 +93,7 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  Future<void> checkExistingSession() async {
+  Future<void> checkExistingSession({bool navigateOnMissing = true}) async {
     // If a session check is already in progress, wait for it to finish
     if (_sessionCheckLock.value) {
       logger.i(
@@ -162,7 +160,7 @@ class AuthController extends GetxController {
     } on AppwriteException catch (e) {
       logger.e(
           "[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
-      if (e.code == 401) {
+      if (e.code == 401 && navigateOnMissing) {
         Get.offAllNamed('/');
       }
     } catch (e) {

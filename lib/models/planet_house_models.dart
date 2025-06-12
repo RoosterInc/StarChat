@@ -226,9 +226,22 @@ class PlanetHouseData {
     this.interpretation,
   });
 
+  static const Map<String, String> _planetAssetMap = {
+    'sun': 'sun.png',
+    'moon': 'Moon.png',
+    'mars': 'mars.png',
+    'mercury': 'mercury.png',
+    'jupiter': 'Jupitor.png',
+    'venus': 'Venus.png',
+    'saturn': 'Saturn.png',
+    'rahu': 'Rahu.png',
+    'ketu': 'Ketu.png',
+  };
+
   String get planetImageAsset {
     final planetName = position.planet.toLowerCase();
-    return 'assets/images/planets/' + planetName + '.png';
+    final fileName = _planetAssetMap[planetName] ?? '$planetName.png';
+    return 'assets/images/planets/' + fileName;
   }
 
   String get housePositionText {
