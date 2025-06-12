@@ -19,6 +19,10 @@ class FeedBinding extends Bindings {
             dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
         commentsCollectionId:
             dotenv.env['POST_COMMENTS_COLLECTION_ID'] ?? 'post_comments',
+        likesCollectionId:
+            dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
+        repostsCollectionId:
+            dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
       );
       Get.put<FeedController>(FeedController(service: service));
     }
