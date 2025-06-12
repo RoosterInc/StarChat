@@ -26,5 +26,5 @@ void main() {
     final controller = PollController(service: FakePollService());
     await controller.loadVotes('1');
     expect(controller.votes, isEmpty);
-  }, skip: true);
+  });
 }

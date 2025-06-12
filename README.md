@@ -38,6 +38,9 @@ POLL_VOTES_COLLECTION_ID=poll_votes
 APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 
+The `.env` file should never be committed to source control. It is listed in
+`.gitignore`, so ensure your local copy contains the required values.
+
 The file is referenced in `pubspec.yaml` so it will be bundled automatically when running the application.
 
 ## Updating Collection Permissions
