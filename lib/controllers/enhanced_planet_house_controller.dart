@@ -160,13 +160,14 @@ class EnhancedPlanetHouseController extends GetxController {
         .toList();
 
     List<PlanetHouseInterpretation> interpretations = [];
-    if (_currentRashiId.value.isNotEmpty) {
+    if (_currentRashiId.value.isNotEmpty &&
+        _currentAscendantSign.value.isNotEmpty) {
       try {
         final interpretationsResult = await _auth.databases.listDocuments(
           databaseId: dbId,
           collectionId: interpretationsCollectionId,
           queries: [
-            Query.equal('rashi_id', _currentRashiId.value),
+            Query.equal('ascendant_sign', _currentAscendantSign.value),
             Query.orderAsc('planet'),
             Query.limit(50),
           ],
