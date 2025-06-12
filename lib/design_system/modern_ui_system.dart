@@ -763,6 +763,8 @@ class AdaptiveNavigation extends StatelessWidget {
         selectedIndex: selectedIndex,
         onDestinationSelected: onDestinationSelected,
         destinations: destinations,
+        labelBehavior:
+            NavigationDestinationLabelBehavior.onlyShowSelected,
         animationDuration: DesignTokens.durationNormal,
       ),
     );
