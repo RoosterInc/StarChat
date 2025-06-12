@@ -95,7 +95,7 @@ class _ChatRoomSliverAppBar extends GetView<ChatController> {
                     child: Center(
                       child: Text(
                         title,
-                        style: context.textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -135,7 +135,7 @@ class _ChatRoomSliverAppBar extends GetView<ChatController> {
                             context.colorScheme.primary.withOpacity(0.1),
                         child: Text(
                           '$activeUsers',
-                          style: context.textTheme.labelLarge?.copyWith(
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
                             color: context.colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
