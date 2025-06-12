@@ -535,6 +535,45 @@ class WatchlistController extends GetxController {
     _showSuccessSnackbar('Refreshed', 'Message counts updated', Colors.blue);
   }
 
+  /// Retrieve the chat room id associated with a [WatchlistItem]. If the item
+  /// already contains a `chatRoomId`, that value is returned immediately.
+  /// Otherwise the Appwrite database is queried using available identifiers such
+  /// as `combinationKey`, `rashiId` and `nakshatraId`.
+  Future<String?> fetchChatRoomId(WatchlistItem item) async {
+    if (item.chatRoomId != null) return item.chatRoomId;
+
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    try {
+      final queries = <String>[Query.equal('is_active', true)];
+
+      if (item.combinationKey != null) {
+        queries.add(Query.equal('combination_key', item.combinationKey!));
+      } else {
+        if (item.rashiId != null) {
+          queries.add(Query.equal('rashi_id', item.rashiId!));
+        }
+        if (item.nakshatraId != null) {
+          queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+        }
+      }
+
+      final res = await _auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: 'chat_rooms',
+        queries: queries,
+      );
+
+      if (res.documents.isNotEmpty) {
+        return res.documents.first.$id;
+      }
+    } catch (e, st) {
+      logger.e('Error finding chat room for item ${item.name}',
+          error: e, stackTrace: st);
+    }
+
+    return null;
+  }
+
   Map<String, dynamic> _itemDataForDb(WatchlistItem item, String uid,
       {int? order, DateTime? updatedAt}) {
     return {
@@ -1361,7 +1400,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                   index: index,
                   onRemove: () => controller.removeItem(item.id),
                   onEdit: () => _showEditItemDialog(context, controller, item),
-                  onTap: () => _showItemDetails(context, item),
+                  onTap: () => _openChatRoom(context, item),
                 );
               },
             );
@@ -1643,95 +1682,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
     );
   }
 
-  void _showItemDetails(BuildContext context, WatchlistItem item) {
-    final textColor = _getAdaptiveTextColor(item.color);
-
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_lightenColor(item.color, 0.4), item.color],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.star, size: 32, color: textColor),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              item.name,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Watchlist Key: ${item.watchlistKey}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontFamily: 'monospace',
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Count: ${item.count}',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Added ${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Get.back();
-                      _showEditItemDialog(
-                          context, Get.find<WatchlistController>(), item);
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Get.back(),
-                    child: const Text('Close'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _openChatRoom(BuildContext context, WatchlistItem item) async {
+    final controller = Get.find<WatchlistController>();
+    final roomId = await controller.fetchChatRoomId(item);
+    if (roomId != null) {
+      Get.toNamed('/chat-room/$roomId');
+    } else {
+      Get.snackbar(
+        'Chat Room',
+        'Unable to locate chat room for ${item.name}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   void _showClearAllDialog(
