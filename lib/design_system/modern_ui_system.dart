@@ -17,8 +17,11 @@ class DesignTokens {
   // SPACING SYSTEM - Fluid spacing that adapts to screen size
   static double spacing(BuildContext context, double baseValue) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final scaleFactor = screenWidth < 600 ? 1.0 : 
-                       screenWidth < 1024 ? 1.2 : 1.4;
+    final scaleFactor = screenWidth < 600
+        ? 1.0
+        : screenWidth < 1024
+            ? 1.2
+            : 1.4;
     return baseValue * scaleFactor;
   }
 
@@ -42,12 +45,12 @@ class DesignTokens {
     BoxShadow(color: Color(0x0D000000), blurRadius: 1, offset: Offset(0, 1)),
     BoxShadow(color: Color(0x1A000000), blurRadius: 2, offset: Offset(0, 1)),
   ];
-  
+
   static const List<BoxShadow> elevation2 = [
     BoxShadow(color: Color(0x1A000000), blurRadius: 2, offset: Offset(0, 1)),
     BoxShadow(color: Color(0x1A000000), blurRadius: 6, offset: Offset(0, 2)),
   ];
-  
+
   static const List<BoxShadow> elevation3 = [
     BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 2)),
     BoxShadow(color: Color(0x1A000000), blurRadius: 12, offset: Offset(0, 4)),
@@ -57,7 +60,7 @@ class DesignTokens {
   static const Duration durationFast = Duration(milliseconds: 150);
   static const Duration durationNormal = Duration(milliseconds: 300);
   static const Duration durationSlow = Duration(milliseconds: 500);
-  
+
   static const Curve curveEaseOut = Curves.easeOut;
   static const Curve curveEaseInOut = Curves.easeInOut;
   static const Curve curveSpring = Curves.elasticOut;
@@ -68,6 +71,7 @@ class DesignTokens {
 // ============================================================================
 
 enum DeviceType { mobile, tablet, desktop }
+
 enum Orientation { portrait, landscape }
 
 class ResponsiveBreakpoints {
@@ -84,13 +88,13 @@ class ResponsiveUtils {
     return DeviceType.desktop;
   }
 
-  static bool isMobile(BuildContext context) => 
+  static bool isMobile(BuildContext context) =>
       getDeviceType(context) == DeviceType.mobile;
-  
-  static bool isTablet(BuildContext context) => 
+
+  static bool isTablet(BuildContext context) =>
       getDeviceType(context) == DeviceType.tablet;
-  
-  static bool isDesktop(BuildContext context) => 
+
+  static bool isDesktop(BuildContext context) =>
       getDeviceType(context) == DeviceType.desktop;
 
   static bool isLandscape(BuildContext context) =>
@@ -121,8 +125,8 @@ class ResponsiveUtils {
     double? ideal,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final normalizedWidth = (screenWidth - ResponsiveBreakpoints.mobile) / 
-                           (ResponsiveBreakpoints.desktop - ResponsiveBreakpoints.mobile);
+    final normalizedWidth = (screenWidth - ResponsiveBreakpoints.mobile) /
+        (ResponsiveBreakpoints.desktop - ResponsiveBreakpoints.mobile);
     final clampedWidth = normalizedWidth.clamp(0.0, 1.0);
     return min + (max - min) * clampedWidth;
   }
@@ -157,10 +161,10 @@ class MD3ThemeSystem {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      
+
       // Enhanced Typography with fluid scaling
       textTheme: _createTextTheme(colorScheme),
-      
+
       // Modern component themes
       appBarTheme: _createAppBarTheme(colorScheme),
       navigationBarTheme: _createNavigationBarTheme(colorScheme),
@@ -168,7 +172,7 @@ class MD3ThemeSystem {
       elevatedButtonTheme: _createElevatedButtonTheme(colorScheme),
       filledButtonTheme: _createFilledButtonTheme(colorScheme),
       inputDecorationTheme: _createInputDecorationTheme(colorScheme),
-      
+
       // Enhanced visual density for better touch targets
       visualDensity: VisualDensity.adaptivePlatformDensity,
     );
@@ -198,7 +202,7 @@ class MD3ThemeSystem {
         color: colorScheme.onSurface,
         height: 1.22,
       ),
-      
+
       // Headline styles
       headlineLarge: TextStyle(
         fontSize: 32,
@@ -221,7 +225,7 @@ class MD3ThemeSystem {
         color: colorScheme.onSurface,
         height: 1.33,
       ),
-      
+
       // Title styles
       titleLarge: TextStyle(
         fontSize: 22,
@@ -244,7 +248,7 @@ class MD3ThemeSystem {
         color: colorScheme.onSurface,
         height: 1.43,
       ),
-      
+
       // Body styles
       bodyLarge: TextStyle(
         fontSize: 16,
@@ -267,7 +271,7 @@ class MD3ThemeSystem {
         color: colorScheme.onSurfaceVariant,
         height: 1.33,
       ),
-      
+
       // Label styles
       labelLarge: TextStyle(
         fontSize: 14,
@@ -347,7 +351,8 @@ class MD3ThemeSystem {
     );
   }
 
-  static ElevatedButtonThemeData _createElevatedButtonTheme(ColorScheme colorScheme) {
+  static ElevatedButtonThemeData _createElevatedButtonTheme(
+      ColorScheme colorScheme) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: colorScheme.surface,
@@ -368,7 +373,8 @@ class MD3ThemeSystem {
     );
   }
 
-  static FilledButtonThemeData _createFilledButtonTheme(ColorScheme colorScheme) {
+  static FilledButtonThemeData _createFilledButtonTheme(
+      ColorScheme colorScheme) {
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: colorScheme.primary,
@@ -387,7 +393,8 @@ class MD3ThemeSystem {
     );
   }
 
-  static InputDecorationTheme _createInputDecorationTheme(ColorScheme colorScheme) {
+  static InputDecorationTheme _createInputDecorationTheme(
+      ColorScheme colorScheme) {
     return InputDecorationTheme(
       filled: true,
       fillColor: colorScheme.surfaceVariant.withOpacity(0.5),
@@ -409,7 +416,8 @@ class MD3ThemeSystem {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
+      hintStyle:
+          TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
     );
   }
 }
@@ -635,8 +643,8 @@ class _StaggeredListItemState extends State<StaggeredListItem>
 
 class GlassmorphicContainer extends StatelessWidget {
   final Widget? child;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
   final double blur;
   final double opacity;
   final Color? color;
@@ -648,8 +656,8 @@ class GlassmorphicContainer extends StatelessWidget {
   const GlassmorphicContainer({
     Key? key,
     this.child,
-    this.width = double.infinity,
-    this.height = double.infinity,
+    this.width,
+    this.height,
     this.blur = 10.0,
     this.opacity = 0.1,
     this.color,
@@ -663,7 +671,7 @@ class GlassmorphicContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Container(
       width: width,
       height: height,
@@ -675,16 +683,16 @@ class GlassmorphicContainer extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: color ?? 
-                     (isDark 
-                      ? Colors.white.withOpacity(opacity) 
+              color: color ??
+                  (isDark
+                      ? Colors.white.withOpacity(opacity)
                       : Colors.white.withOpacity(opacity * 2)),
               borderRadius: borderRadius ?? BorderRadius.circular(12),
-              border: border ?? 
-                     Border.all(
-                       color: Colors.white.withOpacity(isDark ? 0.1 : 0.2),
-                       width: 1,
-                     ),
+              border: border ??
+                  Border.all(
+                    color: Colors.white.withOpacity(isDark ? 0.1 : 0.2),
+                    width: 1,
+                  ),
             ),
             child: child,
           ),
@@ -763,8 +771,7 @@ class AdaptiveNavigation extends StatelessWidget {
         selectedIndex: selectedIndex,
         onDestinationSelected: onDestinationSelected,
         destinations: destinations,
-        labelBehavior:
-            NavigationDestinationLabelBehavior.onlyShowSelected,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         animationDuration: DesignTokens.durationNormal,
       ),
     );
@@ -929,7 +936,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
-    
+
     _animation = Tween<double>(
       begin: -1.0,
       end: 2.0,
@@ -949,7 +956,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -962,15 +969,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                isDark 
-                  ? Colors.grey[800]! 
-                  : Colors.grey[300]!,
-                isDark 
-                  ? Colors.grey[700]! 
-                  : Colors.grey[100]!,
-                isDark 
-                  ? Colors.grey[800]! 
-                  : Colors.grey[300]!,
+                isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                isDark ? Colors.grey[700]! : Colors.grey[100]!,
+                isDark ? Colors.grey[800]! : Colors.grey[300]!,
               ],
               stops: [
                 math.max(0.0, _animation.value - 0.3),
@@ -1026,13 +1027,13 @@ extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get colorScheme => theme.colorScheme;
   TextTheme get textTheme => theme.textTheme;
-  
+
   // Responsive shortcuts
   bool get isMobile => ResponsiveUtils.isMobile(this);
   bool get isTablet => ResponsiveUtils.isTablet(this);
   bool get isDesktop => ResponsiveUtils.isDesktop(this);
   bool get isLandscape => ResponsiveUtils.isLandscape(this);
-  
+
   // Screen dimensions
   Size get screenSize => MediaQuery.of(this).size;
   double get screenWidth => screenSize.width;
@@ -1144,7 +1145,8 @@ class _ModernUIDemoState extends State<ModernUIDemo> {
             padding: DesignTokens.sm(context).bottom,
             child: SkeletonLoader(
               height: 60,
-              borderRadius: BorderRadius.circular(DesignTokens.radiusSm(context)),
+              borderRadius:
+                  BorderRadius.circular(DesignTokens.radiusSm(context)),
             ),
           ),
         ),
@@ -1187,9 +1189,9 @@ class _ModernUIDemoState extends State<ModernUIDemo> {
             ),
           ),
         ),
-        
+
         SizedBox(height: DesignTokens.lg(context)),
-        
+
         // Interactive buttons
         Row(
           children: [
@@ -1215,7 +1217,8 @@ class _ModernUIDemoState extends State<ModernUIDemo> {
                       content: const Text('Action completed!'),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusSm(context)),
+                        borderRadius: BorderRadius.circular(
+                            DesignTokens.radiusSm(context)),
                       ),
                     ),
                   );
@@ -1228,9 +1231,9 @@ class _ModernUIDemoState extends State<ModernUIDemo> {
             ),
           ],
         ),
-        
+
         SizedBox(height: DesignTokens.lg(context)),
-        
+
         // List items with cards
         ...List.generate(
           10,
