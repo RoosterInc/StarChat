@@ -13,6 +13,7 @@ import 'features/social_feed/screens/compose_post_page.dart';
 import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
 import 'bindings/splash_binding.dart';
+import 'bindings/feed_binding.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -109,13 +110,13 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/chat-room/:roomId',
               page: () => const ChatRoomPage(),
-              binding: AuthBinding(),
+              bindings: [AuthBinding(), FeedBinding()],
               transition: Transition.rightToLeft,
             ),
             GetPage(
               name: '/compose-post/:roomId',
               page: () => ComposePostPage(roomId: Get.parameters['roomId']!),
-              binding: AuthBinding(),
+              bindings: [AuthBinding(), FeedBinding()],
             ),
             GetPage(
               name: '/post/:postId',

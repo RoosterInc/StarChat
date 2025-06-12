@@ -1,0 +1,31 @@
+import 'package:get/get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import '../controllers/auth_controller.dart';
+import '../features/social_feed/services/feed_service.dart';
+import '../features/social_feed/controllers/feed_controller.dart';
+import '../features/social_feed/controllers/comments_controller.dart';
+
+class FeedBinding extends Bindings {
+  @override
+  void dependencies() {
+    final auth = Get.find<AuthController>();
+
+    if (!Get.isRegistered<FeedController>()) {
+      final service = FeedService(
+        databases: auth.databases,
+        databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+        postsCollectionId:
+            dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
+        commentsCollectionId:
+            dotenv.env['POST_COMMENTS_COLLECTION_ID'] ?? 'post_comments',
+      );
+      Get.put<FeedController>(FeedController(service: service));
+    }
+
+    if (!Get.isRegistered<CommentsController>()) {
+      final service = Get.find<FeedController>().service;
+      Get.put<CommentsController>(CommentsController(service: service));
+    }
+  }
+}
