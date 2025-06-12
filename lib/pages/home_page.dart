@@ -12,7 +12,6 @@ import '../widgets/complete_enhanced_watchlist.dart';
 import '../controllers/chat_controller.dart';
 import '../widgets/chat/modern_chat_room_card.dart';
 import '../widgets/responsive_sizes.dart';
-import '../widgets/responsive_layout.dart';
 import 'empty_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -94,7 +93,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final isLargeScreen = ResponsiveLayout.isDesktop(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isLargeScreen = screenSize.width >= 1024;
 
     final pages = [
       _buildHomeBody(context),
@@ -234,8 +234,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           body: TabBarView(
             children: [
               EnhancedResponsiveLayout(
-                mobile: (context) =>
-                    _buildContent(context, ResponsiveUtils.fluidSize(context, min: 280, max: 400)),
+                mobile: (context) => _buildContent(
+                    context, MediaQuery.of(context).size.width * 0.95),
                 tablet: (context) => _buildContent(context, 600),
                 desktop: (context) => _buildContent(context, 800),
               ),
@@ -266,11 +266,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               _buildChatRoomsSection(context),
               SizedBox(height: _getResponsiveSpacing(context)),
               SizedBox(
-                height: ResponsiveUtils.fluidSize(
-                  context,
-                  min: 200,
-                  max: 400,
-                ),
+                height: MediaQuery.of(context).size.height * 0.5,
                 child: const EnhancedWatchlistWidget(),
               ),
               SizedBox(height: _getResponsiveSpacing(context)),
@@ -282,31 +278,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   double _getResponsivePadding(BuildContext context) {
-    return ResponsiveUtils.adaptiveValue(
-      context,
-      mobile: DesignTokens.md(context),
-      tablet: DesignTokens.lg(context),
-      desktop: DesignTokens.xl(context),
-    );
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 16.0;
+    if (width >= 600) return 14.0;
+    return 12.0;
   }
 
   double _getResponsiveSpacing(BuildContext context) {
-    return ResponsiveUtils.adaptiveValue(
-      context,
-      mobile: DesignTokens.md(context),
-      tablet: DesignTokens.lg(context),
-      desktop: DesignTokens.xl(context),
-    );
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return 28.0;
+    if (width >= 600) return 22.0;
+    return 18.0;
   }
 
   double _getResponsiveFontSize(BuildContext context, double baseSize) {
-    final scale = ResponsiveUtils.adaptiveValue(
-      context,
-      mobile: 1.0,
-      tablet: 1.05,
-      desktop: 1.1,
-    );
-    return baseSize * scale;
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseSize * 1.1;
+    if (width >= 600) return baseSize * 1.05;
+    return baseSize;
   }
 
   Widget _buildPredictionScoresSection(BuildContext context) {
@@ -416,12 +405,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final chatController = Get.find<ChatController>();
 
     double getOptimalHeight() {
-      return ResponsiveUtils.adaptiveValue(
-        context,
-        mobile: 140.0,
-        tablet: 160.0,
-        desktop: 200.0,
-      );
+      final width = MediaQuery.of(context).size.width;
+      if (width >= 1024) return 200.0;
+      if (width >= 600) return 160.0;
+      return 140.0;
     }
 
     return Column(
@@ -506,17 +493,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   double _getResponsiveChatCardWidth(BuildContext context) {
-    final availableWidth = context.screenWidth;
+    final availableWidth = MediaQuery.of(context).size.width;
     return ResponsiveSizes.chatRoomItemWidth(context, availableWidth);
   }
 
   double _getResponsiveHeight(BuildContext context, double baseHeight) {
-    final scale = ResponsiveUtils.adaptiveValue(
-      context,
-      mobile: 1.0,
-      tablet: 1.05,
-      desktop: 1.1,
-    );
-    return baseHeight * scale;
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1024) return baseHeight * 1.1;
+    if (width >= 600) return baseHeight * 1.05;
+    return baseHeight;
   }
 }

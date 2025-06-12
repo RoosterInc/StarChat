@@ -27,12 +27,4 @@ class FeedController extends GetxController {
     await service.createPost(post);
     _posts.insert(0, post);
   }
-
-  Future<void> likePost(String postId) async {
-    await service.createLike({'item_id': postId, 'item_type': 'post'});
-  }
-
-  Future<void> repostPost(String postId) async {
-    await service.createRepost({'post_id': postId});
-  }
 }
