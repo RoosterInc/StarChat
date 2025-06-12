@@ -15,12 +15,14 @@ class EnhancedPlanetHouseController extends GetxController {
   final RxBool _isLoading = false.obs;
   final RxString _error = ''.obs;
   final RxString _currentAscendantSign = ''.obs;
+  final RxString _currentRashiId = 'r1'.obs;
   final RxString _lastFetchDate = ''.obs;
 
   List<PlanetHouseData> get planetHouseData => _planetHouseData;
   bool get isLoading => _isLoading.value;
   String get error => _error.value;
   String get currentAscendantSign => _currentAscendantSign.value;
+  String get currentRashiId => _currentRashiId.value;
   bool get hasData => _planetHouseData.isNotEmpty;
   String get lastFetchDate => _lastFetchDate.value;
 
@@ -36,10 +38,24 @@ class EnhancedPlanetHouseController extends GetxController {
   static const String _cacheKeyTimestamp = 'planet_house_cache_timestamp_v2';
   static const String _cacheKeyFetchDate = 'planet_house_fetch_date_v2';
 
+  String get _positionsKey =>
+      '\${_cacheKeyPositions}_\${_auth.userId}_\${_currentRashiId.value}';
+  String get _interpretationsKey =>
+      '\${_cacheKeyInterpretations}_\${_auth.userId}_\${_currentRashiId.value}';
+  String get _timestampKey =>
+      '\${_cacheKeyTimestamp}_\${_auth.userId}_\${_currentRashiId.value}';
+  String get _fetchDateKey =>
+      '\${_cacheKeyFetchDate}_\${_auth.userId}_\${_currentRashiId.value}';
+
   @override
   void onInit() {
     super.onInit();
-    _loadPlanetHouseData();
+  }
+
+  Future<void> initialize() async {
+    _currentRashiId.value =
+        _auth.birthRashiId.value.isNotEmpty ? _auth.birthRashiId.value : 'r1';
+    await _loadPlanetHouseData();
   }
 
   Future<void> _loadPlanetHouseData() async {
@@ -95,6 +111,7 @@ class EnhancedPlanetHouseController extends GetxController {
       collectionId: positionsCollectionId,
       queries: [
         Query.equal('date_key', dateKey),
+        Query.equal('rashi_id', _currentRashiId.value),
         Query.orderAsc('planet'),
         Query.limit(25),
       ],
@@ -106,6 +123,7 @@ class EnhancedPlanetHouseController extends GetxController {
         collectionId: positionsCollectionId,
         queries: [
           Query.orderDesc('date_key'),
+          Query.equal('rashi_id', _currentRashiId.value),
           Query.orderAsc('planet'),
           Query.limit(25),
         ],
@@ -142,13 +160,13 @@ class EnhancedPlanetHouseController extends GetxController {
         .toList();
 
     List<PlanetHouseInterpretation> interpretations = [];
-    if (_currentAscendantSign.value.isNotEmpty) {
+    if (_currentRashiId.value.isNotEmpty) {
       try {
         final interpretationsResult = await _auth.databases.listDocuments(
           databaseId: dbId,
           collectionId: interpretationsCollectionId,
           queries: [
-            Query.equal('ascendant_sign', _currentAscendantSign.value),
+            Query.equal('rashi_id', _currentRashiId.value),
             Query.orderAsc('planet'),
             Query.limit(50),
           ],
@@ -253,7 +271,7 @@ class EnhancedPlanetHouseController extends GetxController {
   Future<String> _getLastFetchDate() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_cacheKeyFetchDate) ?? '';
+      return prefs.getString(_fetchDateKey) ?? '';
     } catch (e) {
       logger.e('Error getting last fetch date', error: e);
       return '';
@@ -263,7 +281,7 @@ class EnhancedPlanetHouseController extends GetxController {
   Future<void> _setLastFetchDate(String dateKey) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKeyFetchDate, dateKey);
+      await prefs.setString(_fetchDateKey, dateKey);
     } catch (e) {
       logger.e('Error setting last fetch date', error: e);
     }
@@ -272,14 +290,14 @@ class EnhancedPlanetHouseController extends GetxController {
   Future<List<PlanetHouseData>> _loadFromCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final positionsJson = prefs.getStringList(_cacheKeyPositions);
-      final interpretationsJson = prefs.getStringList(_cacheKeyInterpretations);
-      final ascendantSign = prefs.getString('cached_ascendant_sign');
+      final positionsJson = prefs.getStringList(_positionsKey);
+      final interpretationsJson = prefs.getStringList(_interpretationsKey);
+      final ascendantSign = prefs.getString('cached_rashi_id');
       if (positionsJson == null) {
         return [];
       }
       if (ascendantSign != null) {
-        _currentAscendantSign.value = ascendantSign;
+        _currentRashiId.value = ascendantSign;
       }
       final positions = positionsJson
           .map((json) => PlanetHousePosition.fromJson(jsonDecode(json)))
@@ -305,14 +323,11 @@ class EnhancedPlanetHouseController extends GetxController {
           .where((item) => item.interpretation != null)
           .map((item) => jsonEncode(item.interpretation!.toJson()))
           .toList();
-      await prefs.setStringList(_cacheKeyPositions, positionsJson);
-      await prefs.setStringList(_cacheKeyInterpretations, interpretationsJson);
+      await prefs.setStringList(_positionsKey, positionsJson);
+      await prefs.setStringList(_interpretationsKey, interpretationsJson);
       await prefs.setString(
-          _cacheKeyTimestamp, DateTime.now().toIso8601String());
-      if (_currentAscendantSign.value.isNotEmpty) {
-        await prefs.setString(
-            'cached_ascendant_sign', _currentAscendantSign.value);
-      }
+          _timestampKey, DateTime.now().toIso8601String());
+      await prefs.setString('cached_rashi_id', _currentRashiId.value);
     } catch (e, stackTrace) {
       logger.e('Error saving to cache', error: e, stackTrace: stackTrace);
     }
@@ -325,6 +340,12 @@ class EnhancedPlanetHouseController extends GetxController {
     Get.snackbar('Refreshed', 'Planet data updated successfully',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2));
+  }
+
+  Future<void> selectRashi(String rashiId) async {
+    if (rashiId == _currentRashiId.value) return;
+    _currentRashiId.value = rashiId;
+    await forceRefreshData();
   }
 
   PlanetHouseData? getPlanetData(String planetName) {
@@ -350,11 +371,11 @@ class EnhancedPlanetHouseController extends GetxController {
   Future<void> clearCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_cacheKeyPositions);
-      await prefs.remove(_cacheKeyInterpretations);
-      await prefs.remove(_cacheKeyTimestamp);
-      await prefs.remove(_cacheKeyFetchDate);
-      await prefs.remove('cached_ascendant_sign');
+      await prefs.remove(_positionsKey);
+      await prefs.remove(_interpretationsKey);
+      await prefs.remove(_timestampKey);
+      await prefs.remove(_fetchDateKey);
+      await prefs.remove('cached_rashi_id');
     } catch (e) {
       logger.e('Error clearing cache', error: e);
     }

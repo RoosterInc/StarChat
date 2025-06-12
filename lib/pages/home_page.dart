@@ -58,7 +58,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     Get.put(WatchlistController(), permanent: true);
-    Get.put(EnhancedPlanetHouseController(), permanent: true);
+    final phc = Get.put(EnhancedPlanetHouseController(), permanent: true);
+    phc.initialize();
     _initializeAnimations();
   }
 
