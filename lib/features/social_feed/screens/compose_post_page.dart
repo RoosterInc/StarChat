@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
-import '../../../controllers/auth_controller.dart';
 
 class ComposePostPage extends StatefulWidget {
   final String roomId;
@@ -19,7 +18,6 @@ class _ComposePostPageState extends State<ComposePostPage> {
   @override
   Widget build(BuildContext context) {
     final feedController = Get.find<FeedController>();
-    final auth = Get.find<AuthController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Compose Post')),
       body: Padding(
@@ -34,15 +32,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
             SizedBox(height: DesignTokens.md(context)),
             AnimatedButton(
               onPressed: () {
-                final uid = auth.userId ?? '';
-                final uname = auth.username.value.isNotEmpty
-                    ? auth.username.value
-                    : 'You';
                 final post = FeedPost(
                   id: DateTime.now().toIso8601String(),
                   roomId: widget.roomId,
-                  userId: uid,
-                  username: uname,
+                  userId: 'me',
+                  username: 'You',
                   content: _controller.text,
                 );
                 feedController.createPost(post);
