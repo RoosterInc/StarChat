@@ -5,25 +5,47 @@ class ReactionBar extends StatelessWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onRepost;
-  const ReactionBar({super.key, this.onLike, this.onComment, this.onRepost});
+  final bool isLiked;
+  const ReactionBar({
+    super.key,
+    this.onLike,
+    this.onComment,
+    this.onRepost,
+    this.isLiked = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AnimatedButton(
-          onPressed: onLike,
-          child: const Icon(Icons.favorite_border),
+        AccessibilityWrapper(
+          semanticLabel: isLiked ? 'Unlike post' : 'Like post',
+          isButton: true,
+          child: AnimatedButton(
+            onPressed: onLike,
+            child: Icon(
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              color: isLiked ? Colors.red : null,
+            ),
+          ),
         ),
         SizedBox(width: DesignTokens.sm(context)),
-        AnimatedButton(
-          onPressed: onComment,
-          child: const Icon(Icons.mode_comment_outlined),
+        AccessibilityWrapper(
+          semanticLabel: 'Comment on post',
+          isButton: true,
+          child: AnimatedButton(
+            onPressed: onComment,
+            child: const Icon(Icons.mode_comment_outlined),
+          ),
         ),
         SizedBox(width: DesignTokens.sm(context)),
-        AnimatedButton(
-          onPressed: onRepost,
-          child: const Icon(Icons.repeat),
+        AccessibilityWrapper(
+          semanticLabel: 'Repost',
+          isButton: true,
+          child: AnimatedButton(
+            onPressed: onRepost,
+            child: const Icon(Icons.repeat),
+          ),
         ),
       ],
     );
