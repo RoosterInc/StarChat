@@ -24,7 +24,7 @@ class CommentsController extends GetxController {
   }
 
   Future<void> addComment(PostComment comment) async {
-    // This would call service to create comment, but for now we just add.
+    await service.createComment(comment);
     _comments.add(comment);
   }
 }
