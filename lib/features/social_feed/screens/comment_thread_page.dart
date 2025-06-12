@@ -35,12 +35,21 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
         child: Column(
           children: [
             Expanded(
-              child: OptimizedListView(
-                itemCount: widget.thread.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                  child: CommentCard(comment: widget.thread[index]),
-                ),
+              child: Obx(
+                () {
+                  final root = widget.thread.first;
+                  final items = commentsController.comments
+                      .where((c) => c.id == root.id || c.parentId == root.id)
+                      .toList();
+                  return OptimizedListView(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) => Padding(
+                      padding:
+                          EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                      child: CommentCard(comment: items[index]),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(height: DesignTokens.sm(context)),
@@ -69,10 +78,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       parentId: root.id,
                       content: _controller.text,
                     );
-                    commentsController.addComment(comment);
-                    setState(() {
-                      widget.thread.add(comment);
-                    });
+                    commentsController.replyToComment(comment);
                     _controller.clear();
                   },
                   child: const Text('Send'),

@@ -11,6 +11,11 @@ class FeedController extends GetxController {
   final _posts = <FeedPost>[].obs;
   List<FeedPost> get posts => _posts;
 
+  final _likedIds = <String, String>{}.obs; // postId -> likeId
+  final _repostedIds = <String, String>{}.obs; // postId -> repostId
+  final _likeCounts = <String, int>{}.obs; // postId -> like count
+  final _repostCounts = <String, int>{}.obs; // postId -> repost count
+
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
@@ -19,6 +24,18 @@ class FeedController extends GetxController {
     try {
       final data = await service.getPosts(roomId);
       _posts.assignAll(data);
+      _likeCounts.assignAll({for (final p in data) p.id: p.likeCount});
+      _repostCounts.assignAll({for (final p in data) p.id: p.repostCount});
+      final auth = Get.find<AuthController>();
+      final uid = auth.userId;
+      if (uid != null) {
+        for (final post in data) {
+          final like = await service.getUserLike(post.id, uid);
+          if (like != null) _likedIds[post.id] = like.id;
+          final repost = await service.getUserRepost(post.id, uid);
+          if (repost != null) _repostedIds[post.id] = repost.id;
+        }
+      }
     } finally {
       _isLoading.value = false;
     }
@@ -29,24 +46,41 @@ class FeedController extends GetxController {
     _posts.insert(0, post);
   }
 
-  Future<void> likePost(String postId) async {
+  Future<void> toggleLikePost(String postId) async {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
     if (uid == null) return;
-    await service.createLike({
-      'item_id': postId,
-      'item_type': 'post',
-      'user_id': uid,
-    });
+    if (_likedIds.containsKey(postId)) {
+      final likeId = _likedIds.remove(postId)!;
+      await service.deleteLike(likeId);
+      _likeCounts[postId] = (_likeCounts[postId] ?? 1) - 1;
+    } else {
+      await service.createLike({
+        'item_id': postId,
+        'item_type': 'post',
+        'user_id': uid,
+      });
+      final like = await service.getUserLike(postId, uid);
+      if (like != null) _likedIds[postId] = like.id;
+      _likeCounts[postId] = (_likeCounts[postId] ?? 0) + 1;
+    }
   }
 
   Future<void> repostPost(String postId) async {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
-    if (uid == null) return;
+    if (uid == null || _repostedIds.containsKey(postId)) return;
     await service.createRepost({
       'post_id': postId,
       'user_id': uid,
     });
+    final repost = await service.getUserRepost(postId, uid);
+    if (repost != null) _repostedIds[postId] = repost.id;
+    _repostCounts[postId] = (_repostCounts[postId] ?? 0) + 1;
   }
+
+  bool isPostLiked(String postId) => _likedIds.containsKey(postId);
+  bool isPostReposted(String postId) => _repostedIds.containsKey(postId);
+  int postLikeCount(String postId) => _likeCounts[postId] ?? 0;
+  int postRepostCount(String postId) => _repostCounts[postId] ?? 0;
 }

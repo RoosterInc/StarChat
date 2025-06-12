@@ -1,6 +1,8 @@
 import 'package:appwrite/appwrite.dart';
 import '../models/feed_post.dart';
 import '../models/post_comment.dart';
+import '../models/post_like.dart';
+import '../models/post_repost.dart';
 
 class FeedService {
   final Databases databases;
@@ -77,5 +79,39 @@ class FeedService {
       documentId: ID.unique(),
       data: repost,
     );
+  }
+
+  Future<PostLike?> getUserLike(String itemId, String userId) async {
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: likesCollectionId,
+      queries: [
+        Query.equal('item_id', itemId),
+        Query.equal('user_id', userId),
+      ],
+    );
+    if (res.documents.isEmpty) return null;
+    return PostLike.fromJson(res.documents.first.data);
+  }
+
+  Future<void> deleteLike(String likeId) async {
+    await databases.deleteDocument(
+      databaseId: databaseId,
+      collectionId: likesCollectionId,
+      documentId: likeId,
+    );
+  }
+
+  Future<PostRepost?> getUserRepost(String postId, String userId) async {
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: repostsCollectionId,
+      queries: [
+        Query.equal('post_id', postId),
+        Query.equal('user_id', userId),
+      ],
+    );
+    if (res.documents.isEmpty) return null;
+    return PostRepost.fromJson(res.documents.first.data);
   }
 }

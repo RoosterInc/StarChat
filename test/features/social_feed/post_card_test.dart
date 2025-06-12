@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
 import 'package:myapp/features/social_feed/widgets/post_card.dart';
+import 'package:get/get.dart';
+import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
+import 'package:myapp/features/social_feed/services/feed_service.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:myapp/features/social_feed/models/post_like.dart';
+import 'package:myapp/features/social_feed/models/post_repost.dart';
 
 void main() {
   testWidgets('renders post content', (tester) async {
@@ -18,5 +24,72 @@ void main() {
       ),
     );
     expect(find.text('hello'), findsOneWidget);
-  }, skip: true);
+  });
+
+  testWidgets('like button toggles', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.favorite_border));
+    await tester.pump();
+    expect(controller.isPostLiked('1'), isTrue);
+  });
+}
+
+class FakeFeedService extends FeedService {
+  FakeFeedService()
+      : super(
+          databases: Databases(Client()),
+          databaseId: 'db',
+          postsCollectionId: 'posts',
+          commentsCollectionId: 'comments',
+          likesCollectionId: 'likes',
+          repostsCollectionId: 'reposts',
+        );
+
+  final List<FeedPost> store = [];
+  final Map<String, String> likes = {};
+
+  @override
+  Future<List<FeedPost>> getPosts(String roomId) async {
+    return store.where((e) => e.roomId == roomId).toList();
+  }
+
+  @override
+  Future<void> createLike(Map<String, dynamic> like) async {
+    likes[like['item_id']] = '1';
+  }
+
+  @override
+  Future<PostLike?> getUserLike(String itemId, String userId) async {
+    final id = likes[itemId];
+    return id == null
+        ? null
+        : PostLike(id: id, itemId: itemId, itemType: 'post', userId: userId);
+  }
+
+  @override
+  Future<void> deleteLike(String likeId) async {
+    likes.removeWhere((key, value) => value == likeId);
+  }
+
+  @override
+  Future<void> createRepost(Map<String, dynamic> repost) async {}
+
+  @override
+  Future<PostRepost?> getUserRepost(String postId, String userId) async => null;
 }
