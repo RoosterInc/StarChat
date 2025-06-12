@@ -13,5 +13,8 @@ class AuthBinding extends Bindings {
     if (!Get.isRegistered<ChatController>()) {
       Get.put(ChatController(), permanent: true);
     }
+    if (!Get.isRegistered<EnhancedPlanetHouseController>()) {
+      Get.put(EnhancedPlanetHouseController(), permanent: true);
+    }
   }
 }
