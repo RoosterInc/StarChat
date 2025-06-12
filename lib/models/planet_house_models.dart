@@ -10,6 +10,7 @@ class PlanetHousePosition {
   final String ascendantSign;
   final String ascendantSymbol;
   final int ascendantIndex;
+  final String rashiId;
   final String planet;
   final String planetSign;
   final String planetSignSymbol;
@@ -31,6 +32,7 @@ class PlanetHousePosition {
     required this.ascendantSign,
     required this.ascendantSymbol,
     required this.ascendantIndex,
+    required this.rashiId,
     required this.planet,
     required this.planetSign,
     required this.planetSignSymbol,
@@ -54,6 +56,7 @@ class PlanetHousePosition {
       ascendantSign: json['ascendant_sign'] ?? '',
       ascendantSymbol: json['ascendant_symbol'] ?? '',
       ascendantIndex: ParsingUtils.parseInt(json['ascendant_index']),
+      rashiId: json['rashi_id'] ?? '',
       planet: json['planet'] ?? '',
       planetSign: json['planet_sign'] ?? '',
       planetSignSymbol: json['planet_sign_symbol'] ?? '',
@@ -78,6 +81,7 @@ class PlanetHousePosition {
       'ascendant_sign': ascendantSign,
       'ascendant_symbol': ascendantSymbol,
       'ascendant_index': ascendantIndex,
+      'rashi_id': rashiId,
       'planet': planet,
       'planet_sign': planetSign,
       'planet_sign_symbol': planetSignSymbol,
@@ -180,6 +184,7 @@ class PlanetHouseInterpretation {
       'ascendant_sign': ascendantSign,
       'ascendant_symbol': ascendantSymbol,
       'ascendant_index': ascendantIndex,
+      'rashi_id': rashiId,
       'planet': planet,
       'house_number': houseNumber,
       'house_name': houseName,

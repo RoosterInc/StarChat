@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
+import '../controllers/master_data_controller.dart';
+import '../widgets/complete_enhanced_watchlist.dart';
 
 class SetUsernamePage extends GetView<AuthController> {
   const SetUsernamePage({super.key});
 
+  MasterDataController get dataController => Get.find<MasterDataController>();
+
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<MasterDataController>()) {
+      Get.put(MasterDataController(), permanent: true);
+    }
     return Scaffold(
       appBar: AppBar(title: Text('enter_username'.tr)),
       body: ResponsiveLayout(
@@ -39,6 +46,50 @@ class SetUsernamePage extends GetView<AuthController> {
                 ),
                 onChanged: controller.onUsernameChanged,
               ),
+              const SizedBox(height: 16),
+              Obx(() => DropdownButtonFormField<RashiOption>(
+                    value: dataController.rashiOptions.firstWhereOrNull(
+                        (r) => r.rashiId == controller.birthRashiId.value),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Select Rasi',
+                    ),
+                    items: dataController.rashiOptions
+                        .map((r) => DropdownMenuItem(
+                              value: r,
+                              child: Text('${r.symbol} ${r.name}'),
+                            ))
+                        .toList(),
+                    onChanged: (r) {
+                      controller.birthRashiId.value = r?.rashiId ?? '';
+                      controller.birthNakshatraId.value = '';
+                    },
+                  )),
+              const SizedBox(height: 16),
+              Obx(() {
+                final options = dataController
+                    .getNakshatraForRashi(controller.birthRashiId.value);
+                return DropdownButtonFormField<NakshatraOption>(
+                  value: options.firstWhereOrNull(
+                      (n) => n.nakshatraId == controller.birthNakshatraId.value),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select Nakshatra',
+                  ),
+                  items: options
+                      .map((n) => DropdownMenuItem(
+                            value: n,
+                            child: Text('${n.symbol} ${n.name}'),
+                          ))
+                      .toList(),
+                  onChanged: controller.birthRashiId.value.isEmpty
+                      ? null
+                      : (n) {
+                          controller.birthNakshatraId.value =
+                              n?.nakshatraId ?? '';
+                        },
+                );
+              }),
               Obx(() => controller.usernameError.value.isEmpty
                   ? const SizedBox.shrink()
                   : Padding(
