@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'bindings/auth_binding.dart';
+import 'bindings/chat_room_binding.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
@@ -109,13 +110,13 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/chat-room/:roomId',
               page: () => const ChatRoomPage(),
-              binding: AuthBinding(),
+              binding: ChatRoomBinding(),
               transition: Transition.rightToLeft,
             ),
             GetPage(
               name: '/compose-post/:roomId',
               page: () => ComposePostPage(roomId: Get.parameters['roomId']!),
-              binding: AuthBinding(),
+              binding: ChatRoomBinding(),
             ),
             GetPage(
               name: '/post/:postId',
