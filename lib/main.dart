@@ -9,7 +9,8 @@ import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
 import 'pages/chat_room_page.dart';
 import 'pages/chat_rooms_list_page.dart';
-import 'pages/logout_splash_page.dart';
+import 'pages/splash_screen.dart';
+import 'bindings/splash_binding.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -47,10 +48,17 @@ class MyApp extends StatelessWidget {
               ? ThemeMode.dark
               : ThemeMode.light, // Reactive theme
           initialBinding: AuthBinding(),
-          initialRoute: '/',
+          initialRoute: '/splash',
           defaultTransition: Transition.cupertino,
           transitionDuration: const Duration(milliseconds: 300),
           getPages: [
+            GetPage(
+              name: '/splash',
+              page: () => const SplashScreen(),
+              binding: SplashBinding(),
+              transition: Transition.fadeIn,
+              transitionDuration: const Duration(milliseconds: 400),
+            ),
             GetPage(
               name: '/',
               page: () => const SignInPage(),
@@ -60,8 +68,8 @@ class MyApp extends StatelessWidget {
             ),
             GetPage(
               name: '/logged-out',
-              page: () => const LogoutSplashPage(),
-              binding: AuthBinding(),
+              page: () => const SplashScreen(),
+              binding: SplashBinding(),
               transition: Transition.fadeIn,
               transitionDuration: const Duration(milliseconds: 400),
             ),
