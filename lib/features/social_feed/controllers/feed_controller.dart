@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import '../../../controllers/auth_controller.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 
@@ -30,23 +29,10 @@ class FeedController extends GetxController {
   }
 
   Future<void> likePost(String postId) async {
-    final auth = Get.find<AuthController>();
-    final uid = auth.userId;
-    if (uid == null) return;
-    await service.createLike({
-      'item_id': postId,
-      'item_type': 'post',
-      'user_id': uid,
-    });
+    await service.createLike({'item_id': postId, 'item_type': 'post'});
   }
 
   Future<void> repostPost(String postId) async {
-    final auth = Get.find<AuthController>();
-    final uid = auth.userId;
-    if (uid == null) return;
-    await service.createRepost({
-      'post_id': postId,
-      'user_id': uid,
-    });
+    await service.createRepost({'post_id': postId});
   }
 }
