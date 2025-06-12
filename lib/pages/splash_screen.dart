@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/splash_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});
@@ -16,31 +18,45 @@ class SplashScreen extends GetView<SplashController> {
             fit: BoxFit.cover,
           ),
         ),
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'app_name'.tr,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const Spacer(),
+              Text(
+                'app_name'.tr,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Obx(() {
-              if (controller.isLoading.value) {
-                return const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              SizedBox(height: DesignTokens.lg(context)),
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  );
+                }
+                return Padding(
+                  padding: DesignTokens.lg(context).horizontal,
+                  child: AnimatedButton(
+                    onPressed: () => Get.offAllNamed('/'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: Size.fromHeight(
+                        ResponsiveUtils.fluidSize(context, min: 50, max: 70),
+                      ),
+                    ),
+                    child: Text(
+                      'lets_go'.tr,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 );
-              }
-              return ElevatedButton(
-                onPressed: () => Get.offAllNamed('/'),
-                child: Text('lets_go'.tr),
-              );
-            }),
-          ],
+              }),
+              SizedBox(height: DesignTokens.xl(context)),
+            ],
+          ),
         ),
       ),
     );
