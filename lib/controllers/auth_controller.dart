@@ -124,8 +124,8 @@ class AuthController extends GetxController {
       if (justLoggedOut.value) {
         justLoggedOut.value = false;
         logger.i(
-            "[Auth] checkExistingSession: 'justLoggedOut' flag was true. Navigating to sign-in.");
-        Get.offAllNamed('/');
+            "[Auth] checkExistingSession: 'justLoggedOut' flag was true. Navigating to logout splash.");
+        Get.offAllNamed('/logged-out');
         return;
       }
 
@@ -1195,7 +1195,7 @@ class AuthController extends GetxController {
 
       justLoggedOut.value = true;
       isLoading.value = false;
-      Get.offAllNamed('/');
+      Get.offAllNamed('/logged-out');
     }
   }
 
