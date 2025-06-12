@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:myapp/design_system/modern_ui_system.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/enhanced_responsive_layout.dart';
 import '../design_system/modern_ui_system.dart' as ui;
@@ -233,8 +234,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           body: TabBarView(
             children: [
               EnhancedResponsiveLayout(
-                mobile: (context) =>
-                    _buildContent(context, ui.ResponsiveUtils.fluidSize(context, min: 280, max: 400)),
+                mobile: (context) => _buildContent(context,
+                    ui.ResponsiveUtils.fluidSize(context, min: 280, max: 400)),
                 tablet: (context) => _buildContent(context, 600),
                 desktop: (context) => _buildContent(context, 800),
               ),
