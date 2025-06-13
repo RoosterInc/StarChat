@@ -15,6 +15,7 @@ class FeedPost {
   final int commentCount;
   final int repostCount;
   final int shareCount;
+  final List<String> hashtags;
 
   FeedPost({
     required this.id,
@@ -31,6 +32,7 @@ class FeedPost {
     this.commentCount = 0,
     this.repostCount = 0,
     this.shareCount = 0,
+    this.hashtags = const [],
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class FeedPost {
       commentCount: json['comment_count'] ?? 0,
       repostCount: json['repost_count'] ?? 0,
       shareCount: json['share_count'] ?? 0,
+      hashtags: (json['hashtags'] as List?)?.cast<String>() ?? const [],
     );
   }
 
@@ -67,6 +70,7 @@ class FeedPost {
       'comment_count': commentCount,
       'repost_count': repostCount,
       'share_count': shareCount,
+      'hashtags': hashtags,
     };
   }
 

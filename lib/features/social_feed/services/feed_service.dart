@@ -75,6 +75,18 @@ class FeedService {
     }
   }
 
+  Future<List<FeedPost>> getPostsByHashtag(String tag) async {
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postsCollectionId,
+      queries: [
+        Query.search('hashtags', tag),
+        Query.orderDesc('\$createdAt'),
+      ],
+    );
+    return res.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+  }
+
   Future<void> createPost(FeedPost post) async {
     try {
       await databases.createDocument(
@@ -112,6 +124,7 @@ class FeedService {
     String content,
     String? roomId,
     File image,
+    [List<String> hashtags = const []],
   ) async {
     try {
       final imageUrl = await uploadImage(image);
@@ -122,6 +135,7 @@ class FeedService {
         username: username,
         content: content,
         mediaUrls: [imageUrl],
+        hashtags: hashtags,
       );
       await createPost(post);
     } catch (_) {
@@ -132,6 +146,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'image_path': image.path,
+        'hashtags': hashtags,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Image post queued for syncing');
@@ -152,6 +167,7 @@ class FeedService {
     String content,
     String? roomId,
     String linkUrl,
+    [List<String> hashtags = const []],
   ) async {
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
@@ -163,6 +179,7 @@ class FeedService {
         content: content,
         linkUrl: linkUrl,
         linkMetadata: metadata,
+        hashtags: hashtags,
       );
       await createPost(post);
     } catch (_) {
@@ -173,6 +190,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'link_url': linkUrl,
+        'hashtags': hashtags,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Link post queued for syncing');
@@ -264,6 +282,48 @@ class FeedService {
     }
   }
 
+  Future<void> saveHashtags(List<String> tags) async {
+    for (final tag in tags) {
+      try {
+        final existing = await databases.listDocuments(
+          databaseId: databaseId,
+          collectionId: 'hashtags',
+          queries: [Query.equal('hashtag', tag)],
+        );
+        if (existing.documents.isEmpty) {
+          await databases.createDocument(
+            databaseId: databaseId,
+            collectionId: 'hashtags',
+            documentId: ID.unique(),
+            data: {
+              'hashtag': tag,
+              'usage_count': 1,
+              'last_used_at': DateTime.now().toIso8601String(),
+            },
+          );
+        } else {
+          final doc = existing.documents.first;
+          final count = (doc.data['usage_count'] ?? 0) as int;
+          await databases.updateDocument(
+            databaseId: databaseId,
+            collectionId: 'hashtags',
+            documentId: doc.$id,
+            data: {
+              'usage_count': count + 1,
+              'last_used_at': DateTime.now().toIso8601String(),
+            },
+          );
+        }
+      } catch (_) {
+        await queueBox.add({
+          'action': 'hashtag',
+          'data': tag,
+          '_cachedAt': DateTime.now().toIso8601String(),
+        });
+      }
+    }
+  }
+
   Future<PostLike?> getUserLike(String itemId, String userId) async {
     final res = await databases.listDocuments(
       databaseId: databaseId,
@@ -331,7 +391,11 @@ class FeedService {
               item['content'],
               item['room_id'],
               item['link_url'],
+              (item['hashtags'] as List?)?.cast<String>() ?? const [],
             );
+            break;
+          case 'hashtag':
+            await saveHashtags([item['data'] as String]);
             break;
           case 'follow':
             await createFollow(Map<String, dynamic>.from(item['data']));
@@ -358,6 +422,7 @@ class FeedService {
             item['content'],
             item['room_id'],
             file,
+            (item['hashtags'] as List?)?.cast<String>() ?? const [],
           );
         }
         await postQueueBox.delete(key);

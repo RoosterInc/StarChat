@@ -8,10 +8,41 @@ import 'media_gallery.dart';
 import 'reaction_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/safe_network_image.dart';
+import '../../discovery/screens/hashtag_search_page.dart';
+import 'package:flutter/gestures.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
   const PostCard({super.key, required this.post});
+
+  Widget _buildContent(BuildContext context) {
+    if (post.hashtags.isEmpty) {
+      return Text(post.content);
+    }
+    final spans = <TextSpan>[];
+    final words = post.content.split(RegExp(r'(\s+)'));
+    for (final word in words) {
+      if (word.startsWith('#')) {
+        final tag = word.substring(1).toLowerCase();
+        spans.add(TextSpan(
+          text: '$word ',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              Get.to(() => HashtagSearchPage(hashtag: tag));
+            },
+        ));
+      } else {
+        spans.add(TextSpan(text: '$word '));
+      }
+    }
+    return RichText(
+      text: TextSpan(
+        style: Theme.of(context).textTheme.bodyMedium,
+        children: spans,
+      ),
+    );
+  }
 
   void _handleLike(FeedController controller) {
     controller.toggleLikePost(post.id);
@@ -39,7 +70,7 @@ class PostCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             SizedBox(height: DesignTokens.sm(context)),
-            Text(post.content),
+            _buildContent(context),
             if (post.mediaUrls.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(top: DesignTokens.sm(context)),
