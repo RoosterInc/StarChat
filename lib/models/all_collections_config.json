@@ -1355,6 +1355,121 @@
         }
       ],
       "seed_data": []
+    },
+    {
+      "collection_id": "watchlist_items",
+      "name": "Watchlist Items",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {"key": "userId", "type": "string", "required": true, "array": false, "size": 255},
+        {"key": "name", "type": "string", "required": true, "array": false, "size": 100},
+        {"key": "count", "type": "integer", "required": false, "array": false, "default": 0},
+        {"key": "colorValue", "type": "integer", "required": false, "array": false, "default": 0},
+        {"key": "rashiId", "type": "string", "required": false, "array": false, "size": 50},
+        {"key": "nakshatraId", "type": "string", "required": false, "array": false, "size": 50},
+        {"key": "combinationKey", "type": "string", "required": false, "array": false, "size": 100},
+        {"key": "chatRoomId", "type": "string", "required": false, "array": false, "size": 255},
+        {"key": "watchlistKey", "type": "string", "required": false, "array": false, "size": 100},
+        {"key": "order", "type": "integer", "required": false, "array": false, "default": 0},
+        {"key": "iconCodePoint", "type": "integer", "required": false, "array": false, "default": 0},
+        {"key": "iconFontFamily", "type": "string", "required": false, "array": false, "size": 50},
+        {"key": "createdAt", "type": "datetime", "required": true, "array": false},
+        {"key": "updatedAt", "type": "datetime", "required": false, "array": false}
+      ],
+      "indexes": [
+        {"key": "user_order", "type": "key", "attributes": ["userId", "order"]},
+        {"key": "watchlist_unique", "type": "unique", "attributes": ["userId", "watchlistKey"]}
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "polls",
+      "name": "Polls",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"any\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {"key": "post_id", "type": "string", "required": true, "array": false, "size": 255},
+        {"key": "question", "type": "string", "required": true, "array": false, "size": 500},
+        {"key": "options", "type": "string", "required": true, "array": true, "size": 255},
+        {"key": "expires_at", "type": "datetime", "required": false, "array": false},
+        {"key": "total_votes", "type": "integer", "required": false, "array": false, "default": 0}
+      ],
+      "indexes": [
+        {"key": "post_polls", "type": "key", "attributes": ["post_id"]},
+        {"key": "popular_polls", "type": "key", "attributes": ["total_votes"]}
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "poll_votes",
+      "name": "Poll Votes",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {"key": "poll_id", "type": "string", "required": true, "array": false, "size": 255},
+        {"key": "user_id", "type": "string", "required": true, "array": false, "size": 255},
+        {"key": "option_index", "type": "integer", "required": true, "array": false},
+        {"key": "created_at", "type": "datetime", "required": true, "array": false}
+      ],
+      "indexes": [
+        {"key": "poll_votes_lookup", "type": "key", "attributes": ["poll_id"]},
+        {"key": "unique_vote", "type": "unique", "attributes": ["poll_id", "user_id"]}
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "rasi_master",
+      "name": "Rasi Master",
+      "permissions": [
+        "read(\"any\")",
+        "create(\"team:admins\")",
+        "update(\"team:admins\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {"key": "name", "type": "string", "required": true, "array": false, "size": 100},
+        {"key": "rashi_id", "type": "string", "required": true, "array": false, "size": 50},
+        {"key": "symbol", "type": "string", "required": false, "array": false, "size": 10}
+      ],
+      "indexes": [
+        {"key": "rashi_unique", "type": "unique", "attributes": ["rashi_id"]},
+        {"key": "name_order", "type": "key", "attributes": ["name"]}
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "nakshatra_master",
+      "name": "Nakshatra Master",
+      "permissions": [
+        "read(\"any\")",
+        "create(\"team:admins\")",
+        "update(\"team:admins\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {"key": "name", "type": "string", "required": true, "array": false, "size": 100},
+        {"key": "nakshatra_id", "type": "string", "required": true, "array": false, "size": 50},
+        {"key": "rashi_id", "type": "string", "required": true, "array": false, "size": 50},
+        {"key": "symbol", "type": "string", "required": false, "array": false, "size": 10}
+      ],
+      "indexes": [
+        {"key": "nakshatra_unique", "type": "unique", "attributes": ["nakshatra_id"]},
+        {"key": "rashi_lookup", "type": "key", "attributes": ["rashi_id"]},
+        {"key": "name_order", "type": "key", "attributes": ["name"]}
+      ],
+      "seed_data": []
     }
   ]
 }
