@@ -173,9 +173,9 @@ class FeedService {
   Future<Map<String, dynamic>> fetchLinkMetadata(String url) async {
     final result = await functions.createExecution(
       functionId: linkMetadataFunctionId,
-      data: jsonEncode({'url': url}),
+      body: jsonEncode({'url': url}),
     );
-    return jsonDecode(result.response) as Map<String, dynamic>;
+    return jsonDecode(result.responseBody) as Map<String, dynamic>;
   }
 
   Future<void> createPostWithLink(
