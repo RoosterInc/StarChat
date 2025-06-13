@@ -13,9 +13,11 @@ class FakeProfileService extends ProfileService {
           databaseId: 'db',
           profilesCollection: 'profiles',
           followsCollection: 'follows',
+          blocksCollection: 'blocked_users',
         );
   UserProfile? profile;
   bool followed = false;
+  bool blocked = false;
 
   @override
   Future<UserProfile> fetchProfile(String userId) async {
@@ -25,6 +27,16 @@ class FakeProfileService extends ProfileService {
   @override
   Future<void> followUser(String followerId, String followedId) async {
     followed = true;
+  }
+
+  @override
+  Future<void> blockUser(String blockerId, String blockedId) async {
+    blocked = true;
+  }
+
+  @override
+  Future<void> unblockUser(String blockerId, String blockedId) async {
+    blocked = false;
   }
 }
 

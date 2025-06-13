@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'dart:io';
 import '../../../controllers/auth_controller.dart';
+import '../../profile/services/profile_service.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 
@@ -20,10 +21,19 @@ class FeedController extends GetxController {
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
-  Future<void> loadPosts(String roomId) async {
+  Future<void> loadPosts(String roomId, {List<String>? blockedIds}) async {
     _isLoading.value = true;
     try {
-      final data = await service.getPosts(roomId);
+      List<String> ids = blockedIds ?? [];
+      if (ids.isEmpty &&
+          Get.isRegistered<AuthController>() &&
+          Get.isRegistered<ProfileService>()) {
+        final uid = Get.find<AuthController>().userId;
+        if (uid != null) {
+          ids = Get.find<ProfileService>().getBlockedIds(uid);
+        }
+      }
+      final data = await service.getPosts(roomId, blockedIds: ids);
       _posts.assignAll(data);
       _likeCounts.assignAll({for (final p in data) p.id: p.likeCount});
       _repostCounts.assignAll({for (final p in data) p.id: p.repostCount});

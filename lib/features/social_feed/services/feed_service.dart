@@ -49,19 +49,24 @@ class FeedService {
     });
   }
 
-  Future<List<FeedPost>> getPosts(String roomId) async {
+  Future<List<FeedPost>> getPosts(String roomId,
+      {List<String> blockedIds = const []}) async {
     try {
+      final queries = [
+        Query.equal('room_id', roomId),
+        Query.orderDesc('\$createdAt'),
+      ];
+      for (final id in blockedIds) {
+        queries.add(Query.notEqual('user_id', id));
+      }
       final res = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: postsCollectionId,
-        queries: [
-          Query.equal('room_id', roomId),
-          Query.orderDesc('\$createdAt'),
-        ],
+        queries: queries,
       );
       final posts = res.documents
           .map((e) => FeedPost.fromJson(e.data))
-          .where((p) => !p.isDeleted)
+          .where((p) => !p.isDeleted && !blockedIds.contains(p.userId))
           .toList();
       final cache = posts
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
@@ -77,7 +82,7 @@ class FeedService {
             return ts == null || ts.isAfter(expiry);
           })
           .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
-          .where((p) => !p.isDeleted)
+          .where((p) => !p.isDeleted && !blockedIds.contains(p.userId))
           .toList();
     }
   }

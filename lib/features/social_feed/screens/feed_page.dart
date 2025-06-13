@@ -4,6 +4,8 @@ import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../widgets/post_card.dart';
 import 'compose_post_page.dart';
+import '../../../controllers/auth_controller.dart';
+import '../../profile/services/profile_service.dart';
 
 class FeedPage extends StatefulWidget {
   final String roomId;
@@ -20,7 +22,12 @@ class _FeedPageState extends State<FeedPage> {
   void initState() {
     super.initState();
     controller = Get.find<FeedController>();
-    controller.loadPosts(widget.roomId);
+    final auth = Get.find<AuthController>();
+    List<String> blocked = [];
+    if (auth.userId != null && Get.isRegistered<ProfileService>()) {
+      blocked = Get.find<ProfileService>().getBlockedIds(auth.userId!);
+    }
+    controller.loadPosts(widget.roomId, blockedIds: blocked);
   }
 
   @override

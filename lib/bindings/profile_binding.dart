@@ -13,6 +13,7 @@ class ProfileBinding extends Bindings {
           databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
           profilesCollection: dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles',
           followsCollection: 'follows',
+          blocksCollection: 'blocked_users',
         ));
     Get.lazyPut<ProfileController>(() => ProfileController());
   }

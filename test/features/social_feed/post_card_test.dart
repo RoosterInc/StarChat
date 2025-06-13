@@ -93,8 +93,11 @@ class FakeFeedService extends FeedService {
   final Map<String, String> likes = {};
 
   @override
-  Future<List<FeedPost>> getPosts(String roomId) async {
-    return store.where((e) => e.roomId == roomId).toList();
+  Future<List<FeedPost>> getPosts(String roomId,
+      {List<String> blockedIds = const []}) async {
+    return store
+        .where((e) => e.roomId == roomId && !blockedIds.contains(e.userId))
+        .toList();
   }
 
   @override
