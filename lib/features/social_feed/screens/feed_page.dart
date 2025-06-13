@@ -18,6 +18,39 @@ class FeedPage extends StatefulWidget {
 class _FeedPageState extends State<FeedPage> {
   late FeedController controller;
 
+  Widget _buildSortMenu(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: DropdownButton<String>(
+        value: controller.sortType,
+        onChanged: (value) {
+          if (value == null) return;
+          controller.updateSortType(value);
+          final auth = Get.find<AuthController>();
+          List<String> blocked = [];
+          if (auth.userId != null && Get.isRegistered<ProfileService>()) {
+            blocked = Get.find<ProfileService>().getBlockedIds(auth.userId!);
+          }
+          controller.loadPosts(widget.roomId, blockedIds: blocked);
+        },
+        items: const [
+          DropdownMenuItem(
+            value: 'chronological',
+            child: Text('Chronological'),
+          ),
+          DropdownMenuItem(
+            value: 'most-commented',
+            child: Text('Most Commented'),
+          ),
+          DropdownMenuItem(
+            value: 'most-liked',
+            child: Text('Most Liked'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,16 +85,26 @@ class _FeedPageState extends State<FeedPage> {
             ),
           );
         }
-        return OptimizedListView(
-          itemCount: controller.posts.length,
-          padding: EdgeInsets.all(DesignTokens.md(context)),
-          itemBuilder: (context, index) {
-            final post = controller.posts[index];
-            return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
-              child: PostCard(post: post),
-            );
-          },
+        return Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(DesignTokens.sm(context)),
+              child: _buildSortMenu(context),
+            ),
+            Expanded(
+              child: OptimizedListView(
+                itemCount: controller.posts.length,
+                padding: EdgeInsets.all(DesignTokens.md(context)),
+                itemBuilder: (context, index) {
+                  final post = controller.posts[index];
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                    child: PostCard(post: post),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       }),
     );

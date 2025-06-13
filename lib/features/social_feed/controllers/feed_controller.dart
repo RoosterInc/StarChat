@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'dart:io';
+import 'package:hive/hive.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
 import '../models/feed_post.dart';
@@ -8,10 +9,28 @@ import '../services/feed_service.dart';
 class FeedController extends GetxController {
   final FeedService service;
 
+  final Box _prefs = Hive.box('preferences');
+
   FeedController({required this.service});
 
   final _posts = <FeedPost>[].obs;
   List<FeedPost> get posts => _posts;
+
+  final _sortType = 'chronological'.obs;
+  String get sortType => _sortType.value;
+  set sortType(String value) => _sortType.value = value;
+
+  @override
+  void onInit() {
+    final saved = _prefs.get('feed_sort_type') as String?;
+    if (saved != null) _sortType.value = saved;
+    super.onInit();
+  }
+
+  void updateSortType(String value) {
+    _sortType.value = value;
+    _prefs.put('feed_sort_type', value);
+  }
 
   final _likedIds = <String, String>{}.obs; // postId -> likeId
   final _repostedIds = <String, String>{}.obs; // postId -> repostId
@@ -33,14 +52,15 @@ class FeedController extends GetxController {
           ids = Get.find<ProfileService>().getBlockedIds(uid);
         }
       }
-      final data = await service.getPosts(roomId, blockedIds: ids);
-      _posts.assignAll(data);
-      _likeCounts.assignAll({for (final p in data) p.id: p.likeCount});
-      _repostCounts.assignAll({for (final p in data) p.id: p.repostCount});
+      final data = await service.fetchSortedPosts(_sortType.value, roomId: roomId);
+      final filtered = data.where((p) => !ids.contains(p.userId)).toList();
+      _posts.assignAll(filtered);
+      _likeCounts.assignAll({for (final p in filtered) p.id: p.likeCount});
+      _repostCounts.assignAll({for (final p in filtered) p.id: p.repostCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null) {
-        for (final post in data) {
+        for (final post in filtered) {
           final like = await service.getUserLike(post.id, uid);
           if (like != null) _likedIds[post.id] = like.id;
           final repost = await service.getUserRepost(post.id, uid);
