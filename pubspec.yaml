@@ -36,6 +36,7 @@ dependencies:
   html_unescape: ^2.0.0
   flutter_local_notifications: ^15.0.0
   path_provider: ^2.1.2
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
