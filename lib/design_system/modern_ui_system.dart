@@ -1038,6 +1038,10 @@ extension ContextExtensions on BuildContext {
   Size get screenSize => MediaQuery.of(this).size;
   double get screenWidth => screenSize.width;
   double get screenHeight => screenSize.height;
+
+  // Safe area insets
+  EdgeInsets get safePadding => MediaQuery.of(this).padding;
+  EdgeInsets get viewPadding => MediaQuery.of(this).viewPadding;
 }
 
 extension PaddingExtensions on double {

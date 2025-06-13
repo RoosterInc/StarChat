@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/user_type_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class UserTypeSwitcher extends StatelessWidget {
   const UserTypeSwitcher({super.key});
@@ -11,9 +12,9 @@ class UserTypeSwitcher extends StatelessWidget {
 
     return Obx(() {
       return Card(
-        margin: const EdgeInsets.all(16),
+        margin: DesignTokens.md(context).all,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: DesignTokens.md(context).all,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

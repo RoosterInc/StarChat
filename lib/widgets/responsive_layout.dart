@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/modern_ui_system.dart';
 
 /// Simple responsive layout widget with mobile, tablet and desktop breakpoints.
 class ResponsiveLayout extends StatelessWidget {
@@ -21,24 +22,20 @@ class ResponsiveLayout extends StatelessWidget {
   final WidgetBuilder? desktop;
 
   /// Returns true when the current screen width is considered mobile.
-  static bool isMobile(BuildContext context) =>
-      MediaQuery.of(context).size.width < 600;
+  static bool isMobile(BuildContext context) => ResponsiveUtils.isMobile(context);
 
   /// Returns true when the current screen width is considered tablet.
-  static bool isTablet(BuildContext context) =>
-      MediaQuery.of(context).size.width >= 600 &&
-      MediaQuery.of(context).size.width < 1024;
+  static bool isTablet(BuildContext context) => ResponsiveUtils.isTablet(context);
 
   /// Returns true when the current screen width is considered desktop.
-  static bool isDesktop(BuildContext context) =>
-      MediaQuery.of(context).size.width >= 1024;
+  static bool isDesktop(BuildContext context) => ResponsiveUtils.isDesktop(context);
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= 1024 && desktop != null) {
+    final width = context.screenWidth;
+    if (width >= ResponsiveBreakpoints.desktop && desktop != null) {
       return desktop!(context);
-    } else if (width >= 600 && tablet != null) {
+    } else if (width >= ResponsiveBreakpoints.tablet && tablet != null) {
       return tablet!(context);
     } else {
       return mobile(context);
