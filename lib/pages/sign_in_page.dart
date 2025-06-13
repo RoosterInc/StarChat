@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/animated_form_field.dart';
+import '../design_system/modern_ui_system.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -84,7 +85,10 @@ class _SignInPageState extends State<SignInPage> {
                 onPressed:
                     controller.isLoading.value ? null : controller.sendOTP,
                 child: controller.isLoading.value
-                    ? const CircularProgressIndicator()
+                    ? SkeletonLoader(
+                        height: DesignTokens.lg(context),
+                        width: DesignTokens.lg(context),
+                      )
                     : Text('send_otp'.tr),
               )),
         ),
@@ -152,7 +156,10 @@ class _SignInPageState extends State<SignInPage> {
                   onPressed:
                       controller.isLoading.value ? null : controller.verifyOTP,
                   child: controller.isLoading.value
-                      ? const CircularProgressIndicator()
+                      ? SkeletonLoader(
+                          height: DesignTokens.lg(context),
+                          width: DesignTokens.lg(context),
+                        )
                       : Text('verify_otp'.tr),
                 )),
           ),

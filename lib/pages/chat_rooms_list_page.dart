@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/chat_controller.dart';
 import '../widgets/chat/chat_room_card.dart';
+import '../design_system/modern_ui_system.dart';
 
 class ChatRoomsListPage extends GetView<ChatController> {
   const ChatRoomsListPage({super.key});
@@ -20,7 +21,12 @@ class ChatRoomsListPage extends GetView<ChatController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: SkeletonLoader(
+              height: DesignTokens.xl(context),
+              width: DesignTokens.xl(context),
+            ),
+          );
         }
         if (controller.rashiRooms.isEmpty) {
           return Center(
