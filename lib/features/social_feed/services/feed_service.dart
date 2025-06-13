@@ -368,6 +368,30 @@ class FeedService {
     );
   }
 
+  Future<void> likeComment(String commentId, String userId) async {
+    await createLike({
+      'item_id': commentId,
+      'item_type': 'comment',
+      'user_id': userId,
+    });
+  }
+
+  Future<void> unlikeComment(String likeId) async {
+    await deleteLike(likeId);
+  }
+
+  Future<void> likeRepost(String repostId, String userId) async {
+    await createLike({
+      'item_id': repostId,
+      'item_type': 'repost',
+      'user_id': userId,
+    });
+  }
+
+  Future<void> unlikeRepost(String likeId) async {
+    await deleteLike(likeId);
+  }
+
   Future<PostRepost?> getUserRepost(String postId, String userId) async {
     final res = await databases.listDocuments(
       databaseId: databaseId,
