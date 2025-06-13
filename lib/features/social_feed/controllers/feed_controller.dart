@@ -136,6 +136,38 @@ class FeedController extends GetxController {
     _repostCounts[postId] = (_repostCounts[postId] ?? 0) + 1;
   }
 
+  Future<void> editPost(
+    String postId,
+    String content,
+    List<String> hashtags,
+    List<String> mentions,
+  ) async {
+    await service.editPost(postId, content, hashtags, mentions);
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final post = _posts[index];
+      _posts[index] = FeedPost(
+        id: post.id,
+        roomId: post.roomId,
+        userId: post.userId,
+        username: post.username,
+        userAvatar: post.userAvatar,
+        content: content,
+        mediaUrls: post.mediaUrls,
+        pollId: post.pollId,
+        linkUrl: post.linkUrl,
+        linkMetadata: post.linkMetadata,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount,
+        repostCount: post.repostCount,
+        shareCount: post.shareCount,
+        hashtags: hashtags,
+        isEdited: true,
+        editedAt: DateTime.now(),
+      );
+    }
+  }
+
   bool isPostLiked(String postId) => _likedIds.containsKey(postId);
   bool isPostReposted(String postId) => _repostedIds.containsKey(postId);
   int postLikeCount(String postId) => _likeCounts[postId] ?? 0;
