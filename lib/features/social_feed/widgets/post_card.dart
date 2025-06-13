@@ -13,6 +13,8 @@ import '../../../widgets/safe_network_image.dart';
 import '../../discovery/screens/hashtag_search_page.dart';
 import '../../bookmarks/controllers/bookmark_controller.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../reports/screens/report_post_page.dart';
+import '../../../bindings/report_binding.dart';
 import 'package:flutter/gestures.dart';
 
 class PostCard extends StatelessWidget {
@@ -142,6 +144,21 @@ class PostCard extends StatelessWidget {
                     child: AnimatedButton(
                       onPressed: () => _handleDelete(controller),
                       child: const Text('Delete'),
+                    ),
+                  ),
+                ]
+                else if (auth.userId != null) ...[
+                  AccessibilityWrapper(
+                    semanticLabel: 'Report post',
+                    isButton: true,
+                    child: AnimatedButton(
+                      onPressed: () {
+                        Get.to(
+                          () => ReportPostPage(postId: post.id),
+                          binding: ReportBinding(),
+                        );
+                      },
+                      child: const Text('Report'),
                     ),
                   ),
                 ],

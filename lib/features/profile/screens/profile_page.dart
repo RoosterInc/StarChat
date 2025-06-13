@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
+import '../../../controllers/auth_controller.dart';
+import '../../reports/screens/report_user_page.dart';
+import '../../../bindings/report_binding.dart';
+import '../../../design_system/modern_ui_system.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -43,6 +47,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
               onPressed: () => controller.followUser(profile.id),
               child: const Text('Follow'),
             ),
+            if (Get.find<AuthController>().userId != null &&
+                Get.find<AuthController>().userId != profile.id)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: AnimatedButton(
+                  onPressed: () {
+                    Get.to(
+                      () => ReportUserPage(userId: profile.id),
+                      binding: ReportBinding(),
+                    );
+                  },
+                  child: const Text('Report'),
+                ),
+              ),
           ],
         );
       }),
