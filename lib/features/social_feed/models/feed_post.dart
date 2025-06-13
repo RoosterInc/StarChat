@@ -79,7 +79,8 @@ class FeedPost {
       'media_urls': mediaUrls,
       'poll_id': pollId,
       'link_url': linkUrl,
-      'link_metadata': linkMetadata,
+      'link_metadata':
+          linkMetadata != null ? jsonEncode(linkMetadata) : null,
       'like_count': likeCount,
       'comment_count': commentCount,
       'repost_count': repostCount,
