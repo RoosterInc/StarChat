@@ -86,7 +86,7 @@ Future<void> main() async {
     if (result != ConnectivityResult.none) {
       await feedService.syncQueuedActions();
     }
-  });
+  } as void Function(List<ConnectivityResult> event)?);
 
   runApp(const MyApp());
 }
