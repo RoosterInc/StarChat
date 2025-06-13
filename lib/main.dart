@@ -63,16 +63,13 @@ Future<void> main() async {
     storage: auth.storage,
     functions: appwrite.Functions(auth.client),
     databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
-    postsCollectionId:
-        dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
+    postsCollectionId: dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
     commentsCollectionId:
         dotenv.env['POST_COMMENTS_COLLECTION_ID'] ?? 'post_comments',
-    likesCollectionId:
-        dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
+    likesCollectionId: dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
     repostsCollectionId:
         dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
-    bookmarksCollectionId:
-        dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
+    bookmarksCollectionId: dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
     connectivity: Connectivity(),
     linkMetadataFunctionId:
         dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
@@ -81,12 +78,13 @@ Future<void> main() async {
   if (await Connectivity().checkConnectivity() != ConnectivityResult.none) {
     await feedService.syncQueuedActions();
   }
-  Connectivity().onConnectivityChanged
+  Connectivity()
+      .onConnectivityChanged
       .listen((ConnectivityResult result) async {
-    if (result != ConnectivityResult.none) {
-      await feedService.syncQueuedActions();
-    }
-  } as void Function(List<ConnectivityResult> event)?);
+        if (result != ConnectivityResult.none) {
+          await feedService.syncQueuedActions();
+        }
+      } as void Function(List<ConnectivityResult> event)?);
 
   runApp(const MyApp());
 }
