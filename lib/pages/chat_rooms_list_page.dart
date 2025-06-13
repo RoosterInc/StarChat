@@ -35,18 +35,18 @@ class ChatRoomsListPage extends GetView<ChatController> {
               children: [
                 Icon(
                   Icons.chat_bubble_outline,
-                  size: 64,
+                  size: DesignTokens.spacing(context, 64),
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
                       .withOpacity(0.5),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: DesignTokens.md(context)),
                 Text(
                   'No chat rooms available',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: DesignTokens.sm(context)),
                 Text(
                   'Check back later for active discussions',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -58,11 +58,12 @@ class ChatRoomsListPage extends GetView<ChatController> {
           );
         }
         return GridView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: DesignTokens.md(context).all,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            crossAxisCount:
+                ResponsiveUtils.isMobile(context) ? 2 : 3,
+            crossAxisSpacing: DesignTokens.md(context),
+            mainAxisSpacing: DesignTokens.md(context),
             childAspectRatio: 1.0,
           ),
           itemCount: controller.rashiRooms.length,

@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../design_system/modern_ui_system.dart';
 import '../utils/logger.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/parsing_utils.dart';
@@ -1156,11 +1157,11 @@ class SwipeableWatchlistCard extends StatelessWidget {
             onTap();
           },
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: DesignTokens.md(context).all,
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: DesignTokens.xs(context).all,
                   child: Icon(
                     Icons.drag_indicator,
                     color: secondaryTextColor,
@@ -1423,13 +1424,13 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             child: Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
               child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).padding.bottom + 16),
+                padding:
+                    EdgeInsets.only(bottom: context.safePadding.bottom + DesignTokens.md(context)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: DesignTokens.lg(context).all,
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme

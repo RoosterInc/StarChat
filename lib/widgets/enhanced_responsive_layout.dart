@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/modern_ui_system.dart';
 
 /// Enhanced responsive layout with orientation support and utilities.
 class EnhancedResponsiveLayout extends StatelessWidget {
@@ -23,9 +24,8 @@ class EnhancedResponsiveLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
-    final isLandscape = orientation == Orientation.landscape;
+    final screenSize = context.screenSize;
+    final isLandscape = context.isLandscape;
     final bp = breakpoints ?? ResponsiveBreakpoints.defaultBreakpoints;
 
     if (screenSize.width >= bp.desktop) {
@@ -48,7 +48,7 @@ class EnhancedResponsiveLayout extends StatelessWidget {
 
   static DeviceCategory getDeviceCategory(BuildContext context,
       [ResponsiveBreakpoints? breakpoints]) {
-    final width = MediaQuery.of(context).size.width;
+    final width = context.screenWidth;
     final bp = breakpoints ?? ResponsiveBreakpoints.defaultBreakpoints;
     if (width >= bp.desktop) return DeviceCategory.desktop;
     if (width >= bp.tablet) return DeviceCategory.tablet;
@@ -66,9 +66,9 @@ class EnhancedResponsiveLayout extends StatelessWidget {
       getDeviceCategory(context, breakpoints) == DeviceCategory.desktop;
 
   static bool isLandscape(BuildContext context) =>
-      MediaQuery.of(context).orientation == Orientation.landscape;
+      context.isLandscape;
   static bool isPortrait(BuildContext context) =>
-      MediaQuery.of(context).orientation == Orientation.portrait;
+      !context.isLandscape;
 }
 
 enum DeviceCategory { mobile, tablet, desktop }

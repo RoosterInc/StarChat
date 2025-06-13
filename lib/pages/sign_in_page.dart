@@ -36,8 +36,7 @@ class _SignInPageState extends State<SignInPage> {
         title: Text('email_sign_in'.tr),
       ),
       body: ResponsiveLayout(
-        mobile: (_) =>
-            _buildForm(context, MediaQuery.of(context).size.width * 0.9),
+        mobile: (_) => _buildForm(context, context.screenWidth * 0.9),
         tablet: (_) => _buildForm(context, 500),
         desktop: (_) => _buildForm(context, 400),
       ),
@@ -48,7 +47,7 @@ class _SignInPageState extends State<SignInPage> {
     return Center(
       child: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: DesignTokens.md(context).all,
           width: width,
           child: Obx(
             () => controller.isOTPSent.value ? _otpForm() : _emailForm(),
@@ -67,7 +66,7 @@ class _SignInPageState extends State<SignInPage> {
           style: const TextStyle(fontSize: 18),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: DesignTokens.spacing(context, 20)),
         AnimatedFormField(
           controller: controller.emailController,
           label: 'email'.tr,
@@ -78,7 +77,7 @@ class _SignInPageState extends State<SignInPage> {
               : controller.emailError.value,
           onChanged: (_) => controller.emailError.value = '',
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: DesignTokens.spacing(context, 20)),
         SizedBox(
           width: double.infinity,
           child: Obx(() => ElevatedButton(
@@ -132,13 +131,13 @@ class _SignInPageState extends State<SignInPage> {
             style: const TextStyle(fontSize: 18),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: DesignTokens.spacing(context, 10)),
           Obx(() => Text(
                 'otp_expires_in'.trParams(
                     {'seconds': controller.otpExpiration.value.toString()}),
                 style: const TextStyle(color: Colors.red),
               )),
-          const SizedBox(height: 10),
+          SizedBox(height: DesignTokens.spacing(context, 10)),
           AnimatedFormField(
             controller: controller.otpController,
             label: 'otp'.tr,
@@ -149,7 +148,7 @@ class _SignInPageState extends State<SignInPage> {
                 : controller.otpError.value,
             onChanged: (_) => controller.otpError.value = '',
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: DesignTokens.spacing(context, 20)),
           SizedBox(
             width: double.infinity,
             child: Obx(() => ElevatedButton(
@@ -163,7 +162,7 @@ class _SignInPageState extends State<SignInPage> {
                       : Text('verify_otp'.tr),
                 )),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: DesignTokens.spacing(context, 10)),
           Obx(() => TextButton(
                 onPressed:
                     controller.canResendOTP.value ? controller.resendOTP : null,
@@ -173,7 +172,7 @@ class _SignInPageState extends State<SignInPage> {
                         'seconds': controller.resendCooldown.value.toString()
                       })),
               )),
-          const SizedBox(height: 10),
+          SizedBox(height: DesignTokens.spacing(context, 10)),
           // Add the 'Change Email' button
           TextButton(
             onPressed: controller.goBackToEmailInput,

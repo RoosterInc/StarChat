@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../models/chat_room.dart';
+import '../../design_system/modern_ui_system.dart';
 
 class ModernChatRoomCard extends StatefulWidget {
   final ChatRoom room;
@@ -156,7 +157,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
 
   Widget _buildCardContent(BuildContext context, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: DesignTokens.md(context).all,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

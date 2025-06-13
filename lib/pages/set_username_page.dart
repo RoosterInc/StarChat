@@ -4,6 +4,7 @@ import '../controllers/auth_controller.dart';
 import '../widgets/responsive_layout.dart';
 import '../controllers/master_data_controller.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
+import '../design_system/modern_ui_system.dart';
 
 class SetUsernamePage extends GetView<AuthController> {
   const SetUsernamePage({super.key});
@@ -18,7 +19,7 @@ class SetUsernamePage extends GetView<AuthController> {
     return Scaffold(
       appBar: AppBar(title: Text('enter_username'.tr)),
       body: ResponsiveLayout(
-        mobile: (_) => _buildForm(context, MediaQuery.of(context).size.width * 0.9),
+        mobile: (_) => _buildForm(context, context.screenWidth * 0.9),
         tablet: (_) => _buildForm(context, 500),
         desktop: (_) => _buildForm(context, 400),
       ),
@@ -28,7 +29,7 @@ class SetUsernamePage extends GetView<AuthController> {
   Widget _buildForm(BuildContext context, double width) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: DesignTokens.md(context).all,
         width: width,
         child: Obx(() => Column(
               mainAxisSize: MainAxisSize.min,
@@ -46,7 +47,7 @@ class SetUsernamePage extends GetView<AuthController> {
                 ),
                 onChanged: controller.onUsernameChanged,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: DesignTokens.md(context)),
               Obx(() => DropdownButtonFormField<RashiOption>(
                     value: dataController.rashiOptions.firstWhereOrNull(
                         (r) => r.rashiId == controller.birthRashiId.value),
@@ -65,7 +66,7 @@ class SetUsernamePage extends GetView<AuthController> {
                       controller.birthNakshatraId.value = '';
                     },
                   )),
-              const SizedBox(height: 16),
+              SizedBox(height: DesignTokens.md(context)),
               Obx(() {
                 final options = dataController
                     .getNakshatraForRashi(controller.birthRashiId.value);
@@ -93,22 +94,22 @@ class SetUsernamePage extends GetView<AuthController> {
               Obx(() => controller.usernameError.value.isEmpty
                   ? const SizedBox.shrink()
                   : Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: DesignTokens.sm(context).top,
                       child: Text(
                         controller.usernameError.value,
                         style: const TextStyle(color: Colors.red),
                       ),
                     )),
-              const SizedBox(height: 8),
+              SizedBox(height: DesignTokens.sm(context)),
               Obx(() {
                   if (!controller.hasCheckedUsername.value) {
                     return const SizedBox.shrink();
                   }
                   if (controller.isCheckingUsername.value) {
-                    return const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                    return SizedBox(
+                      width: DesignTokens.spacing(context, 20),
+                      height: DesignTokens.spacing(context, 20),
+                      child: const CircularProgressIndicator(strokeWidth: 2),
                     );
                   }
                   final available =
@@ -120,7 +121,7 @@ class SetUsernamePage extends GetView<AuthController> {
                         available ? Icons.check : Icons.close,
                         color: available ? Colors.green : Colors.red,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: DesignTokens.sm(context)),
                       Text(
                         available ? 'username_available'.tr : 'username_taken'.tr,
                         style: TextStyle(
@@ -130,7 +131,7 @@ class SetUsernamePage extends GetView<AuthController> {
                     ],
                   );
                 }),
-                const SizedBox(height: 20),
+                SizedBox(height: DesignTokens.spacing(context, 20)),
                 SizedBox(
                   width: double.infinity,
                   child: Obx(() => ElevatedButton(
