@@ -20,6 +20,7 @@ import 'features/bookmarks/screens/bookmark_list_page.dart';
 import 'features/profile/screens/profile_page.dart';
 import 'features/reports/screens/report_post_page.dart';
 import 'features/reports/screens/report_user_page.dart';
+import 'features/admin/screens/moderation_dashboard.dart';
 import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
 import 'bindings/splash_binding.dart';
@@ -28,6 +29,7 @@ import 'bindings/search_binding.dart';
 import 'bindings/notification_binding.dart';
 import 'bindings/profile_binding.dart';
 import 'bindings/report_binding.dart';
+import 'bindings/moderation_binding.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -213,6 +215,11 @@ class MyApp extends StatelessWidget {
               name: '/report-user/:userId',
               page: () => ReportUserPage(userId: Get.parameters['userId']!),
               binding: ReportBinding(),
+            ),
+            GetPage(
+              name: '/moderation',
+              page: () => const ModerationDashboard(),
+              binding: ModerationBinding(),
             ),
             GetPage(
               name: '/chat-rooms-list',
