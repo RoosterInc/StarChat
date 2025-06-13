@@ -53,8 +53,10 @@ class FeedController extends GetxController {
     String content,
     String roomId,
     File image,
+    List<String> hashtags,
   ) async {
-    await service.createPostWithImage(userId, username, content, roomId, image);
+    await service.createPostWithImage(
+        userId, username, content, roomId, image, hashtags);
     _posts.insert(
       0,
       FeedPost(
@@ -64,6 +66,7 @@ class FeedController extends GetxController {
         username: username,
         content: content,
         mediaUrls: [image.path],
+        hashtags: hashtags,
       ),
     );
   }
@@ -74,14 +77,16 @@ class FeedController extends GetxController {
     String content,
     String roomId,
     String linkUrl,
-    Map<String, dynamic> metadata,
+    List<String> hashtags,
   ) async {
+    final metadata = await service.fetchLinkMetadata(linkUrl);
     await service.createPostWithLink(
       userId,
       username,
       content,
       roomId,
       linkUrl,
+      hashtags,
     );
     _posts.insert(
       0,
@@ -93,6 +98,7 @@ class FeedController extends GetxController {
         content: content,
         linkUrl: linkUrl,
         linkMetadata: metadata,
+        hashtags: hashtags,
       ),
     );
   }

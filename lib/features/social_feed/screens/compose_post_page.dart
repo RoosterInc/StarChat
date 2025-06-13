@@ -80,18 +80,24 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+                    final tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
+                        .allMatches(_controller.text)
+                        .map((m) => m.group(1)!.toLowerCase())
+                        .toSet()
+                        .toList();
+                    if (tags.isNotEmpty) {
+                      await feedController.service.saveHashtags(tags);
+                    }
                     final linkText = _linkController.text.trim();
                     if (linkText.isNotEmpty && isURL(linkText) &&
                         linkText.startsWith('http')) {
-                      final meta =
-                          await feedController.service.fetchLinkMetadata(linkText);
                       await feedController.createPostWithLink(
                         uid,
                         uname,
                         _controller.text,
                         widget.roomId,
                         linkText,
-                        meta,
+                        tags,
                       );
                     } else if (_image != null) {
                       await feedController.createPostWithImage(
@@ -100,6 +106,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         _controller.text,
                         widget.roomId,
                         File(_image!.path),
+                        tags,
                       );
                     } else {
                       final post = FeedPost(
@@ -108,6 +115,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         userId: uid,
                         username: uname,
                         content: _controller.text,
+                        hashtags: tags,
                       );
                       await feedController.createPost(post);
                     }
