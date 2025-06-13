@@ -18,6 +18,7 @@ import '../widgets/responsive_sizes.dart';
 import 'empty_page.dart';
 import '../features/search/screens/search_page.dart';
 import '../features/notifications/screens/notification_page.dart';
+import '../features/notifications/controllers/notification_controller.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

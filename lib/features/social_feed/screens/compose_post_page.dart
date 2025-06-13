@@ -129,8 +129,8 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         _controller.text,
                         widget.roomId,
                         linkText,
-                        hashtags: tags,
-                        mentions: mentions,
+                        tags,
+                        mentions,
                       );
                       await _notifyMentions(
                         mentions,
@@ -143,8 +143,8 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         _controller.text,
                         widget.roomId,
                         File(_image!.path),
-                        hashtags: tags,
-                        mentions: mentions,
+                        tags,
+                        mentions,
                       );
                       await _notifyMentions(
                         mentions,
