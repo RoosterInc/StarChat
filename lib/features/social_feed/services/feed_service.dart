@@ -1,4 +1,6 @@
 import 'package:appwrite/appwrite.dart';
+import 'package:hive/hive.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/feed_post.dart';
 import '../models/post_comment.dart';
 import '../models/post_like.dart';
@@ -11,6 +13,10 @@ class FeedService {
   final String commentsCollectionId;
   final String likesCollectionId;
   final String repostsCollectionId;
+  final Connectivity connectivity;
+  final Box postsBox = Hive.box('posts');
+  final Box commentsBox = Hive.box('comments');
+  final Box queueBox = Hive.box('action_queue');
 
   FeedService({
     required this.databases,
@@ -19,66 +25,145 @@ class FeedService {
     required this.commentsCollectionId,
     required this.likesCollectionId,
     required this.repostsCollectionId,
-  });
+    required this.connectivity,
+  }) {
+    connectivity.onConnectivityChanged.listen((result) async {
+      if (result != ConnectivityResult.none) {
+        await syncQueuedActions();
+      }
+    });
+  }
 
   Future<List<FeedPost>> getPosts(String roomId) async {
-    final res = await databases.listDocuments(
-      databaseId: databaseId,
-      collectionId: postsCollectionId,
-      queries: [
-        Query.equal('room_id', roomId),
-        Query.orderDesc('\$createdAt'),
-      ],
-    );
-    return res.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        queries: [
+          Query.equal('room_id', roomId),
+          Query.orderDesc('\$createdAt'),
+        ],
+      );
+      final posts =
+          res.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+      final cache = posts
+          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .toList();
+      await postsBox.put('posts_$roomId', cache);
+      return posts;
+    } catch (_) {
+      final cached = postsBox.get('posts_$roomId', defaultValue: []) as List;
+      final expiry = DateTime.now().subtract(const Duration(days: 30));
+      return cached
+          .where((e) {
+            final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
+            return ts == null || ts.isAfter(expiry);
+          })
+          .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
   }
 
   Future<void> createPost(FeedPost post) async {
-    await databases.createDocument(
-      databaseId: databaseId,
-      collectionId: postsCollectionId,
-      documentId: ID.unique(),
-      data: post.toJson(),
-    );
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: ID.unique(),
+        data: post.toJson(),
+      );
+    } catch (_) {
+      await queueBox.add({
+        'action': 'post',
+        'data': post.toJson(),
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<List<PostComment>> getComments(String postId) async {
-    final res = await databases.listDocuments(
-      databaseId: databaseId,
-      collectionId: commentsCollectionId,
-      queries: [
-        Query.equal('post_id', postId),
-        Query.orderAsc('\$createdAt'),
-      ],
-    );
-    return res.documents.map((e) => PostComment.fromJson(e.data)).toList();
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: commentsCollectionId,
+        queries: [
+          Query.equal('post_id', postId),
+          Query.orderAsc('\$createdAt'),
+        ],
+      );
+      final comments =
+          res.documents.map((e) => PostComment.fromJson(e.data)).toList();
+      final cache = comments
+          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .toList();
+      await commentsBox.put('comments_$postId', cache);
+      return comments;
+    } catch (_) {
+      final cached = commentsBox.get('comments_$postId', defaultValue: []) as List;
+      final expiry = DateTime.now().subtract(const Duration(days: 30));
+      return cached
+          .where((e) {
+            final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
+            return ts == null || ts.isAfter(expiry);
+          })
+          .map((e) => PostComment.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
   }
 
   Future<void> createComment(PostComment comment) async {
-    await databases.createDocument(
-      databaseId: databaseId,
-      collectionId: commentsCollectionId,
-      documentId: ID.unique(),
-      data: comment.toJson(),
-    );
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: commentsCollectionId,
+        documentId: ID.unique(),
+        data: comment.toJson(),
+      );
+    } catch (_) {
+      await commentsBox.put(
+        comment.id,
+        {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()},
+      );
+      await queueBox.add({
+        'action': 'comment',
+        'data': comment.toJson(),
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> createLike(Map<String, dynamic> like) async {
-    await databases.createDocument(
-      databaseId: databaseId,
-      collectionId: likesCollectionId,
-      documentId: ID.unique(),
-      data: like,
-    );
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: likesCollectionId,
+        documentId: ID.unique(),
+        data: like,
+      );
+    } catch (_) {
+      await queueBox.add({
+        'action': 'like',
+        'data': like,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> createRepost(Map<String, dynamic> repost) async {
-    await databases.createDocument(
-      databaseId: databaseId,
-      collectionId: repostsCollectionId,
-      documentId: ID.unique(),
-      data: repost,
-    );
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: repostsCollectionId,
+        documentId: ID.unique(),
+        data: repost,
+      );
+    } catch (_) {
+      await queueBox.add({
+        'action': 'repost',
+        'data': repost,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<PostLike?> getUserLike(String itemId, String userId) async {
@@ -113,5 +198,57 @@ class FeedService {
     );
     if (res.documents.isEmpty) return null;
     return PostRepost.fromJson(res.documents.first.data);
+  }
+
+  Future<void> syncQueuedActions() async {
+    final expiry = DateTime.now().subtract(const Duration(days: 30));
+    final keys = queueBox.keys.toList();
+    for (final key in keys) {
+      final Map item = queueBox.get(key);
+      final ts = DateTime.tryParse(item['_cachedAt'] ?? '');
+      if (ts != null && ts.isBefore(expiry)) {
+        await queueBox.delete(key);
+        continue;
+      }
+      try {
+        switch (item['action']) {
+          case 'like':
+            await createLike(Map<String, dynamic>.from(item['data']));
+            break;
+          case 'repost':
+            await createRepost(Map<String, dynamic>.from(item['data']));
+            break;
+          case 'comment':
+            await createComment(PostComment.fromJson(
+                Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'post':
+            await createPost(FeedPost.fromJson(
+                Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'follow':
+            await createFollow(Map<String, dynamic>.from(item['data']));
+            break;
+        }
+        await queueBox.delete(key);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> createFollow(Map<String, dynamic> follow) async {
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: 'follows',
+        documentId: ID.unique(),
+        data: follow,
+      );
+    } catch (_) {
+      await queueBox.add({
+        'action': 'follow',
+        'data': follow,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 }

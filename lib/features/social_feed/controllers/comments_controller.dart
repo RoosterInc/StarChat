@@ -60,8 +60,16 @@ class CommentsController extends GetxController {
         'item_type': 'comment',
         'user_id': uid,
       });
-      final like = await service.getUserLike(commentId, uid);
-      if (like != null) _likedIds[commentId] = like.id;
+      try {
+        final like = await service.getUserLike(commentId, uid);
+        if (like != null) {
+          _likedIds[commentId] = like.id;
+        } else {
+          _likedIds[commentId] = 'offline';
+        }
+      } catch (_) {
+        _likedIds[commentId] = 'offline';
+      }
       _likeCounts[commentId] = (_likeCounts[commentId] ?? 0) + 1;
     }
   }

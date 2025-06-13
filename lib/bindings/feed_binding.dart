@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../controllers/auth_controller.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../features/social_feed/services/feed_service.dart';
 import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
@@ -23,6 +24,7 @@ class FeedBinding extends Bindings {
             dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
         repostsCollectionId:
             dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
+        connectivity: Get.put(Connectivity()),
       );
       Get.put<FeedController>(FeedController(service: service));
     }
