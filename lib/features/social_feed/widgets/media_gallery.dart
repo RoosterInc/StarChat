@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../design_system/modern_ui_system.dart';
-import '../../../widgets/safe_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class MediaGallery extends StatelessWidget {
   final List<String> urls;
@@ -19,11 +19,18 @@ class MediaGallery extends StatelessWidget {
           final url = urls[index];
           return ClipRRect(
             borderRadius: BorderRadius.circular(DesignTokens.radiusMd(context)),
-            child: SafeNetworkImage(
+            child: CachedNetworkImage(
               imageUrl: url,
               width: 200,
               height: 200,
               fit: BoxFit.cover,
+              placeholder: (context, url) => SkeletonLoader(
+                width: 200,
+                height: 200,
+                borderRadius:
+                    BorderRadius.circular(DesignTokens.radiusMd(context)),
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           );
         },

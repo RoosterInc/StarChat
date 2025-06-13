@@ -1,6 +1,9 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:io';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:get/get.dart';
 import '../models/feed_post.dart';
 import '../models/post_comment.dart';
 import '../models/post_like.dart';
@@ -8,6 +11,7 @@ import '../models/post_repost.dart';
 
 class FeedService {
   final Databases databases;
+  final Storage storage;
   final String databaseId;
   final String postsCollectionId;
   final String commentsCollectionId;
@@ -17,9 +21,11 @@ class FeedService {
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
   final Box queueBox = Hive.box('action_queue');
+  final Box postQueueBox = Hive.box('post_queue');
 
   FeedService({
     required this.databases,
+    required this.storage,
     required this.databaseId,
     required this.postsCollectionId,
     required this.commentsCollectionId,
@@ -78,6 +84,52 @@ class FeedService {
         'data': post.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+    }
+  }
+
+  Future<String> uploadImage(File image) async {
+    final compressed = await FlutterImageCompress.compressAndGetFile(
+      image.path,
+      '${image.path}_compressed.jpg',
+      quality: 80,
+    );
+    final result = await storage.createFile(
+      bucketId: 'post_images',
+      fileId: ID.unique(),
+      file: InputFile.fromPath(path: compressed!.path),
+    );
+    return '${storage.client.endPoint}/storage/buckets/post_images/files/${result.\$id}/view?project=${storage.client.config['project']}';
+  }
+
+  Future<void> createPostWithImage(
+    String userId,
+    String username,
+    String content,
+    String? roomId,
+    File image,
+  ) async {
+    try {
+      final imageUrl = await uploadImage(image);
+      final post = FeedPost(
+        id: DateTime.now().toIso8601String(),
+        roomId: roomId ?? '',
+        userId: userId,
+        username: username,
+        content: content,
+        mediaUrls: [imageUrl],
+      );
+      await createPost(post);
+    } catch (_) {
+      await postQueueBox.add({
+        'action': 'post_with_image',
+        'user_id': userId,
+        'username': username,
+        'content': content,
+        'room_id': roomId,
+        'image_path': image.path,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+      Get.snackbar('Offline', 'Image post queued for syncing');
     }
   }
 
@@ -231,6 +283,29 @@ class FeedService {
             break;
         }
         await queueBox.delete(key);
+      } catch (_) {}
+    }
+
+    final imageKeys = postQueueBox.keys.toList();
+    for (final key in imageKeys) {
+      final Map item = postQueueBox.get(key);
+      final ts = DateTime.tryParse(item['_cachedAt'] ?? '');
+      if (ts != null && ts.isBefore(expiry)) {
+        await postQueueBox.delete(key);
+        continue;
+      }
+      try {
+        if (item['action'] == 'post_with_image') {
+          final file = File(item['image_path']);
+          await createPostWithImage(
+            item['user_id'],
+            item['username'],
+            item['content'],
+            item['room_id'],
+            file,
+          );
+        }
+        await postQueueBox.delete(key);
       } catch (_) {}
     }
   }

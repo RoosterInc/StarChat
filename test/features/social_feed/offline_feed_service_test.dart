@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 
 class OfflineDatabases extends Databases {
   OfflineDatabases() : super(Client());
@@ -30,6 +31,21 @@ class OfflineDatabases extends Databases {
   }
 }
 
+class OfflineStorage extends Storage {
+  OfflineStorage() : super(Client());
+
+  @override
+  Future<File> createFile({
+    required String bucketId,
+    required String fileId,
+    required InputFile file,
+    List<String>? permissions,
+    bool? onProgress,
+  }) {
+    return Future.error('offline');
+  }
+}
+
 void main() {
   late Directory dir;
   late FeedService service;
@@ -40,8 +56,10 @@ void main() {
     await Hive.openBox('posts');
     await Hive.openBox('comments');
     await Hive.openBox('action_queue');
+    await Hive.openBox('post_queue');
     service = FeedService(
       databases: OfflineDatabases(),
+      storage: OfflineStorage(),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -76,6 +94,14 @@ void main() {
   test('createLike queues when offline', () async {
     await service.createLike({'item_id': '1', 'item_type': 'post', 'user_id': 'u'});
     final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+  });
+
+  test('createPostWithImage queues when offline', () async {
+    final file = File('${dir.path}/img.jpg');
+    await file.writeAsBytes(List.filled(10, 0));
+    await service.createPostWithImage('u', 'name', 'hi', 'room', file);
+    final queue = Hive.box('post_queue');
     expect(queue.isNotEmpty, isTrue);
   });
 }
