@@ -7,6 +7,7 @@ import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:myapp/features/social_feed/widgets/comment_card.dart';
+import '../../test_utils/fake_connectivity.dart';
 
 void main() {
   testWidgets('like comment updates controller', (tester) async {
@@ -42,7 +43,7 @@ class _FakeService extends FeedService {
           commentsCollectionId: 'comments',
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
-          connectivity: Connectivity(),
+          connectivity: FakeConnectivity(),
         );
 
   final List<PostComment> store = [];

@@ -4,6 +4,7 @@ import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:appwrite/appwrite.dart';
+import '../../test_utils/fake_connectivity.dart';
 
 class FakeFeedService extends FeedService {
   FakeFeedService()
@@ -16,7 +17,7 @@ class FakeFeedService extends FeedService {
           commentsCollectionId: 'comments',
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
-          connectivity: Connectivity(),
+          connectivity: FakeConnectivity(),
           linkMetadataFunctionId: 'fetch_link_metadata',
         );
 
