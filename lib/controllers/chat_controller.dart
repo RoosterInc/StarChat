@@ -4,9 +4,11 @@ import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/logger.dart';
+import '../utils/modern_color_palettes.dart';
 
 import '../models/chat_room.dart';
 import 'auth_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class ChatController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
@@ -171,14 +173,11 @@ class GlassmorphismUtils {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: gradientColors ??
-                  [
-                    Colors.white.withOpacity(isDark ? 0.1 : 0.2),
-                    Colors.white.withOpacity(isDark ? 0.05 : 0.1),
-                  ],
+                  ModernColorPalettes.getGlassmorphismOverlay(isDark: isDark),
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: ModernColorPalettes.getGlassmorphismBorder(isDark: isDark),
               width: 1.5,
             ),
           ),

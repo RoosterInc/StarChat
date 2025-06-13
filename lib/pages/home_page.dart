@@ -4,6 +4,7 @@ import 'package:myapp/design_system/modern_ui_system.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/enhanced_responsive_layout.dart';
 import '../design_system/modern_ui_system.dart' as ui;
+import '../utils/modern_color_palettes.dart';
 import '../widgets/enhanced_sliver_app_bar.dart';
 import '../widgets/simple_astrologer_fab.dart';
 import '../controllers/user_type_controller.dart';
@@ -343,7 +344,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             separatorBuilder: (_, __) =>
                 SizedBox(width: _getResponsiveSpacing(context) * 0.4),
             itemBuilder: (context, index) {
-              final color = Colors.primaries[index % Colors.primaries.length];
+              final color =
+                  ModernColorPalettes.getGradientForIndex(index).first;
               return TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: Duration(milliseconds: 200 + (index * 50)),
@@ -378,7 +380,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: Text(
                 '$number',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.colorScheme.onPrimary,
                   fontSize: _getResponsiveFontSize(context, 16),
                   fontWeight: FontWeight.bold,
                 ),

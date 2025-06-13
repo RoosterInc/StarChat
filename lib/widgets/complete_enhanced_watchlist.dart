@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../design_system/modern_ui_system.dart';
 import '../utils/logger.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/parsing_utils.dart';
@@ -1203,7 +1204,7 @@ class SwipeableWatchlistCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: context.colorScheme.onPrimary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -1244,12 +1245,12 @@ class SwipeableWatchlistCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 24),
+              Icon(icon, color: context.colorScheme.onPrimary, size: 24),
               const SizedBox(height: 4),
               Text(
                 text,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.colorScheme.onPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1275,8 +1276,8 @@ class SwipeableWatchlistCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => Get.back(result: true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+                  backgroundColor: context.colorScheme.error,
+                  foregroundColor: context.colorScheme.onError,
                 ),
                 child: const Text('Remove'),
               ),
@@ -1714,8 +1715,8 @@ class EnhancedWatchlistWidget extends StatelessWidget {
               Get.back();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: context.colorScheme.error,
+              foregroundColor: context.colorScheme.onError,
             ),
             child: const Text('Clear All'),
           ),

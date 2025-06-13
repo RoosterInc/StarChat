@@ -25,15 +25,17 @@ class SplashScreen extends GetView<SplashController> {
               Text(
                 'app_name'.tr,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
+                  color: context.colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               SizedBox(height: DesignTokens.lg(context)),
               Obx(() {
                 if (controller.isLoading.value) {
-                  return const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  return CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      context.colorScheme.onPrimary,
+                    ),
                   );
                 }
                 return Padding(
