@@ -41,8 +41,9 @@ class FakeProfileService extends ProfileService {
 }
 
 class FakeAuthController extends AuthController {
-  @override
-  String? userId = 'u1';
+  FakeAuthController() {
+    userId = 'u1';
+  }
 }
 
 void main() {

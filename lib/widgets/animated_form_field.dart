@@ -165,7 +165,7 @@ class _AnimatedFormFieldState extends State<AnimatedFormField>
                                 .withOpacity(0.3)
                             : Theme.of(context)
                                 .colorScheme
-                                .surfaceVariant
+                                .surfaceContainerHighest
                                 .withOpacity(0.5),
                         errorText: null,
                       ),

@@ -56,10 +56,10 @@ class ActivityService {
         ],
       );
       final logs = res.documents.map((e) => e.data).toList();
-      await activityBox.put("activities_" + userId, logs);
+      await activityBox.put('activities_$userId', logs);
       return logs.cast<Map<String, dynamic>>();
     } catch (_) {
-      final cached = activityBox.get("activities_" + userId, defaultValue: []);
+      final cached = activityBox.get('activities_$userId', defaultValue: []);
       return (cached as List).cast<Map<String, dynamic>>();
     }
   }

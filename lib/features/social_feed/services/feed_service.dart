@@ -42,7 +42,8 @@ class FeedService {
     required this.connectivity,
     required this.linkMetadataFunctionId,
   }) {
-    connectivity.onConnectivityChanged.listen((result) async {
+    connectivity.onConnectivityChanged
+        .listen((ConnectivityResult result) async {
       if (result != ConnectivityResult.none) {
         await syncQueuedActions();
       }
@@ -130,7 +131,7 @@ class FeedService {
       fileId: ID.unique(),
       file: InputFile.fromPath(path: compressed!.path),
     );
-    return '${storage.client.endPoint}/storage/buckets/post_images/files/${result.\$id}/view?project=${storage.client.config['project']}';
+    return '${storage.client.endPoint}/storage/buckets/post_images/files/${result.$id}/view?project=${storage.client.config['project']}';
   }
 
   Future<void> createPostWithImage(
@@ -740,7 +741,7 @@ class FeedService {
     try {
       await functions.createExecution(
         functionId: 'increment_share_count',
-        data: jsonEncode({'post_id': postId}),
+        body: jsonEncode({'post_id': postId}),
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
