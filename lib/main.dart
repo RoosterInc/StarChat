@@ -10,20 +10,31 @@ import 'pages/sliver_sample_page.dart';
 import 'pages/chat_room_page.dart';
 import 'pages/chat_rooms_list_page.dart';
 import 'features/social_feed/screens/compose_post_page.dart';
+import 'features/search/screens/search_page.dart';
+import 'features/notifications/screens/notification_page.dart';
+import 'features/profile/screens/profile_page.dart';
 import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
 import 'bindings/splash_binding.dart';
 import 'bindings/feed_binding.dart';
+import 'bindings/search_binding.dart';
+import 'bindings/notification_binding.dart';
+import 'bindings/profile_binding.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
 import 'controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  await Hive.initFlutter();
+  await Hive.openBox('profiles');
+  await Hive.openBox('notifications');
+  await Hive.openBox('follows');
   runApp(const MyApp());
 }
 
@@ -112,6 +123,21 @@ class MyApp extends StatelessWidget {
               page: () => const ChatRoomPage(),
               bindings: [AuthBinding(), FeedBinding()],
               transition: Transition.rightToLeft,
+            ),
+            GetPage(
+              name: '/search',
+              page: () => const SearchPage(),
+              binding: SearchBinding(),
+            ),
+            GetPage(
+              name: '/notifications',
+              page: () => const NotificationPage(),
+              binding: NotificationBinding(),
+            ),
+            GetPage(
+              name: '/user-profile/:userId',
+              page: () => UserProfilePage(userId: Get.parameters['userId']!),
+              binding: ProfileBinding(),
             ),
             GetPage(
               name: '/compose-post/:roomId',
