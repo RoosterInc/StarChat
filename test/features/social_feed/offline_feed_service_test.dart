@@ -102,12 +102,14 @@ void main() {
   test('createPostWithImage queues when offline', () async {
     final file = File('${dir.path}/img.jpg');
     await file.writeAsBytes(List.filled(10, 0));
-    await service.createPostWithImage('u', 'name', 'hi', 'room', file, ['tag']);
+    await service.createPostWithImage('u', 'name', 'hi', 'room', file,
+        hashtags: ['tag']);
     final queue = Hive.box('post_queue');
     expect(queue.isNotEmpty, isTrue);
   });
   test('createPostWithLink queues when offline', () async {
-    await service.createPostWithLink('u', 'name', 'hi', 'room', 'https://x.com', ['tag']);
+    await service.createPostWithLink('u', 'name', 'hi', 'room', 'https://x.com',
+        hashtags: ['tag']);
     final queue = Hive.box('action_queue');
     expect(queue.isNotEmpty, isTrue);
   });

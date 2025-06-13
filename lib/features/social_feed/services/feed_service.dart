@@ -139,7 +139,7 @@ class FeedService {
     String content,
     String? roomId,
     File image,
-    [List<String> hashtags = const []],
+    {List<String> hashtags = const [], List<String> mentions = const []},
   ) async {
     try {
       final imageUrl = await uploadImage(image);
@@ -151,6 +151,7 @@ class FeedService {
         content: content,
         mediaUrls: [imageUrl],
         hashtags: hashtags,
+        mentions: mentions,
       );
       await createPost(post);
     } catch (_) {
@@ -162,6 +163,7 @@ class FeedService {
         'room_id': roomId,
         'image_path': image.path,
         'hashtags': hashtags,
+        'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Image post queued for syncing');
@@ -182,7 +184,7 @@ class FeedService {
     String content,
     String? roomId,
     String linkUrl,
-    [List<String> hashtags = const []],
+    {List<String> hashtags = const [], List<String> mentions = const []},
   ) async {
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
@@ -195,6 +197,7 @@ class FeedService {
         linkUrl: linkUrl,
         linkMetadata: metadata,
         hashtags: hashtags,
+        mentions: mentions,
       );
       await createPost(post);
     } catch (_) {
@@ -206,6 +209,7 @@ class FeedService {
         'room_id': roomId,
         'link_url': linkUrl,
         'hashtags': hashtags,
+        'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Link post queued for syncing');
@@ -499,7 +503,8 @@ class FeedService {
               item['content'],
               item['room_id'],
               item['link_url'],
-              (item['hashtags'] as List?)?.cast<String>() ?? const [],
+              hashtags: (item['hashtags'] as List?)?.cast<String>() ?? const [],
+              mentions: (item['mentions'] as List?)?.cast<String>() ?? const [],
             );
             break;
           case 'hashtag':
@@ -530,7 +535,8 @@ class FeedService {
             item['content'],
             item['room_id'],
             file,
-            (item['hashtags'] as List?)?.cast<String>() ?? const [],
+            hashtags: (item['hashtags'] as List?)?.cast<String>() ?? const [],
+            mentions: (item['mentions'] as List?)?.cast<String>() ?? const [],
           );
         }
         await postQueueBox.delete(key);
