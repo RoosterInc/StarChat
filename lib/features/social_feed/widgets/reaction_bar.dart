@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../design_system/modern_ui_system.dart';
+import '../services/feed_service.dart';
 
 enum ReactionTarget { post, comment, repost }
 
@@ -9,6 +12,7 @@ class ReactionBar extends StatelessWidget {
   final VoidCallback? onRepost;
   final VoidCallback? onBookmark;
   final VoidCallback? onShare;
+  final String? postId;
   final bool isLiked;
   final bool isBookmarked;
   final int likeCount;
@@ -16,6 +20,7 @@ class ReactionBar extends StatelessWidget {
   final int repostCount;
   final int shareCount;
   final ReactionTarget target;
+
   const ReactionBar({
     super.key,
     this.onLike,
@@ -23,6 +28,7 @@ class ReactionBar extends StatelessWidget {
     this.onRepost,
     this.onBookmark,
     this.onShare,
+    this.postId,
     this.isLiked = false,
     this.isBookmarked = false,
     this.likeCount = 0,
@@ -57,6 +63,16 @@ class ReactionBar extends StatelessWidget {
         ),
       );
     }
+    Future<void> _defaultShare() async {
+      if (postId == null) return;
+      try {
+        final link = await Get.find<FeedService>().sharePost(postId!);
+        await Share.share("Check out this post: " + link);
+      } catch (_) {
+        Get.snackbar("Error", "Failed to share post");
+      }
+    }
+
 
     String targetName() {
       switch (target) {
@@ -116,12 +132,13 @@ class ReactionBar extends StatelessWidget {
       );
     }
 
-    if ((onShare != null || shareCount > 0) && target == ReactionTarget.post) {
+    if ((onShare != null || postId != null || shareCount > 0) &&
+        target == ReactionTarget.post) {
       addItem(
         buildItem(
           icon: const Icon(Icons.share),
           label: 'Share',
-          onTap: onShare,
+          onTap: onShare ?? _defaultShare,
           count: shareCount,
         ),
       );

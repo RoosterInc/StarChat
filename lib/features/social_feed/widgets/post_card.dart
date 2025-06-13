@@ -21,7 +21,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
 import '../services/feed_service.dart';
-import 'package:share_plus/share_plus.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
@@ -101,14 +100,6 @@ class PostCard extends StatelessWidget {
     controller.toggleBookmark(userId, post.id);
   }
 
-  Future<void> _handleShare() async {
-    try {
-      final link = await Get.find<FeedService>().sharePost(post.id);
-      await Share.share('Check out this post: $link');
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to share post');
-    }
-  }
 
   Future<void> _handleDelete(FeedController controller) async {
     final confirm = await Get.dialog<bool>(
@@ -261,7 +252,7 @@ class PostCard extends StatelessWidget {
               onComment: _handleComment,
               onRepost: () => _handleRepost(controller),
               onBookmark: () => _handleBookmark(bookmarkController, auth.userId ?? ''),
-              onShare: _handleShare,
+              postId: post.id,
               isLiked: controller.isPostLiked(post.id),
               isBookmarked: bookmarkController.isBookmarked(post.id),
               likeCount: controller.postLikeCount(post.id),
