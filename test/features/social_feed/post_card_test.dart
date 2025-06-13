@@ -49,6 +49,29 @@ void main() {
     await tester.pump();
     expect(controller.isPostLiked('1'), isTrue);
   });
+
+  testWidgets('shows repost attribution', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+    await controller.repostPost('1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Reposted by you'), findsOneWidget);
+  });
 }
 
 class FakeFeedService extends FeedService {
@@ -93,7 +116,10 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> createRepost(Map<String, dynamic> repost) async {}
+  Future<String?> createRepost(Map<String, dynamic> repost) async => 'r1';
+
+  @override
+  Future<void> deleteRepost(String repostId) async {}
 
   @override
   Future<PostRepost?> getUserRepost(String postId, String userId) async => null;

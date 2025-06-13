@@ -5,6 +5,7 @@ import '../models/feed_post.dart';
 import '../controllers/feed_controller.dart';
 import '../screens/post_detail_page.dart';
 import '../screens/edit_post_page.dart';
+import '../screens/repost_page.dart';
 import 'media_gallery.dart';
 import 'reaction_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,7 +57,11 @@ class PostCard extends StatelessWidget {
   }
 
   void _handleRepost(FeedController controller) {
-    controller.repostPost(post.id);
+    if (controller.isPostReposted(post.id)) {
+      controller.undoRepost(post.id);
+    } else {
+      Get.to(() => RepostPage(post: post));
+    }
   }
 
   void _handleBookmark(BookmarkController controller, String userId) {
@@ -96,6 +101,14 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (controller.isPostReposted(post.id))
+              Padding(
+                padding: EdgeInsets.only(bottom: DesignTokens.xs(context)),
+                child: Text(
+                  'Reposted by you',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
             Row(
               children: [
                 Text(

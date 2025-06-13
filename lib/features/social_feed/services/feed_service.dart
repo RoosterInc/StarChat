@@ -278,21 +278,31 @@ class FeedService {
     }
   }
 
-  Future<void> createRepost(Map<String, dynamic> repost) async {
+  Future<String?> createRepost(Map<String, dynamic> repost) async {
     try {
-      await databases.createDocument(
+      final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: repostsCollectionId,
         documentId: ID.unique(),
         data: repost,
       );
+      return doc.$id;
     } catch (_) {
       await queueBox.add({
         'action': 'repost',
         'data': repost,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+      return null;
     }
+  }
+
+  Future<void> deleteRepost(String repostId) async {
+    await databases.deleteDocument(
+      databaseId: databaseId,
+      collectionId: repostsCollectionId,
+      documentId: repostId,
+    );
   }
 
   Future<void> saveHashtags(List<String> tags) async {
