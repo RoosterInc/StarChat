@@ -16,6 +16,8 @@ class FeedPost {
   final int repostCount;
   final int shareCount;
   final List<String> hashtags;
+  final bool isEdited;
+  final DateTime? editedAt;
 
   FeedPost({
     required this.id,
@@ -33,6 +35,8 @@ class FeedPost {
     this.repostCount = 0,
     this.shareCount = 0,
     this.hashtags = const [],
+    this.isEdited = false,
+    this.editedAt,
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
@@ -52,6 +56,10 @@ class FeedPost {
       repostCount: json['repost_count'] ?? 0,
       shareCount: json['share_count'] ?? 0,
       hashtags: (json['hashtags'] as List?)?.cast<String>() ?? const [],
+      isEdited: json['is_edited'] ?? false,
+      editedAt: json['edited_at'] != null
+          ? DateTime.tryParse(json['edited_at'])
+          : null,
     );
   }
 
@@ -71,6 +79,8 @@ class FeedPost {
       'repost_count': repostCount,
       'share_count': shareCount,
       'hashtags': hashtags,
+      'is_edited': isEdited,
+      'edited_at': editedAt?.toIso8601String(),
     };
   }
 

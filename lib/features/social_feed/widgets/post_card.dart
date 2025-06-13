@@ -4,6 +4,7 @@ import '../../../design_system/modern_ui_system.dart';
 import '../models/feed_post.dart';
 import '../controllers/feed_controller.dart';
 import '../screens/post_detail_page.dart';
+import '../screens/edit_post_page.dart';
 import 'media_gallery.dart';
 import 'reaction_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -73,9 +74,33 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              post.username,
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              children: [
+                Text(
+                  post.username,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (post.isEdited)
+                  Padding(
+                    padding: EdgeInsets.only(left: DesignTokens.xs(context)),
+                    child: Text(
+                      'Edited',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                const Spacer(),
+                if (auth.userId == post.userId)
+                  AccessibilityWrapper(
+                    semanticLabel: 'Edit post',
+                    isButton: true,
+                    child: AnimatedButton(
+                      onPressed: () {
+                        Get.to(() => EditPostPage(post: post));
+                      },
+                      child: const Text('Edit'),
+                    ),
+                  ),
+              ],
             ),
             SizedBox(height: DesignTokens.sm(context)),
             _buildContent(context),

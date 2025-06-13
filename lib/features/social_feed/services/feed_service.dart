@@ -362,6 +362,58 @@ class FeedService {
     return PostRepost.fromJson(res.documents.first.data);
   }
 
+  Future<void> editPost(
+    String postId,
+    String content,
+    List<String> hashtags,
+    List<String> mentions,
+  ) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+      );
+      final createdAtStr = doc.data['\$createdAt'] ?? doc.data['createdAt'];
+      final createdAt = createdAtStr != null
+          ? DateTime.parse(createdAtStr)
+          : DateTime.now();
+      if (DateTime.now().difference(createdAt).inMinutes > 30) {
+        throw Exception('Edit window expired');
+      }
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {
+          'content': content,
+          'hashtags': hashtags,
+          'mentions': mentions,
+          'is_edited': true,
+          'edited_at': DateTime.now().toIso8601String(),
+        },
+      );
+
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere((p) => p['id'] == postId || p['\$id'] == postId);
+        if (index != -1) {
+          cached[index] = {
+            ...cached[index],
+            'content': content,
+            'hashtags': hashtags,
+            'mentions': mentions,
+            'is_edited': true,
+            'edited_at': DateTime.now().toIso8601String(),
+          };
+          await postsBox.put(key, cached);
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to edit post: $e');
+    }
+  }
+
   Future<void> syncQueuedActions() async {
     final expiry = DateTime.now().subtract(const Duration(days: 30));
     final keys = queueBox.keys.toList();

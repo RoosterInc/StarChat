@@ -66,6 +66,32 @@ class FakeFeedService extends FeedService {
         ? null
         : PostRepost(id: id, postId: postId, userId: userId);
   }
+
+  @override
+  Future<void> editPost(
+      String postId, String content, List<String> hashtags, List<String> mentions) async {
+    final index = store.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final p = store[index];
+      store[index] = FeedPost(
+        id: p.id,
+        roomId: p.roomId,
+        userId: p.userId,
+        username: p.username,
+        content: content,
+        mediaUrls: p.mediaUrls,
+        pollId: p.pollId,
+        linkUrl: p.linkUrl,
+        linkMetadata: p.linkMetadata,
+        likeCount: p.likeCount,
+        commentCount: p.commentCount,
+        repostCount: p.repostCount,
+        shareCount: p.shareCount,
+        hashtags: hashtags,
+        isEdited: true,
+      );
+    }
+  }
 }
 
 void main() {
@@ -127,5 +153,22 @@ void main() {
     await controller.loadPosts('room');
     await controller.repostPost('1');
     expect(controller.postRepostCount('1'), 1);
+  });
+
+  test('editPost updates content', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'room',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+    service.store.add(post);
+    await controller.loadPosts('room');
+    await controller.editPost('1', 'updated', [], []);
+    expect(controller.posts.first.content, 'updated');
+    expect(controller.posts.first.isEdited, isTrue);
   });
 }
