@@ -5,7 +5,9 @@ class ReactionBar extends StatelessWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onRepost;
+  final VoidCallback? onBookmark;
   final bool isLiked;
+  final bool isBookmarked;
   final int likeCount;
   final int commentCount;
   final int repostCount;
@@ -14,7 +16,9 @@ class ReactionBar extends StatelessWidget {
     this.onLike,
     this.onComment,
     this.onRepost,
+    this.onBookmark,
     this.isLiked = false,
+    this.isBookmarked = false,
     this.likeCount = 0,
     this.commentCount = 0,
     this.repostCount = 0,
@@ -26,7 +30,7 @@ class ReactionBar extends StatelessWidget {
       required Widget icon,
       required String label,
       required VoidCallback? onTap,
-      required int count,
+      int? count,
     }) {
       return AccessibilityWrapper(
         semanticLabel: label,
@@ -36,8 +40,10 @@ class ReactionBar extends StatelessWidget {
           child: Row(
             children: [
               icon,
-              SizedBox(width: DesignTokens.xs(context)),
-              Text('$count'),
+              if (count != null) ...[
+                SizedBox(width: DesignTokens.xs(context)),
+                Text('$count'),
+              ]
             ],
           ),
         ),
@@ -70,6 +76,17 @@ class ReactionBar extends StatelessWidget {
           label: 'Repost',
           onTap: onRepost,
           count: repostCount,
+        ),
+        SizedBox(width: DesignTokens.sm(context)),
+        buildItem(
+          icon: Icon(
+            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+            color: isBookmarked
+                ? context.colorScheme.primary
+                : context.theme.iconTheme.color,
+          ),
+          label: isBookmarked ? 'Remove bookmark' : 'Bookmark',
+          onTap: onBookmark,
         ),
       ],
     );

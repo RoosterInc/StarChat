@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../features/social_feed/services/feed_service.dart';
 import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
+import '../features/bookmarks/controllers/bookmark_controller.dart';
 import 'package:appwrite/appwrite.dart';
 
 class FeedBinding extends Bindings {
@@ -27,11 +28,14 @@ class FeedBinding extends Bindings {
             dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
         repostsCollectionId:
             dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
+        bookmarksCollectionId:
+            dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
         connectivity: Get.put(Connectivity()),
         linkMetadataFunctionId:
             dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
       );
       Get.put<FeedController>(FeedController(service: service));
+      Get.put<BookmarkController>(BookmarkController(service: service));
     }
 
     if (!Get.isRegistered<CommentsController>()) {

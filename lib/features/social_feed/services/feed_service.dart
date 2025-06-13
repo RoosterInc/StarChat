@@ -9,6 +9,7 @@ import '../models/feed_post.dart';
 import '../models/post_comment.dart';
 import '../models/post_like.dart';
 import '../models/post_repost.dart';
+import '../../bookmarks/models/bookmark.dart';
 
 class FeedService {
   final Databases databases;
@@ -19,10 +20,12 @@ class FeedService {
   final String commentsCollectionId;
   final String likesCollectionId;
   final String repostsCollectionId;
+  final String bookmarksCollectionId;
   final String linkMetadataFunctionId;
   final Connectivity connectivity;
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
+  final Box bookmarksBox = Hive.box('bookmarks');
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
@@ -35,6 +38,7 @@ class FeedService {
     required this.commentsCollectionId,
     required this.likesCollectionId,
     required this.repostsCollectionId,
+    required this.bookmarksCollectionId,
     required this.connectivity,
     required this.linkMetadataFunctionId,
   }) {
@@ -376,6 +380,10 @@ class FeedService {
           case 'repost':
             await createRepost(Map<String, dynamic>.from(item['data']));
             break;
+          case 'bookmark':
+            final data = Map<String, dynamic>.from(item['data']);
+            await bookmarkPost(data['user_id'], data['post_id']);
+            break;
           case 'comment':
             await createComment(PostComment.fromJson(
                 Map<String, dynamic>.from(item['data'])));
@@ -427,6 +435,96 @@ class FeedService {
         }
         await postQueueBox.delete(key);
       } catch (_) {}
+    }
+  }
+
+  Future<void> bookmarkPost(String userId, String postId) async {
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: bookmarksCollectionId,
+        documentId: ID.unique(),
+        data: {
+          'user_id': userId,
+          'post_id': postId,
+          'created_at': DateTime.now().toIso8601String(),
+        },
+      );
+    } catch (_) {
+      await queueBox.add({
+        'action': 'bookmark',
+        'data': {'user_id': userId, 'post_id': postId},
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> removeBookmark(String bookmarkId) async {
+    await databases.deleteDocument(
+      databaseId: databaseId,
+      collectionId: bookmarksCollectionId,
+      documentId: bookmarkId,
+    );
+  }
+
+  Future<Bookmark?> getUserBookmark(String postId, String userId) async {
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: bookmarksCollectionId,
+      queries: [
+        Query.equal('post_id', postId),
+        Query.equal('user_id', userId),
+      ],
+    );
+    if (res.documents.isEmpty) return null;
+    return Bookmark.fromJson(res.documents.first.data);
+  }
+
+  Future<List<BookmarkedPost>> listBookmarks(String userId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: bookmarksCollectionId,
+        queries: [
+          Query.equal('user_id', userId),
+          Query.orderDesc('created_at'),
+        ],
+      );
+      final items = <BookmarkedPost>[];
+      for (final doc in res.documents) {
+        final post = await databases.getDocument(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          documentId: doc.data['post_id'],
+        );
+        items.add(
+          BookmarkedPost(
+            bookmark: Bookmark.fromJson(doc.data),
+            post: FeedPost.fromJson(post.data),
+          ),
+        );
+      }
+      await bookmarksBox.put(
+        'bookmarks_$userId',
+        items
+            .map((e) => {
+                  ...e.toMap(),
+                  '_cachedAt': DateTime.now().toIso8601String(),
+                })
+            .toList(),
+      );
+      return items;
+    } catch (_) {
+      final cached =
+          bookmarksBox.get('bookmarks_$userId', defaultValue: []) as List;
+      final expiry = DateTime.now().subtract(const Duration(days: 30));
+      return cached
+          .where((e) {
+            final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
+            return ts == null || ts.isAfter(expiry);
+          })
+          .map((e) => BookmarkedPost.fromMap(Map<String, dynamic>.from(e)))
+          .toList();
     }
   }
 
