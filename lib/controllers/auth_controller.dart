@@ -673,7 +673,7 @@ class AuthController extends GetxController {
         'username': name,
         'userId': uid,
         'createdAt': DateTime.now().toUtc().toIso8601String(),
-        'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
         'subscriptionType': subscriptionType,
       };
 
@@ -747,7 +747,7 @@ class AuthController extends GetxController {
             'username': name,
             'birth_rashi': rashiId ?? '',
             'birth_nakshatra': nakshatraId ?? '',
-            'UpdateAt': now,
+            'updatedAt': now,
           },
         );
         logger.i(
@@ -765,7 +765,7 @@ class AuthController extends GetxController {
           'birth_rashi': rashiId ?? '',
           'birth_nakshatra': nakshatraId ?? '',
           'createdAt': now,
-          'UpdateAt': now,
+          'updatedAt': now,
         };
 
         logger.i(
@@ -1029,7 +1029,7 @@ class AuthController extends GetxController {
           documentId: result.documents.first.$id,
           data: {
             'username': '',
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+            'updatedAt': DateTime.now().toUtc().toIso8601String(),
           },
         );
       }
@@ -1224,7 +1224,7 @@ class AuthController extends GetxController {
           documentId: docId,
           data: {
             'userType': type,
-            'UpdateAt': DateTime.now().toUtc().toIso8601String(),
+            'updatedAt': DateTime.now().toUtc().toIso8601String(),
           },
         );
       }
