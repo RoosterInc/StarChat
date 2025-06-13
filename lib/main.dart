@@ -52,6 +52,7 @@ Future<void> main() async {
   await Hive.openBox('bookmarks');
   await Hive.openBox('blocks');
   await Hive.openBox('preferences');
+  await Hive.openBox('activities');
   await dotenv.load(fileName: '.env');
 
   AuthBinding().dependencies();

@@ -4,10 +4,20 @@ import '../controllers/auth_controller.dart';
 import '../features/profile/services/profile_service.dart';
 import '../features/profile/controllers/profile_controller.dart';
 
+import '../features/profile/services/activity_service.dart';
+import '../features/profile/controllers/activity_controller.dart';
 class ProfileBinding extends Bindings {
   @override
   void dependencies() {
     final auth = Get.find<AuthController>();
+    if (!Get.isRegistered<ActivityService>()) {
+      Get.lazyPut<ActivityService>(() => ActivityService(
+            databases: auth.databases,
+            databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+            collectionId: 'activity_logs',
+          ));
+    }
+    Get.lazyPut<ActivityController>(() => ActivityController(service: Get.find<ActivityService>()));
     Get.lazyPut<ProfileService>(() => ProfileService(
           databases: auth.databases,
           databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',

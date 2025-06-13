@@ -43,4 +43,24 @@ class ActivityService {
       });
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchActivities(String userId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal("user_id", userId),
+          Query.orderDesc("created_at"),
+          Query.limit(50),
+        ],
+      );
+      final logs = res.documents.map((e) => e.data).toList();
+      await activityBox.put("activities_" + userId, logs);
+      return logs.cast<Map<String, dynamic>>();
+    } catch (_) {
+      final cached = activityBox.get("activities_" + userId, defaultValue: []);
+      return (cached as List).cast<Map<String, dynamic>>();
+    }
+  }
 }

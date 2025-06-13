@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
 import '../models/post_comment.dart';
+import "../../profile/services/activity_service.dart";
 import '../services/feed_service.dart';
 
 class CommentsController extends GetxController {
@@ -41,6 +42,7 @@ class CommentsController extends GetxController {
   Future<void> addComment(PostComment comment) async {
     await service.createComment(comment);
     _comments.add(comment);
+    await Get.find<ActivityService>().logActivity(comment.userId, 'reply', itemId: comment.id, itemType: 'comment');
     _likeCounts[comment.id] = comment.likeCount;
   }
 
