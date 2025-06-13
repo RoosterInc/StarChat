@@ -5,7 +5,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart' as aw;
 
 class OfflineDatabases extends Databases {
   OfflineDatabases() : super(Client());

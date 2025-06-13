@@ -442,13 +442,13 @@ class AnimatedButton extends StatefulWidget {
   final Duration animationDuration;
 
   const AnimatedButton({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.style,
     this.enableHaptics = true,
     this.animationDuration = const Duration(milliseconds: 150),
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
@@ -530,12 +530,12 @@ class StaggeredListView extends StatelessWidget {
   final Axis scrollDirection;
 
   const StaggeredListView({
-    Key? key,
+    super.key,
     required this.children,
     this.staggerDelay = const Duration(milliseconds: 100),
     this.animationDuration = const Duration(milliseconds: 500),
     this.scrollDirection = Axis.vertical,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -561,12 +561,12 @@ class StaggeredListItem extends StatefulWidget {
   final Widget child;
 
   const StaggeredListItem({
-    Key? key,
+    super.key,
     required this.index,
     required this.staggerDelay,
     required this.animationDuration,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   State<StaggeredListItem> createState() => _StaggeredListItemState();
@@ -653,7 +653,7 @@ class GlassmorphicContainer extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
 
   const GlassmorphicContainer({
-    Key? key,
+    super.key,
     this.child,
     this.width,
     this.height,
@@ -664,7 +664,7 @@ class GlassmorphicContainer extends StatelessWidget {
     this.border,
     this.padding,
     this.margin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -708,12 +708,12 @@ class GlassmorphicCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const GlassmorphicCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -743,13 +743,13 @@ class AdaptiveNavigation extends StatelessWidget {
   final Widget? drawer;
 
   const AdaptiveNavigation({
-    Key? key,
+    super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.destinations,
     required this.body,
     this.drawer,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -881,13 +881,13 @@ class OptimizedListView extends StatelessWidget {
   final double? itemExtent;
 
   const OptimizedListView({
-    Key? key,
+    super.key,
     required this.itemCount,
     required this.itemBuilder,
     this.controller,
     this.padding,
     this.itemExtent,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -913,11 +913,11 @@ class SkeletonLoader extends StatefulWidget {
   final BorderRadius? borderRadius;
 
   const SkeletonLoader({
-    Key? key,
+    super.key,
     this.width = double.infinity,
     this.height = 16,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -997,13 +997,13 @@ class AccessibilityWrapper extends StatelessWidget {
   final VoidCallback? onTap;
 
   const AccessibilityWrapper({
-    Key? key,
+    super.key,
     required this.child,
     this.semanticLabel,
     this.hint,
     this.isButton = false,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1075,7 +1075,7 @@ extension ColorTokens on BuildContext {
 // ============================================================================
 
 class ModernUIDemo extends StatefulWidget {
-  const ModernUIDemo({Key? key}) : super(key: key);
+  const ModernUIDemo({super.key});
 
   @override
   State<ModernUIDemo> createState() => _ModernUIDemoState();

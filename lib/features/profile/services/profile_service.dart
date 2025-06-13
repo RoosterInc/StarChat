@@ -102,7 +102,7 @@ class ProfileService {
 
   List<String> getBlockedIds(String blockerId) {
     return blocksBox.keys
-        .where((k) => k.toString().startsWith('$blockerId\_'))
+        .where((k) => k.toString().startsWith('${blockerId}_'))
         .map((k) => blocksBox.get(k)['blocked_id'] as String)
         .toList();
   }

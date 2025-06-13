@@ -16,11 +16,9 @@ import '../../../controllers/auth_controller.dart';
 import '../../reports/screens/report_post_page.dart';
 import '../../../bindings/report_binding.dart';
 import 'package:flutter/gestures.dart';
-import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
-import '../services/feed_service.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
