@@ -697,6 +697,45 @@ class FeedService {
     }
   }
 
+  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
+    final queries = <String>[Query.limit(20)];
+    if (roomId != null) {
+      queries.add(Query.equal('room_id', roomId));
+    }
+    switch (sortType) {
+      case 'chronological':
+      case 'most-recent':
+        queries.add(Query.orderDesc('\$createdAt'));
+        break;
+      case 'most-commented':
+        queries.add(Query.orderDesc('comment_count'));
+        break;
+      case 'most-liked':
+        queries.add(Query.orderDesc('like_count'));
+        break;
+    }
+    final key = 'posts_${sortType}_${roomId ?? 'home'}';
+    try {
+      final result = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        queries: queries,
+      );
+      final posts =
+          result.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+      final cache = posts
+          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .toList();
+      await postsBox.put(key, cache);
+      return posts;
+    } catch (_) {
+      final cached = postsBox.get(key, defaultValue: []) as List;
+      return cached
+          .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
+  }
+
   Future<String> sharePost(String postId) async {
     try {
       await functions.createExecution(

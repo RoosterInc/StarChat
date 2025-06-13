@@ -41,6 +41,7 @@ void main() {
     await Hive.openBox('posts');
     await Hive.openBox('comments');
     await Hive.openBox('action_queue');
+    await Hive.openBox('preferences');
     final service = FeedService(
       databases: OfflineDatabases(),
       storage: Storage(Client()),
