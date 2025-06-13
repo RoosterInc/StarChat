@@ -8,6 +8,8 @@ class CommentsController extends GetxController {
 
   CommentsController({required this.service});
 
+  static const int maxDepth = 5;
+
   final _comments = <PostComment>[].obs;
   List<PostComment> get comments => _comments;
 
@@ -79,4 +81,8 @@ class CommentsController extends GetxController {
 
   bool isCommentLiked(String id) => _likedIds.containsKey(id);
   int commentLikeCount(String id) => _likeCounts[id] ?? 0;
+
+  List<PostComment> getReplies(String commentId) {
+    return _comments.where((c) => c.parentId == commentId).toList();
+  }
 }

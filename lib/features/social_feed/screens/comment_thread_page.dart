@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../design_system/modern_ui_system.dart';
 import 'package:get/get.dart';
-import '../widgets/comment_card.dart';
+import '../widgets/comment_thread.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../../../controllers/auth_controller.dart';
 
 class CommentThreadPage extends StatefulWidget {
-  final List<PostComment> thread;
-  const CommentThreadPage({super.key, required this.thread});
+  final PostComment rootComment;
+  const CommentThreadPage({super.key, required this.rootComment});
 
   @override
   State<CommentThreadPage> createState() => _CommentThreadPageState();
@@ -36,20 +36,9 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
           children: [
             Expanded(
               child: Obx(
-                () {
-                  final root = widget.thread.first;
-                  final items = commentsController.comments
-                      .where((c) => c.id == root.id || c.parentId == root.id)
-                      .toList();
-                  return OptimizedListView(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding:
-                          EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                      child: CommentCard(comment: items[index]),
-                    ),
-                  );
-                },
+                () => SingleChildScrollView(
+                  child: CommentThread(comment: widget.rootComment),
+                ),
               ),
             ),
             SizedBox(height: DesignTokens.sm(context)),
@@ -65,7 +54,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                 SizedBox(width: DesignTokens.sm(context)),
                 AnimatedButton(
                   onPressed: () {
-                    final root = widget.thread.first;
+                    final root = widget.rootComment;
                     final uid = auth.userId ?? '';
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
