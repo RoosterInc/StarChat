@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
 import '../models/feed_post.dart';
+import "../../profile/services/activity_service.dart";
 import '../services/feed_service.dart';
 
 class FeedController extends GetxController {
@@ -108,6 +109,7 @@ class FeedController extends GetxController {
         mentions: mentions,
       ),
     );
+    await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
   }
 
   Future<void> createPostWithLink(
@@ -143,6 +145,7 @@ class FeedController extends GetxController {
         mentions: mentions,
       ),
     );
+    await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
   }
 
   Future<void> toggleLikePost(String postId) async {
