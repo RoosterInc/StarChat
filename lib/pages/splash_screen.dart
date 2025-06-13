@@ -25,7 +25,7 @@ class SplashScreen extends GetView<SplashController> {
               Text(
                 'app_name'.tr,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
+                  color: context.colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

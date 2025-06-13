@@ -106,13 +106,13 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Colors.white.withOpacity(isDark ? 0.1 : 0.2),
-                                Colors.white.withOpacity(isDark ? 0.05 : 0.1),
+                                context.glassOverlayHigh,
+                                context.glassOverlayLow,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: context.glassBorderColor,
                               width: 1.5,
                             ),
                           ),
@@ -127,7 +127,8 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                                   offset: Offset(0, _elevationAnimation.value / 2),
                                 ),
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                                  color: context.colorScheme.shadow
+                                      .withOpacity(isDark ? 0.3 : 0.1),
                                   blurRadius: _elevationAnimation.value * 2,
                                   offset: Offset(0, _elevationAnimation.value),
                                 ),
@@ -185,10 +186,10 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                 child: Center(
                   child: Text(
                     widget.room.symbol ?? '⭐',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: context.colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -203,7 +204,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: context.colorScheme.onSurface,
                         letterSpacing: 0.5,
                       ),
                       maxLines: 1,
@@ -215,9 +216,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.7)
-                            : Colors.black54,
+                        color: context.colorScheme.onSurfaceVariant,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -253,9 +252,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark 
-                      ? Colors.white.withOpacity(0.8)
-                      : Colors.black54,
+                  color: context.colorScheme.onSurface.withOpacity(0.8),
                   letterSpacing: 0.2,
                 ),
               ),
@@ -263,9 +260,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
               Icon(
                 Icons.arrow_forward_ios,
                 size: 12,
-                color: isDark 
-                    ? Colors.white.withOpacity(0.6)
-                    : Colors.black38,
+                color: context.colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -283,18 +278,18 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(isDark ? 0.2 : 0.9),
-              Colors.white.withOpacity(isDark ? 0.1 : 0.8),
+              context.glassOverlayHigh,
+              context.glassOverlayLow,
             ],
           ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: context.glassBorderColor,
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: context.colorScheme.shadow.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -305,7 +300,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : Colors.black87,
+            color: context.colorScheme.onSurface,
             letterSpacing: 0.2,
           ),
         ),
