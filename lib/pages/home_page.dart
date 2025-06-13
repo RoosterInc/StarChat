@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:myapp/design_system/modern_ui_system.dart';
 import '../controllers/auth_controller.dart';
+import '../bindings/notification_binding.dart';
 import '../widgets/enhanced_responsive_layout.dart';
 import '../design_system/modern_ui_system.dart' as ui;
 import '../utils/modern_color_palettes.dart';
@@ -26,32 +27,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  static const navigationDestinations = [
-    NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
-        label: 'Home'),
-    NavigationDestination(
-        icon: Icon(Icons.dashboard_outlined),
-        selectedIcon: Icon(Icons.dashboard),
-        label: 'Dashboard'),
-    NavigationDestination(
-        icon: Icon(Icons.search_outlined),
-        selectedIcon: Icon(Icons.search),
-        label: 'Search'),
-    NavigationDestination(
-        icon: Icon(Icons.favorite_outline),
-        selectedIcon: Icon(Icons.favorite),
-        label: 'Match'),
-    NavigationDestination(
-        icon: Icon(Icons.notifications_none),
-        selectedIcon: Icon(Icons.notifications),
-        label: 'Notifications'),
-    NavigationDestination(
-        icon: Icon(Icons.storefront_outlined),
-        selectedIcon: Icon(Icons.storefront),
-        label: 'Marketplace'),
-  ];
+  late final NotificationController _notificationController;
   int _selectedIndex = 0;
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -64,6 +40,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     Get.put(WatchlistController(), permanent: true);
     final phc = Get.put(EnhancedPlanetHouseController(), permanent: true);
     phc.initialize();
+    if (!Get.isRegistered<NotificationController>()) {
+      NotificationBinding().dependencies();
+    }
+    _notificationController = Get.find<NotificationController>();
     _initializeAnimations();
   }
 
@@ -94,6 +74,69 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  List<NavigationDestination> _buildDestinations(BuildContext context) {
+    final unread = _notificationController.unreadCount.value;
+    return [
+      const NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Home'),
+      const NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard'),
+      const NavigationDestination(
+          icon: Icon(Icons.search_outlined),
+          selectedIcon: Icon(Icons.search),
+          label: 'Search'),
+      const NavigationDestination(
+          icon: Icon(Icons.favorite_outline),
+          selectedIcon: Icon(Icons.favorite),
+          label: 'Match'),
+      NavigationDestination(
+        icon: _notificationIcon(context, unread, false),
+        selectedIcon: _notificationIcon(context, unread, true),
+        label: 'Notifications',
+      ),
+      const NavigationDestination(
+          icon: Icon(Icons.storefront_outlined),
+          selectedIcon: Icon(Icons.storefront),
+          label: 'Marketplace'),
+    ];
+  }
+
+  Widget _notificationIcon(
+      BuildContext context, int count, bool selected) {
+    return Stack(
+      children: [
+        Icon(selected ? Icons.notifications : Icons.notifications_none),
+        if (count > 0)
+          Positioned(
+            right: 0,
+            child: Semantics(
+              label: '$count unread notifications',
+              child: Container(
+                padding: EdgeInsets.all(ui.DesignTokens.xs(context)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.error,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$count',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(
+                        color: Theme.of(context).colorScheme.onError,
+                      ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
@@ -108,26 +151,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       const EmptyPage(),
     ];
 
-    return AdaptiveNavigation(
-      selectedIndex: _selectedIndex,
-      onDestinationSelected: (index) {
-        setState(() => _selectedIndex = index);
-        _slideController.reset();
-        _slideController.forward();
-      },
-      destinations: navigationDestinations,
-      body: Scaffold(
-        drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
-        floatingActionButton: const SimpleAstrologerFAB(),
-        body: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: pages[_selectedIndex],
+    return Obx(() => AdaptiveNavigation(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) {
+            setState(() => _selectedIndex = index);
+            _slideController.reset();
+            _slideController.forward();
+          },
+          destinations: _buildDestinations(context),
+          body: Scaffold(
+            drawer: !isLargeScreen ? _buildDrawer(context, authController) : null,
+            floatingActionButton: const SimpleAstrologerFAB(),
+            body: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: pages[_selectedIndex],
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildDrawer(BuildContext context, AuthController authController) {
