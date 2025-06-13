@@ -39,6 +39,7 @@ Future<void> main() async {
   await Hive.openBox('posts');
   await Hive.openBox('comments');
   await Hive.openBox('action_queue');
+  await Hive.openBox('post_queue');
   await Hive.openBox('profiles');
   await Hive.openBox('notifications');
   await Hive.openBox('follows');
@@ -48,6 +49,7 @@ Future<void> main() async {
   final auth = Get.find<AuthController>();
   final feedService = FeedService(
     databases: auth.databases,
+    storage: auth.storage,
     databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
     postsCollectionId:
         dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',

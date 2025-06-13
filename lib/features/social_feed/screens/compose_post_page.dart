@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
@@ -15,6 +17,17 @@ class ComposePostPage extends StatefulWidget {
 
 class _ComposePostPageState extends State<ComposePostPage> {
   final _controller = TextEditingController();
+  XFile? _image;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _image = picked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,24 +44,51 @@ class _ComposePostPageState extends State<ComposePostPage> {
               maxLines: 5,
               decoration: const InputDecoration(hintText: 'What\'s happening?'),
             ),
+            if (_image != null)
+              Padding(
+                padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                child: Image.file(
+                  File(_image!.path),
+                  height: 150,
+                ),
+              ),
             SizedBox(height: DesignTokens.md(context)),
-            AnimatedButton(
-              onPressed: () {
-                final uid = auth.userId ?? '';
-                final uname = auth.username.value.isNotEmpty
-                    ? auth.username.value
-                    : 'You';
-                final post = FeedPost(
-                  id: DateTime.now().toIso8601String(),
-                  roomId: widget.roomId,
-                  userId: uid,
-                  username: uname,
-                  content: _controller.text,
-                );
-                feedController.createPost(post);
-                Get.back();
-              },
-              child: const Text('Post'),
+            Row(
+              children: [
+                AnimatedButton(
+                  onPressed: _pickImage,
+                  child: const Text('Add Image'),
+                ),
+                const Spacer(),
+                AnimatedButton(
+                  onPressed: () async {
+                    final uid = auth.userId ?? '';
+                    final uname = auth.username.value.isNotEmpty
+                        ? auth.username.value
+                        : 'You';
+                    if (_image != null) {
+                      await feedController.createPostWithImage(
+                        uid,
+                        uname,
+                        _controller.text,
+                        widget.roomId,
+                        File(_image!.path),
+                      );
+                    } else {
+                      final post = FeedPost(
+                        id: DateTime.now().toIso8601String(),
+                        roomId: widget.roomId,
+                        userId: uid,
+                        username: uname,
+                        content: _controller.text,
+                      );
+                      await feedController.createPost(post);
+                    }
+                    Get.back();
+                  },
+                  child: const Text('Post'),
+                ),
+              ],
             ),
           ],
         ),

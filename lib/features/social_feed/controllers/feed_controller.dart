@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'dart:io';
 import '../../../controllers/auth_controller.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
@@ -44,6 +45,27 @@ class FeedController extends GetxController {
   Future<void> createPost(FeedPost post) async {
     await service.createPost(post);
     _posts.insert(0, post);
+  }
+
+  Future<void> createPostWithImage(
+    String userId,
+    String username,
+    String content,
+    String roomId,
+    File image,
+  ) async {
+    await service.createPostWithImage(userId, username, content, roomId, image);
+    _posts.insert(
+      0,
+      FeedPost(
+        id: DateTime.now().toIso8601String(),
+        roomId: roomId,
+        userId: userId,
+        username: username,
+        content: content,
+        mediaUrls: [image.path],
+      ),
+    );
   }
 
   Future<void> toggleLikePost(String postId) async {
