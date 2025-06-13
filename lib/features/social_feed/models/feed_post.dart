@@ -17,6 +17,7 @@ class FeedPost {
   final int shareCount;
   final List<String> hashtags;
   final bool isEdited;
+  final bool isDeleted;
   final DateTime? editedAt;
 
   FeedPost({
@@ -36,6 +37,7 @@ class FeedPost {
     this.shareCount = 0,
     this.hashtags = const [],
     this.isEdited = false,
+    this.isDeleted = false,
     this.editedAt,
   });
 
@@ -57,6 +59,7 @@ class FeedPost {
       shareCount: json['share_count'] ?? 0,
       hashtags: (json['hashtags'] as List?)?.cast<String>() ?? const [],
       isEdited: json['is_edited'] ?? false,
+      isDeleted: json['is_deleted'] ?? false,
       editedAt: json['edited_at'] != null
           ? DateTime.tryParse(json['edited_at'])
           : null,
@@ -80,6 +83,7 @@ class FeedPost {
       'share_count': shareCount,
       'hashtags': hashtags,
       'is_edited': isEdited,
+      'is_deleted': isDeleted,
       'edited_at': editedAt?.toIso8601String(),
     };
   }
