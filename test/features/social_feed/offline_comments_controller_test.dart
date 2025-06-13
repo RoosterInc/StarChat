@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../test_utils/fake_connectivity.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
@@ -51,7 +52,7 @@ void main() {
       commentsCollectionId: 'comments',
       likesCollectionId: 'likes',
       repostsCollectionId: 'reposts',
-      connectivity: Connectivity(),
+      connectivity: FakeConnectivity(),
       linkMetadataFunctionId: 'fetch_link_metadata',
     );
     controller = CommentsController(service: service);

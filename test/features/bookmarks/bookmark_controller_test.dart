@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../test_utils/fake_connectivity.dart';
 import 'package:myapp/features/bookmarks/controllers/bookmark_controller.dart';
 import 'package:myapp/features/bookmarks/models/bookmark.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
@@ -18,7 +19,7 @@ class FakeFeedService extends FeedService {
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
           bookmarksCollectionId: 'bookmarks',
-          connectivity: Connectivity(),
+          connectivity: FakeConnectivity(),
           linkMetadataFunctionId: 'link',
         );
 

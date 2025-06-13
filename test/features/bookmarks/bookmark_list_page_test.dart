@@ -5,6 +5,7 @@ import 'package:myapp/features/bookmarks/screens/bookmark_list_page.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../test_utils/fake_connectivity.dart';
 import 'package:myapp/features/bookmarks/models/bookmark.dart';
 
 void main() {
@@ -27,7 +28,7 @@ class FakeService extends FeedService {
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
           bookmarksCollectionId: 'bookmarks',
-          connectivity: Connectivity(),
+          connectivity: FakeConnectivity(),
           linkMetadataFunctionId: 'link',
         );
 

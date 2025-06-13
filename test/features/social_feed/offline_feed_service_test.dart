@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../test_utils/fake_connectivity.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
@@ -68,7 +69,7 @@ void main() {
       likesCollectionId: 'likes',
       repostsCollectionId: 'reposts',
       bookmarksCollectionId: 'bookmarks',
-      connectivity: Connectivity(),
+      connectivity: FakeConnectivity(),
     );
   });
 
