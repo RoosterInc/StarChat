@@ -72,7 +72,6 @@ class DesignTokens {
 
 enum DeviceType { mobile, tablet, desktop }
 
-enum Orientation { portrait, landscape }
 
 class ResponsiveBreakpoints {
   static const double mobile = 600;

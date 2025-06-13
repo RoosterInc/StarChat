@@ -127,7 +127,7 @@ class EnhancedSliverAppBar extends StatelessWidget {
                 ),
               ),
               SizedBox(height: DesignTokens.sm(context)),
-              Expanded(child: const EnhancedPlanetHouseList()),
+              const Expanded(child: EnhancedPlanetHouseList()),
               SizedBox(height: DesignTokens.xs(context)),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../profile/models/user_profile.dart';
 

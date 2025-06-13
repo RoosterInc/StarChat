@@ -28,7 +28,7 @@ class FakeProfileService extends ProfileService {
   }
 }
 
-class FakeAuthController extends GetxController implements AuthController {
+class FakeAuthController extends AuthController {
   @override
   String? userId = 'u1';
 }

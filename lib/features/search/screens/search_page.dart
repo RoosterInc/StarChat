@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/search_controller.dart';
+import '../controllers/search_controller.dart' as my;
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -20,7 +20,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final searchController = Get.find<SearchController>();
+    final searchController = Get.find<my.SearchController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Search')),
       body: Padding(

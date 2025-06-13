@@ -465,7 +465,7 @@ class AuthController extends GetxController {
 
   Future<bool> ensureUsername() async {
     logger.i(
-        "[Auth] ensureUsername: Called. Current local userId: ${this.userId}, Current local username: ${username.value}");
+        "[Auth] ensureUsername: Called. Current local userId: ${userId}, Current local username: ${username.value}");
 
     final prefs = await SharedPreferences.getInstance();
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
@@ -555,100 +555,6 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _promptForUsername(String dbId, String collectionId, String uid,
-      SharedPreferences prefs) async {
-    final textController = TextEditingController();
-    usernameAvailable.value = false;
-
-    await Get.dialog(
-      StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text('enter_username'.tr),
-            content: Obx(() {
-              final children = <Widget>[
-                TextField(
-                  controller: textController,
-                  decoration: InputDecoration(
-                    labelText: 'username'.tr,
-                    suffixIcon: textController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              textController.clear();
-                              usernameAvailable.value = false;
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: (value) async {
-                    setState(() {});
-                    await _checkUsernameAvailability(value);
-                  },
-                ),
-              ];
-
-              if (textController.text.isNotEmpty) {
-                children.add(const SizedBox(height: 8));
-                if (isCheckingUsername.value) {
-                  children.add(const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ));
-                } else {
-                  final available = isValidUsername(textController.text) &&
-                      usernameAvailable.value;
-                  children.add(Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        available ? Icons.check : Icons.close,
-                        color: available ? Colors.green : Colors.red,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        available
-                            ? 'username_available'.tr
-                            : 'username_taken'.tr,
-                        style: TextStyle(
-                          color: available ? Colors.green : Colors.red,
-                        ),
-                      ),
-                    ],
-                  ));
-                }
-              }
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: children,
-              );
-            }),
-            actions: [
-              TextButton(
-                onPressed: () => Get.back(),
-                child: Text('cancel'.tr),
-              ),
-              Obx(() => ElevatedButton(
-                    onPressed: usernameAvailable.value
-                        ? () async {
-                            await _saveUsername(dbId, collectionId, uid,
-                                textController.text, prefs);
-                            Get.back();
-                          }
-                        : null,
-                    child: Text('save'.tr),
-                  )),
-            ],
-          );
-        },
-      ),
-      barrierDismissible: false,
-    );
-    textController.dispose();
-  }
 
   Future<bool> _checkUsernameAvailability(String name) async {
     // Validate input consistency
@@ -792,7 +698,7 @@ class AuthController extends GetxController {
       logger.e(
           "[Auth] _addUsernameToHistory: Error adding username to history: $e");
       // Re-throw the error so the calling method can handle it
-      throw e;
+      rethrow;
     }
   }
 

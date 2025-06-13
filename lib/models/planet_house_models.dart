@@ -245,7 +245,7 @@ class PlanetHouseData {
   String get planetImageAsset {
     final planetName = position.planet.toLowerCase();
     final fileName = _planetAssetMap[planetName] ?? '$planetName.png';
-    return 'assets/images/planets/' + fileName;
+    return 'assets/images/planets/$fileName';
   }
 
   String get housePositionText {
@@ -253,7 +253,7 @@ class PlanetHouseData {
     if (number == 1) return '1st';
     if (number == 2) return '2nd';
     if (number == 3) return '3rd';
-    return number.toString() + 'th';
+    return '${number}th';
   }
 
   Color get strengthColor {

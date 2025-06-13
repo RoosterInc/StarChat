@@ -2,7 +2,6 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter_app_badge/flutter_app_badge.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../profile/controllers/profile_controller.dart';
 import '../models/notification_model.dart';
 import '../../../controllers/auth_controller.dart';
 
@@ -74,9 +73,9 @@ class NotificationService {
     final count = list.where((n) => !(n['is_read'] as bool)).length;
     await notificationBox.put('unread_count_$userId', count);
     if (count > 0) {
-      FlutterAppBadge.updateBadge(count);
+      await FlutterAppBadge.count(count);
     } else {
-      FlutterAppBadge.removeBadge();
+      await FlutterAppBadge.count(0);
     }
   }
 }
