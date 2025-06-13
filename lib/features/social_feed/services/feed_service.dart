@@ -139,9 +139,10 @@ class FeedService {
     String username,
     String content,
     String? roomId,
-    File image,
-    {List<String> hashtags = const [], List<String> mentions = const []},
-  ) async {
+    File image, {
+    List<String> hashtags = const [],
+    List<String> mentions = const [],
+  }) async {
     try {
       final imageUrl = await uploadImage(image);
       final post = FeedPost(
@@ -184,9 +185,10 @@ class FeedService {
     String username,
     String content,
     String? roomId,
-    String linkUrl,
-    {List<String> hashtags = const [], List<String> mentions = const []},
-  ) async {
+    String linkUrl, {
+    List<String> hashtags = const [],
+    List<String> mentions = const [],
+  }) async {
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
       final post = FeedPost(

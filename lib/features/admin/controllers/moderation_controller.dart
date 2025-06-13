@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../profile/services/activity_service.dart';
 import '../../../controllers/auth_controller.dart';
+import 'package:appwrite/appwrite.dart';
 import '../models/report.dart';
 import '../services/moderation_service.dart';
 
@@ -20,9 +21,12 @@ class ModerationController extends GetxController {
     if (uid == null) return;
     isLoading.value = true;
     try {
-      final memberships = await auth.account.getMemberships();
-      isModerator.value = memberships.memberships
-          .any((m) => m.teamId == 'moderators');
+      final teams = Teams(auth.client);
+      final memberships = await teams.listMemberships(
+        teamId: 'moderators',
+        queries: [Query.equal('userId', uid)],
+      );
+      isModerator.value = memberships.memberships.isNotEmpty;
       if (!isModerator.value) return;
       reports.value = await service.fetchPendingReports();
     } finally {
