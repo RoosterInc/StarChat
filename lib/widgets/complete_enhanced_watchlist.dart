@@ -1434,7 +1434,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme
-                            .surfaceVariant
+                            .surfaceContainerHighest
                             .withOpacity(0.5),
                         shape: BoxShape.circle,
                       ),

@@ -217,7 +217,8 @@ class AuthController extends GetxController {
     }
 
     // Check network connectivity
-    var connectivityResult = await Connectivity().checkConnectivity();
+    ConnectivityResult connectivityResult =
+        await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
         'no_internet'.tr,
@@ -306,7 +307,8 @@ class AuthController extends GetxController {
     }
 
     // Check network connectivity
-    var connectivityResult = await Connectivity().checkConnectivity();
+    ConnectivityResult connectivityResult =
+        await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
         'no_internet'.tr,
@@ -465,7 +467,7 @@ class AuthController extends GetxController {
 
   Future<bool> ensureUsername() async {
     logger.i(
-        "[Auth] ensureUsername: Called. Current local userId: ${userId}, Current local username: ${username.value}");
+        '[Auth] ensureUsername: Called. Current local userId: $userId, Current local username: ${username.value}');
 
     final prefs = await SharedPreferences.getInstance();
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';

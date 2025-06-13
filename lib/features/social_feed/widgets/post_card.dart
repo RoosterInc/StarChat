@@ -19,6 +19,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
+import 'package:appwrite/appwrite.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;

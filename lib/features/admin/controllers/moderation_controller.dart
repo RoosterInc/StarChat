@@ -20,7 +20,7 @@ class ModerationController extends GetxController {
     if (uid == null) return;
     isLoading.value = true;
     try {
-      final memberships = await auth.account.listMemberships();
+      final memberships = await auth.account.getMemberships();
       isModerator.value = memberships.memberships
           .any((m) => m.teamId == 'moderators');
       if (!isModerator.value) return;

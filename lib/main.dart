@@ -81,7 +81,8 @@ Future<void> main() async {
   if (await Connectivity().checkConnectivity() != ConnectivityResult.none) {
     await feedService.syncQueuedActions();
   }
-  Connectivity().onConnectivityChanged.listen((result) async {
+  Connectivity().onConnectivityChanged
+      .listen((ConnectivityResult result) async {
     if (result != ConnectivityResult.none) {
       await feedService.syncQueuedActions();
     }

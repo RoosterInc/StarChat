@@ -63,11 +63,11 @@ class ReactionBar extends StatelessWidget {
         ),
       );
     }
-    Future<void> _defaultShare() async {
+    Future<void> defaultShare() async {
       if (postId == null) return;
       try {
         final link = await Get.find<FeedService>().sharePost(postId!);
-        await Share.share("Check out this post: " + link);
+        await Share.share('Check out this post: $link');
       } catch (_) {
         Get.snackbar("Error", "Failed to share post");
       }
@@ -99,8 +99,9 @@ class ReactionBar extends StatelessWidget {
       buildItem(
         icon: Icon(
           isLiked ? Icons.favorite : Icons.favorite_border,
-          color:
-              isLiked ? context.colorScheme.primary : context.theme.iconTheme.color,
+          color: isLiked
+              ? context.colorScheme.primary
+              : ContextExtensions(context).theme.iconTheme.color,
         ),
         label: isLiked ? 'Unlike ${targetName()}' : 'Like ${targetName()}',
         onTap: onLike,
@@ -138,7 +139,7 @@ class ReactionBar extends StatelessWidget {
         buildItem(
           icon: const Icon(Icons.share),
           label: 'Share',
-          onTap: onShare ?? _defaultShare,
+          onTap: onShare ?? defaultShare,
           count: shareCount,
         ),
       );
@@ -151,7 +152,7 @@ class ReactionBar extends StatelessWidget {
             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
             color: isBookmarked
                 ? context.colorScheme.primary
-                : context.theme.iconTheme.color,
+                : ContextExtensions(context).theme.iconTheme.color,
           ),
           label: isBookmarked ? 'Remove bookmark' : 'Bookmark',
           onTap: onBookmark,

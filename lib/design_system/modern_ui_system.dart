@@ -321,8 +321,8 @@ class MD3ThemeSystem {
       elevation: 3,
       shadowColor: colorScheme.shadow,
       surfaceTintColor: colorScheme.surfaceTint,
-      labelTextStyle: MaterialStateProperty.resolveWith<TextStyle?>((states) {
-        if (states.contains(MaterialState.selected)) {
+      labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
+        if (states.contains(WidgetState.selected)) {
           return TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -396,7 +396,7 @@ class MD3ThemeSystem {
       ColorScheme colorScheme) {
     return InputDecorationTheme(
       filled: true,
-      fillColor: colorScheme.surfaceVariant.withOpacity(0.5),
+      fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: colorScheme.outline),
@@ -1179,7 +1179,7 @@ class _ModernUIDemoState extends State<ModernUIDemo> {
       children: [
         // Glassmorphic hero card
         GlassmorphicCard(
-          child: Container(
+          child: SizedBox(
             height: ResponsiveUtils.fluidSize(
               context,
               min: 150,
