@@ -93,8 +93,8 @@ class FeedController extends GetxController {
       content,
       roomId,
       image,
-      hashtags,
-      mentions,
+      hashtags: hashtags,
+      mentions: mentions,
     );
     _posts.insert(
       0,
@@ -128,8 +128,8 @@ class FeedController extends GetxController {
       content,
       roomId,
       linkUrl,
-      hashtags,
-      mentions,
+      hashtags: hashtags,
+      mentions: mentions,
     );
     _posts.insert(
       0,
