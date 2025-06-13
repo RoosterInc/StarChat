@@ -4,6 +4,7 @@ import 'bindings/auth_binding.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'features/social_feed/services/feed_service.dart';
+import 'package:appwrite/appwrite.dart';
 import 'controllers/auth_controller.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
@@ -60,6 +61,7 @@ Future<void> main() async {
   final feedService = FeedService(
     databases: auth.databases,
     storage: auth.storage,
+    functions: Functions(auth.client),
     databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
     postsCollectionId:
         dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
@@ -72,6 +74,8 @@ Future<void> main() async {
     bookmarksCollectionId:
         dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
     connectivity: Connectivity(),
+    linkMetadataFunctionId:
+        dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
   );
   Get.put(feedService, permanent: true);
   if (await Connectivity().checkConnectivity() != ConnectivityResult.none) {

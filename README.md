@@ -35,6 +35,7 @@ POST_LIKES_COLLECTION_ID=post_likes
 POST_REPOSTS_COLLECTION_ID=post_reposts
 POLLS_COLLECTION_ID=polls
 POLL_VOTES_COLLECTION_ID=poll_votes
+FETCH_LINK_METADATA_FUNCTION_ID=fetch_link_metadata
 APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 
