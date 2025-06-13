@@ -62,6 +62,7 @@ void main() {
     service = FeedService(
       databases: OfflineDatabases(),
       storage: OfflineStorage(),
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -69,6 +70,7 @@ void main() {
       repostsCollectionId: 'reposts',
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
     );
   });
 
