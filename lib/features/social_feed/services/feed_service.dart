@@ -42,9 +42,9 @@ class FeedService {
     required this.connectivity,
     required this.linkMetadataFunctionId,
   }) {
-    connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
+    connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        await syncQueuedActions();
+        syncQueuedActions();
       }
     });
   }
