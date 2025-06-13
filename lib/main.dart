@@ -75,16 +75,18 @@ Future<void> main() async {
         dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
   );
   Get.put(feedService, permanent: true);
-  if (await Connectivity().checkConnectivity() != ConnectivityResult.none) {
+  if (!(await Connectivity()
+          .checkConnectivity())
+      .contains(ConnectivityResult.none)) {
     await feedService.syncQueuedActions();
   }
   Connectivity()
       .onConnectivityChanged
-      .listen((ConnectivityResult result) async {
-        if (result != ConnectivityResult.none) {
+      .listen((List<ConnectivityResult> results) async {
+        if (results.any((r) => r != ConnectivityResult.none)) {
           await feedService.syncQueuedActions();
         }
-      } as void Function(List<ConnectivityResult> event)?);
+      });
 
   runApp(const MyApp());
 }
