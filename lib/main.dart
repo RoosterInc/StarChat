@@ -20,10 +20,38 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/theme_controller.dart'; // Import the ThemeController
 import 'controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'features/social_feed/models/feed_post.dart';
+import 'features/social_feed/models/post_comment.dart';
+import 'features/social_feed/services/feed_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(FeedPostAdapter());
+  // Adapters for notifications and profiles would be registered here
+  Hive.registerAdapter(PostCommentAdapter());
+
+  await Hive.openBox('posts');
+  await Hive.openBox('notifications');
+  await Hive.openBox('profiles');
+  await Hive.openBox('comments');
+  await Hive.openBox('post_queue');
+
+  final feedService = Get.find<FeedService>();
+  final connectivity = Connectivity();
+  if (await connectivity.checkConnectivity() != ConnectivityResult.none) {
+    await feedService.syncQueuedPosts();
+  }
+  connectivity.onConnectivityChanged.listen((result) async {
+    if (result != ConnectivityResult.none) {
+      await feedService.syncQueuedPosts();
+    }
+  });
+
   runApp(const MyApp());
 }
 
