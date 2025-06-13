@@ -47,6 +47,34 @@ class _UserProfilePageState extends State<UserProfilePage> {
               onPressed: () => controller.followUser(profile.id),
               child: const Text('Follow'),
             ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: AnimatedButton(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Block User'),
+                      content: const Text('Are you sure you want to block this user?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Block'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await controller.blockUser(profile.id);
+                  }
+                },
+                child: const Text('Block'),
+              ),
+            ),
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
               Padding(

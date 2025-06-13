@@ -9,14 +9,17 @@ class ProfileService {
   final String databaseId;
   final String profilesCollection;
   final String followsCollection;
+  final String blocksCollection;
   final Box profileBox = Hive.box('profiles');
   final Box followsBox = Hive.box('follows');
+  final Box blocksBox = Hive.box('blocks');
 
   ProfileService({
     required this.databases,
     required this.databaseId,
     required this.profilesCollection,
     required this.followsCollection,
+    required this.blocksCollection,
   });
 
   Future<void> followUser(String followerId, String followedId) async {
@@ -54,6 +57,54 @@ class ProfileService {
       if (cached != null) return UserProfile.fromJson(cached);
       rethrow;
     }
+  }
+
+  Future<void> blockUser(String blockerId, String blockedId) async {
+    try {
+      await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: blocksCollection,
+        documentId: ID.unique(),
+        data: {
+          'blocker_id': blockerId,
+          'blocked_id': blockedId,
+          'created_at': DateTime.now().toIso8601String(),
+        },
+      );
+      blocksBox.put('${blockerId}_$blockedId', {'blocked_id': blockedId});
+    } catch (_) {
+      blocksBox.put('${blockerId}_$blockedId', {'blocked_id': blockedId});
+    }
+  }
+
+  Future<void> unblockUser(String blockerId, String blockedId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: blocksCollection,
+        queries: [
+          Query.equal('blocker_id', blockerId),
+          Query.equal('blocked_id', blockedId),
+        ],
+      );
+      for (final doc in res.documents) {
+        await databases.deleteDocument(
+          databaseId: databaseId,
+          collectionId: blocksCollection,
+          documentId: doc.$id,
+        );
+      }
+      blocksBox.delete('${blockerId}_$blockedId');
+    } catch (_) {
+      blocksBox.delete('${blockerId}_$blockedId');
+    }
+  }
+
+  List<String> getBlockedIds(String blockerId) {
+    return blocksBox.keys
+        .where((k) => k.toString().startsWith('$blockerId\_'))
+        .map((k) => blocksBox.get(k)['blocked_id'] as String)
+        .toList();
   }
 }
 
