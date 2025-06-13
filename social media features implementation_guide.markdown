@@ -5,6 +5,7 @@ This guide provides detailed instructions  to implement 26 social media features
 ## Project Overview
 
 - **Backend**: Appwrite, with 17 collections defined in `lib/models/all_collections_config.json`.
+- docs/social_media_app_data_dictionary.csv: Maps collections to features and attributes.
 - **Frontend**: Flutter, using GetX for state management, Hive for local caching, and a modern UI system (`lib/design_system/modern_ui_system.dart`).
 - **Features**: 26 social media features, including posting, commenting, liking, following, in-app notifications, and more.
 - **Offline Support**: Enabled via Hive for caching data (posts, notifications, profiles) and queuing actions (posts, likes, comments).
