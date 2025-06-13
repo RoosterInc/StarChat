@@ -32,20 +32,14 @@ class EnhancedPlanetHouseController extends GetxController {
   static const String _interpretationsCollectionKey =
       'PLANET_HOUSE_INTERPRETATIONS_COLLECTION_ID';
 
-  static const String _cacheKeyPositions = 'planet_house_positions_v2';
-  static const String _cacheKeyInterpretations =
-      'planet_house_interpretations_v2';
-  static const String _cacheKeyTimestamp = 'planet_house_cache_timestamp_v2';
-  static const String _cacheKeyFetchDate = 'planet_house_fetch_date_v2';
-
   String get _positionsKey =>
-      '\${_cacheKeyPositions}_\${_auth.userId}_\${_currentRashiId.value}';
+      'planet_house_positions_v2_${_auth.userId}_${_currentRashiId.value}';
   String get _interpretationsKey =>
-      '\${_cacheKeyInterpretations}_\${_auth.userId}_\${_currentRashiId.value}';
+      'planet_house_interpretations_v2_${_auth.userId}_${_currentRashiId.value}';
   String get _timestampKey =>
-      '\${_cacheKeyTimestamp}_\${_auth.userId}_\${_currentRashiId.value}';
+      'planet_house_cache_timestamp_v2_${_auth.userId}_${_currentRashiId.value}';
   String get _fetchDateKey =>
-      '\${_cacheKeyFetchDate}_\${_auth.userId}_\${_currentRashiId.value}';
+      'planet_house_fetch_date_v2_${_auth.userId}_${_currentRashiId.value}';
 
 
   Future<void> initialize() async {

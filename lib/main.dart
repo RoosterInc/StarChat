@@ -4,7 +4,7 @@ import 'bindings/auth_binding.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as appwrite;
 import 'controllers/auth_controller.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
@@ -61,7 +61,7 @@ Future<void> main() async {
   final feedService = FeedService(
     databases: auth.databases,
     storage: auth.storage,
-    functions: Functions(auth.client),
+    functions: appwrite.Functions(auth.client),
     databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
     postsCollectionId:
         dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
