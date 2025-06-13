@@ -24,7 +24,7 @@ class OfflineDatabases extends Databases {
     required String databaseId,
     required String collectionId,
     required String documentId,
-    required Map<String, dynamic> data,
+    required Map<dynamic, dynamic> data,
     List<String>? permissions,
   }) {
     return Future.error('offline');
