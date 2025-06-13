@@ -14,6 +14,11 @@ import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
 import 'bindings/splash_binding.dart';
 import 'bindings/feed_binding.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'controllers/auth_controller.dart';
+import 'features/social_feed/services/feed_service.dart';
 import 'design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -24,6 +29,40 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  final appDocDir = await getApplicationDocumentsDirectory();
+  await Hive.initFlutter(appDocDir.path);
+  await Hive.openBox('posts');
+  await Hive.openBox('notifications');
+  await Hive.openBox('profiles');
+  await Hive.openBox('comments');
+  await Hive.openBox('post_queue');
+
+  AuthBinding().dependencies();
+  final auth = Get.find<AuthController>();
+  final feedService = FeedService(
+    databases: auth.databases,
+    databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+    postsCollectionId:
+        dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
+    commentsCollectionId:
+        dotenv.env['POST_COMMENTS_COLLECTION_ID'] ?? 'post_comments',
+    likesCollectionId:
+        dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
+    repostsCollectionId:
+        dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
+  );
+  Get.put(feedService, permanent: true);
+
+  final connectivity = Connectivity();
+  if (await connectivity.checkConnectivity() != ConnectivityResult.none) {
+    await feedService.syncQueuedPosts();
+  }
+  connectivity.onConnectivityChanged.listen((result) async {
+    if (result != ConnectivityResult.none) {
+      await feedService.syncQueuedPosts();
+    }
+  });
+
   runApp(const MyApp());
 }
 

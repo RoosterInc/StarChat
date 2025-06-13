@@ -114,4 +114,8 @@ class FeedService {
     if (res.documents.isEmpty) return null;
     return PostRepost.fromJson(res.documents.first.data);
   }
+
+  Future<void> syncQueuedPosts() async {
+    // TODO: implement offline sync of queued posts when connectivity is restored
+  }
 }
