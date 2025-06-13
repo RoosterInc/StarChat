@@ -42,8 +42,8 @@ class FeedService {
     required this.connectivity,
     required this.linkMetadataFunctionId,
   }) {
-    connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-      if (result != ConnectivityResult.none) {
+    connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      if (results.any((r) => r != ConnectivityResult.none)) {
         syncQueuedActions();
       }
     });
