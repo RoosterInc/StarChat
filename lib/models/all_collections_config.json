@@ -38,7 +38,7 @@
           "array": false
         },
         {
-          "key": "UpdateAt",
+          "key": "updatedAt",
           "type": "datetime",
           "required": false,
           "array": false
@@ -1472,7 +1472,7 @@
           "default": "Free"
         },
         {
-          "key": "UpdateAt",
+          "key": "updatedAt",
           "type": "datetime",
           "required": false,
           "array": false
