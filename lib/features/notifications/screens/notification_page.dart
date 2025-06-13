@@ -32,12 +32,21 @@ class _NotificationPageState extends State<NotificationPage> {
               itemCount: controller.notifications.length,
               itemBuilder: (context, index) {
                 final n = controller.notifications[index];
-                return ListTile(
-                  leading: Icon(_iconForAction(n.actionType)),
-                  title: Text('${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
-                  subtitle: Text(n.createdAt.toString()),
-                  trailing: n.isRead ? null : const Icon(Icons.circle, color: Colors.blue, size: 10),
-                  onTap: () => controller.markAsRead(n.id),
+                return Semantics(
+                  label:
+                      '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}',
+                  button: true,
+                  child: ListTile(
+                    leading: Icon(_iconForAction(n.actionType)),
+                    title: Text(
+                        '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
+                    subtitle: Text(n.createdAt.toString()),
+                    trailing: n.isRead
+                        ? null
+                        : const Icon(Icons.circle,
+                            color: Colors.blue, size: 10),
+                    onTap: () => controller.markAsRead(n.id),
+                  ),
                 );
               },
             )),
