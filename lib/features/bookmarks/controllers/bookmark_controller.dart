@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import '../../social_feed/services/feed_service.dart';
 import '../models/bookmark.dart';
-import '../../social_feed/models/feed_post.dart';
 import '../../social_feed/controllers/feed_controller.dart';
 
 class BookmarkController extends GetxController {
