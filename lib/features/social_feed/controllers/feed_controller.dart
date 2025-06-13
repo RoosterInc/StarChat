@@ -123,17 +123,31 @@ class FeedController extends GetxController {
     }
   }
 
-  Future<void> repostPost(String postId) async {
+  Future<void> repostPost(String postId, [String? comment]) async {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
     if (uid == null || _repostedIds.containsKey(postId)) return;
-    await service.createRepost({
+    final id = await service.createRepost({
       'post_id': postId,
       'user_id': uid,
+      'comment': comment,
     });
-    final repost = await service.getUserRepost(postId, uid);
-    if (repost != null) _repostedIds[postId] = repost.id;
+    if (id != null) {
+      _repostedIds[postId] = id;
+    } else {
+      final repost = await service.getUserRepost(postId, uid);
+      if (repost != null) _repostedIds[postId] = repost.id;
+    }
     _repostCounts[postId] = (_repostCounts[postId] ?? 0) + 1;
+  }
+
+  Future<void> undoRepost(String postId) async {
+    final auth = Get.find<AuthController>();
+    final uid = auth.userId;
+    if (uid == null || !_repostedIds.containsKey(postId)) return;
+    final repostId = _repostedIds.remove(postId)!;
+    await service.deleteRepost(repostId);
+    _repostCounts[postId] = (_repostCounts[postId] ?? 1) - 1;
   }
 
   Future<void> editPost(

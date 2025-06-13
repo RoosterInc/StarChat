@@ -55,8 +55,14 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> createRepost(Map<String, dynamic> repost) async {
+  Future<String?> createRepost(Map<String, dynamic> repost) async {
     reposts[repost['post_id']] = 'r1';
+    return 'r1';
+  }
+
+  @override
+  Future<void> deleteRepost(String repostId) async {
+    reposts.removeWhere((key, value) => value == repostId);
   }
 
   @override
@@ -138,7 +144,25 @@ void main() {
     expect(controller.isPostLiked('1'), isFalse);
   });
 
-  test('repostPost increases count', () async {
+  test('repostPost stores id and increases count', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    service.store.add(
+      FeedPost(
+        id: '1',
+        roomId: 'room',
+        userId: 'u1',
+        username: 'user',
+        content: 'hello',
+      ),
+    );
+    await controller.loadPosts('room');
+    await controller.repostPost('1', 'nice');
+    expect(controller.postRepostCount('1'), 1);
+    expect(controller.isPostReposted('1'), isTrue);
+  });
+
+  test('undoRepost decreases count', () async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);
     service.store.add(
@@ -152,7 +176,9 @@ void main() {
     );
     await controller.loadPosts('room');
     await controller.repostPost('1');
-    expect(controller.postRepostCount('1'), 1);
+    await controller.undoRepost('1');
+    expect(controller.isPostReposted('1'), isFalse);
+    expect(controller.postRepostCount('1'), 0);
   });
 
   test('editPost updates content', () async {
