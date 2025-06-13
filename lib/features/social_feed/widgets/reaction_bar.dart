@@ -8,11 +8,13 @@ class ReactionBar extends StatelessWidget {
   final VoidCallback? onComment;
   final VoidCallback? onRepost;
   final VoidCallback? onBookmark;
+  final VoidCallback? onShare;
   final bool isLiked;
   final bool isBookmarked;
   final int likeCount;
   final int commentCount;
   final int repostCount;
+  final int shareCount;
   final ReactionTarget target;
   const ReactionBar({
     super.key,
@@ -20,11 +22,13 @@ class ReactionBar extends StatelessWidget {
     this.onComment,
     this.onRepost,
     this.onBookmark,
+    this.onShare,
     this.isLiked = false,
     this.isBookmarked = false,
     this.likeCount = 0,
     this.commentCount = 0,
     this.repostCount = 0,
+    this.shareCount = 0,
     this.target = ReactionTarget.post,
   });
 
@@ -108,6 +112,17 @@ class ReactionBar extends StatelessWidget {
           label: 'Repost',
           onTap: onRepost,
           count: repostCount,
+        ),
+      );
+    }
+
+    if ((onShare != null || shareCount > 0) && target == ReactionTarget.post) {
+      addItem(
+        buildItem(
+          icon: const Icon(Icons.share),
+          label: 'Share',
+          onTap: onShare,
+          count: shareCount,
         ),
       );
     }

@@ -696,4 +696,30 @@ class FeedService {
       });
     }
   }
+
+  Future<String> sharePost(String postId) async {
+    try {
+      await functions.createExecution(
+        functionId: 'increment_share_count',
+        data: jsonEncode({'post_id': postId}),
+      );
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == postId || p['\$id'] == postId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['share_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'share_count': count + 1,
+          };
+          await postsBox.put(key, cached);
+        }
+      }
+      return 'https://your-app.com/post/$postId';
+    } catch (e) {
+      throw Exception('Failed to share post: $e');
+    }
+  }
 }
