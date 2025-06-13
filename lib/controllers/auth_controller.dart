@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import '../utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart'; // Added for email validation
@@ -11,10 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'user_type_controller.dart';
 
 class AuthController extends GetxController {
-  final Client client = Client();
-  late Account account;
-  late Databases databases;
-  late Storage storage;
+  final aw.Client client = aw.Client();
+  late aw.Account account;
+  late aw.Databases databases;
+  late aw.Storage storage;
 
   final isLoading = false.obs;
   final isOTPSent = false.obs;
@@ -78,9 +78,9 @@ class AuthController extends GetxController {
       usernameText.value = usernameController.text;
     });
 
-    account = Account(client);
-    databases = Databases(client);
-    storage = Storage(client);
+    account = aw.Account(client);
+    databases = aw.Databases(client);
+    storage = aw.Storage(client);
   }
 
   @override
@@ -138,7 +138,7 @@ class AuthController extends GetxController {
       isLoading.value = true;
       final session = await account.get();
       logger.i(
-          "[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
+          "[Auth] checkExistingSession: account.get() succeeded. User aw.ID: ${session.$id}, Email: ${session.email}");
 
       bool hasUsername = await ensureUsername();
       if (hasUsername) {
@@ -162,9 +162,9 @@ class AuthController extends GetxController {
               "[Auth] checkExistingSession: Already on /set_username, not navigating.");
         }
       }
-    } on AppwriteException catch (e) {
+    } on aw.AppwriteException catch (e) {
       logger.e(
-          "[Auth] checkExistingSession: account.get() failed with AppwriteException. Code: ${e.code}, Message: ${e.message}");
+          "[Auth] checkExistingSession: account.get() failed with aw.AppwriteException. Code: ${e.code}, Message: ${e.message}");
       if (e.code == 401 && navigateOnMissing) {
         Get.offAllNamed('/');
       }
@@ -230,7 +230,7 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       final result = await account.createEmailToken(
-        userId: ID.unique(),
+        userId: aw.ID.unique(),
         email: email,
       );
 
@@ -249,8 +249,8 @@ class AuthController extends GetxController {
 
       // Start OTP expiration timer
       startOTPExpirationTimer();
-    } on AppwriteException catch (e) {
-      logger.e('AppwriteException in sendOTP', error: e);
+    } on aw.AppwriteException catch (e) {
+      logger.e('aw.AppwriteException in sendOTP', error: e);
       String errorMessage = 'failed_to_send_otp'.tr;
 
       if (e.code == 400) {
@@ -324,7 +324,7 @@ class AuthController extends GetxController {
       isOTPSent.value = false;
       await Future.delayed(const Duration(milliseconds: 100));
       await ensureUsername();
-    } on AppwriteException {
+    } on aw.AppwriteException {
       logger.i('No existing session, verifying OTP...');
       if (userId == null) {
         logger.e('verifyOTP called with null userId');
@@ -351,8 +351,8 @@ class AuthController extends GetxController {
         }
         clearControllers();
         isOTPSent.value = false;
-      } on AppwriteException catch (e) {
-        logger.e('AppwriteException in verifyOTP', error: e);
+      } on aw.AppwriteException catch (e) {
+        logger.e('aw.AppwriteException in verifyOTP', error: e);
         String errorMessage = 'failed_to_verify_otp'.tr;
 
         if (e.code == 400 || e.code == 404) {
@@ -475,14 +475,14 @@ class AuthController extends GetxController {
       final session = await account.get();
       final uid = session.$id;
       logger.i(
-          "[Auth] ensureUsername: Fetched session successfully. User ID for query: $uid, Email: ${session.email}");
+          "[Auth] ensureUsername: Fetched session successfully. User aw.ID for query: $uid, Email: ${session.email}");
 
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.limit(1),
+          aw.Query.equal('userId', uid),
+          aw.Query.limit(1),
         ],
       );
       logger.i(
@@ -532,9 +532,9 @@ class AuthController extends GetxController {
           "[Auth] ensureUsername: Returning false (no username found on server for this session/UID, or it was empty).");
       return false;
     } catch (e) {
-      if (e is AppwriteException) {
+      if (e is aw.AppwriteException) {
         logger.e(
-            "[Auth] ensureUsername: AppwriteException. Code: ${e.code}, Message: ${e.message}");
+            "[Auth] ensureUsername: aw.AppwriteException. Code: ${e.code}, Message: ${e.message}");
       } else {
         logger.e("[Auth] ensureUsername: General error: $e");
       }
@@ -598,11 +598,11 @@ class AuthController extends GetxController {
       final result = await databases.listDocuments(
         databaseId: dbId,
         collectionId: historyCollectionId,
-        queries: [Query.equal('username', name)],
+        queries: [aw.Query.equal('username', name)],
       );
 
       logger.i(
-          "[Auth] _checkUsernameAvailability: Query completed. Found ${result.documents.length} documents with username '$name'");
+          "[Auth] _checkUsernameAvailability: aw.Query completed. Found ${result.documents.length} documents with username '$name'");
 
       // Final input consistency check
       if (name != _currentCheckingUsername || name != usernameText.value) {
@@ -624,9 +624,9 @@ class AuthController extends GetxController {
       }
 
       return usernameAvailable.value;
-    } on AppwriteException catch (e) {
+    } on aw.AppwriteException catch (e) {
       logger.e(
-          "[Auth] _checkUsernameAvailability: AppwriteException. Code: ${e.code}, Message: ${e.message}");
+          "[Auth] _checkUsernameAvailability: aw.AppwriteException. Code: ${e.code}, Message: ${e.message}");
       final message = e.message ?? 'username_check_error'.tr;
       usernameError.value = message;
       Get.snackbar(
@@ -683,17 +683,17 @@ class AuthController extends GetxController {
       final doc = await databases.createDocument(
         databaseId: dbId,
         collectionId: historyCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: docData,
         permissions: [
-          Permission.read(Role.user(uid)),
-          Permission.update(Role.user(uid)),
-          Permission.delete(Role.user(uid)),
+          aw.Permission.read(aw.Role.user(uid)),
+          aw.Permission.update(aw.Role.user(uid)),
+          aw.Permission.delete(aw.Role.user(uid)),
         ],
       );
 
       logger.i(
-          "[Auth] _addUsernameToHistory: Successfully added username '$name' to history. Document ID: ${doc.$id}");
+          "[Auth] _addUsernameToHistory: Successfully added username '$name' to history. Document aw.ID: ${doc.$id}");
     } catch (e) {
       logger.e(
           "[Auth] _addUsernameToHistory: Error adding username to history: $e");
@@ -727,8 +727,8 @@ class AuthController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.limit(1),
+          aw.Query.equal('userId', uid),
+          aw.Query.limit(1),
         ],
       );
 
@@ -774,16 +774,16 @@ class AuthController extends GetxController {
         final doc = await databases.createDocument(
           databaseId: dbId,
           collectionId: collectionId,
-          documentId: ID.unique(),
+          documentId: aw.ID.unique(),
           data: profileData,
           permissions: [
-            Permission.read(Role.user(uid)),
-            Permission.update(Role.user(uid)),
-            Permission.delete(Role.user(uid)),
+            aw.Permission.read(aw.Role.user(uid)),
+            aw.Permission.update(aw.Role.user(uid)),
+            aw.Permission.delete(aw.Role.user(uid)),
           ],
         );
         logger.i(
-            "[Auth] _saveUsername: Successfully created new user profile. Document ID: ${doc.$id}");
+            "[Auth] _saveUsername: Successfully created new user profile. Document aw.ID: ${doc.$id}");
       }
 
       logger.i("[Auth] _saveUsername: STEP 4 - Updating local state and cache");
@@ -797,7 +797,7 @@ class AuthController extends GetxController {
     } catch (e) {
       logger.e("[Auth] _saveUsername: Error in save process: $e");
 
-      if (e is AppwriteException) {
+      if (e is aw.AppwriteException) {
         if (e.code == 409 ||
             e.message?.contains('duplicate') == true ||
             e.message?.contains('unique') == true) {
@@ -806,7 +806,7 @@ class AuthController extends GetxController {
           throw Exception('USERNAME_TAKEN');
         } else {
           logger.e(
-              "[Auth] _saveUsername: AppwriteException during save. Code: ${e.code}, Message: ${e.message}");
+              "[Auth] _saveUsername: aw.AppwriteException during save. Code: ${e.code}, Message: ${e.message}");
           throw Exception('SAVE_ERROR: ${e.message}');
         }
       } else {
@@ -883,7 +883,7 @@ class AuthController extends GetxController {
       final session = await account.get();
       return session.$id;
     } catch (e) {
-      logger.e('Error fetching user ID', error: e);
+      logger.e('Error fetching user aw.ID', error: e);
       return null;
     }
   }
@@ -1018,8 +1018,8 @@ class AuthController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.limit(1),
+          aw.Query.equal('userId', uid),
+          aw.Query.limit(1),
         ],
       );
       if (result.documents.isNotEmpty) {
@@ -1038,7 +1038,7 @@ class AuthController extends GetxController {
       await ensureUsername();
       Get.snackbar('success'.tr, 'username_deleted'.tr,
           snackPosition: SnackPosition.BOTTOM);
-    } on AppwriteException catch (e) {
+    } on aw.AppwriteException catch (e) {
       logger.e('Error deleting username', error: e);
       Get.snackbar('error'.tr, 'failed_to_delete_username'.tr,
           snackPosition: SnackPosition.BOTTOM);
@@ -1055,7 +1055,7 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await account.updateStatus();
-      logger.i('Account deleted successfully');
+      logger.i('aw.Account deleted successfully');
       clearControllers();
       isOTPSent.value = false;
       Get.offAllNamed('/');
@@ -1064,7 +1064,7 @@ class AuthController extends GetxController {
         'account_deleted'.tr,
         snackPosition: SnackPosition.BOTTOM,
       );
-    } on AppwriteException catch (e) {
+    } on aw.AppwriteException catch (e) {
       logger.e('Error deleting account', error: e);
       Get.snackbar(
         'error'.tr,
@@ -1134,7 +1134,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> updateProfilePicture(File file) async {
+  Future<void> updateProfilePicture(io.File file) async {
     isLoading.value = true;
     final bucketId = dotenv.env[_bucketIdKey] ?? 'profile_pics';
     final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
@@ -1144,8 +1144,8 @@ class AuthController extends GetxController {
       final uid = session.$id;
       final upload = await storage.createFile(
         bucketId: bucketId,
-        fileId: ID.unique(),
-        file: InputFile.fromPath(path: file.path),
+        fileId: aw.ID.unique(),
+        file: aw.InputFile.fromPath(path: file.path),
       );
       final url =
           '${client.endPoint}/storage/buckets/$bucketId/files/${upload.$id}/view?project=${client.config['project']}';
@@ -1153,8 +1153,8 @@ class AuthController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.limit(1),
+          aw.Query.equal('userId', uid),
+          aw.Query.limit(1),
         ],
       );
       if (result.documents.isNotEmpty) {
@@ -1188,8 +1188,8 @@ class AuthController extends GetxController {
         databaseId: dbId,
         collectionId: historyCollectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.orderDesc('createdAt'),
+          aw.Query.equal('userId', uid),
+          aw.Query.orderDesc('createdAt'),
         ],
       );
 
@@ -1212,8 +1212,8 @@ class AuthController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.limit(1),
+          aw.Query.equal('userId', uid),
+          aw.Query.limit(1),
         ],
       );
       if (result.documents.isNotEmpty) {

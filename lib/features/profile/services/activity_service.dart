@@ -1,8 +1,8 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ActivityService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String collectionId;
   final Box activityBox = Hive.box('activities');
@@ -23,7 +23,7 @@ class ActivityService {
       final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: collectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'user_id': userId,
           'action_type': actionType,
@@ -50,9 +50,9 @@ class ActivityService {
         databaseId: databaseId,
         collectionId: collectionId,
         queries: [
-          Query.equal("user_id", userId),
-          Query.orderDesc("created_at"),
-          Query.limit(50),
+          aw.Query.equal("user_id", userId),
+          aw.Query.orderDesc("created_at"),
+          aw.Query.limit(50),
         ],
       );
       final logs = res.documents.map((e) => e.data).toList();

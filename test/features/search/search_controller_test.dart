@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:myapp/features/search/controllers/search_controller.dart';
 import 'package:myapp/features/search/services/search_service.dart';
 import 'package:myapp/features/profile/models/user_profile.dart';
@@ -8,7 +8,7 @@ import 'package:myapp/features/profile/models/user_profile.dart';
 class FakeSearchService extends SearchService {
   FakeSearchService()
       : super(
-          databases: Databases(Client()),
+          databases: aw.Databases(aw.Client()),
           databaseId: 'db',
           profilesCollection: 'profiles',
           namesHistoryCollection: 'history',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:myapp/features/social_feed/controllers/comments_controller.dart';
 import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
@@ -36,7 +36,7 @@ void main() {
 class _FakeService extends FeedService {
   _FakeService()
       : super(
-          databases: Databases(Client()),
+          databases: aw.Databases(aw.Client()),
           databaseId: 'db',
           postsCollectionId: 'posts',
           commentsCollectionId: 'comments',

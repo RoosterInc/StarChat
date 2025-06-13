@@ -4,7 +4,8 @@ import 'bindings/auth_binding.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
+import 'dart:ui' as ui;
 import 'controllers/auth_controller.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
@@ -61,7 +62,7 @@ Future<void> main() async {
   final feedService = FeedService(
     databases: auth.databases,
     storage: auth.storage,
-    functions: Functions(auth.client),
+    functions: aw.Functions(auth.client),
     databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
     postsCollectionId:
         dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
@@ -234,11 +235,11 @@ class MyApp extends StatelessWidget {
             ),
           ],
           locale: Get.deviceLocale,
-          fallbackLocale: const Locale('en', 'US'),
+          fallbackLocale: const ui.Locale('en', 'US'),
           translations: AppTranslations(),
           supportedLocales: const [
-            Locale('en', 'US'),
-            Locale('es', 'ES'),
+            ui.Locale('en', 'US'),
+            ui.Locale('es', 'ES'),
             // Add other supported locales here
           ],
           localizationsDelegates: const [

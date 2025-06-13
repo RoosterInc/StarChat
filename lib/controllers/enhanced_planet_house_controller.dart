@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -106,10 +106,10 @@ class EnhancedPlanetHouseController extends GetxController {
       databaseId: dbId,
       collectionId: positionsCollectionId,
       queries: [
-        Query.equal('date_key', dateKey),
-        Query.equal('rashi_id', _currentRashiId.value),
-        Query.orderAsc('planet'),
-        Query.limit(25),
+        aw.Query.equal('date_key', dateKey),
+        aw.Query.equal('rashi_id', _currentRashiId.value),
+        aw.Query.orderAsc('planet'),
+        aw.Query.limit(25),
       ],
     );
 
@@ -118,10 +118,10 @@ class EnhancedPlanetHouseController extends GetxController {
         databaseId: dbId,
         collectionId: positionsCollectionId,
         queries: [
-          Query.orderDesc('date_key'),
-          Query.equal('rashi_id', _currentRashiId.value),
-          Query.orderAsc('planet'),
-          Query.limit(25),
+          aw.Query.orderDesc('date_key'),
+          aw.Query.equal('rashi_id', _currentRashiId.value),
+          aw.Query.orderAsc('planet'),
+          aw.Query.limit(25),
         ],
       );
       if (positionsResult.documents.isEmpty) {
@@ -163,9 +163,9 @@ class EnhancedPlanetHouseController extends GetxController {
           databaseId: dbId,
           collectionId: interpretationsCollectionId,
           queries: [
-            Query.equal('ascendant_sign', _currentAscendantSign.value),
-            Query.orderAsc('planet'),
-            Query.limit(50),
+            aw.Query.equal('ascendant_sign', _currentAscendantSign.value),
+            aw.Query.orderAsc('planet'),
+            aw.Query.limit(50),
           ],
         );
 

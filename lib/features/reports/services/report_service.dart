@@ -1,8 +1,8 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:get/get.dart';
 
 class ReportService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String collectionId;
 
@@ -22,7 +22,7 @@ class ReportService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: collectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'reporter_id': reporterId,
           'reported_post_id': postId,
@@ -47,7 +47,7 @@ class ReportService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: collectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'reporter_id': reporterId,
           'reported_user_id': reportedUserId,

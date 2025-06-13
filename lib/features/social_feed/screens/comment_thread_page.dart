@@ -5,7 +5,7 @@ import '../widgets/comment_thread.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../../../controllers/auth_controller.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 
@@ -30,7 +30,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
       final res = await auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: profilesId,
-        queries: [Query.equal('username', name)],
+        queries: [aw.Query.equal('username', name)],
       );
       if (res.documents.isNotEmpty) {
         await Get.find<NotificationService>().createNotification(

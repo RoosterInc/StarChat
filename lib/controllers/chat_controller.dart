@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/logger.dart';
 import '../utils/modern_color_palettes.dart';
@@ -47,9 +47,9 @@ class ChatController extends GetxController {
       databaseId: dbId,
       collectionId: collectionId,
       queries: [
-        Query.equal('type', 'rashi'),
-        Query.equal('is_active', true),
-        Query.orderAsc('order'),
+        aw.Query.equal('type', 'rashi'),
+        aw.Query.equal('is_active', true),
+        aw.Query.orderAsc('order'),
       ],
     );
     final rooms =
@@ -165,7 +165,7 @@ class GlassmorphismUtils {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

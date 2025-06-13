@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:hive/hive.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
@@ -83,7 +83,7 @@ class FeedController extends GetxController {
     String username,
     String content,
     String roomId,
-    File image,
+    io.File image,
     List<String> hashtags,
     List<String> mentions,
   ) async {

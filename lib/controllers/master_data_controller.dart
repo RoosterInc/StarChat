@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/logger.dart';
@@ -57,7 +57,7 @@ class MasterDataController extends GetxController {
       final rashiResult = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: 'rasi_master',
-        queries: [Query.orderAsc('name'), Query.limit(50)],
+        queries: [aw.Query.orderAsc('name'), aw.Query.limit(50)],
       );
       final rashiList =
           rashiResult.documents.map((e) => RashiOption.fromJson(e.data)).toList();
@@ -67,7 +67,7 @@ class MasterDataController extends GetxController {
       final nakshatraResult = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: 'nakshatra_master',
-        queries: [Query.orderAsc('name'), Query.limit(100)],
+        queries: [aw.Query.orderAsc('name'), aw.Query.limit(100)],
       );
       final nakshatraList = nakshatraResult.documents
           .map((e) => NakshatraOption.fromJson(e.data))

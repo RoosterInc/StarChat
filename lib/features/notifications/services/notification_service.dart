@@ -1,4 +1,4 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_app_badge/flutter_app_badge.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -6,7 +6,7 @@ import '../models/notification_model.dart';
 import '../../../controllers/auth_controller.dart';
 
 class NotificationService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String collectionId;
   final Box notificationBox = Hive.box('notifications');
@@ -17,7 +17,7 @@ class NotificationService {
     final doc = await databases.createDocument(
       databaseId: databaseId,
       collectionId: collectionId,
-      documentId: ID.unique(),
+      documentId: aw.ID.unique(),
       data: {
         'user_id': userId,
         'actor_id': actorId,
@@ -39,7 +39,7 @@ class NotificationService {
       final res = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: collectionId,
-        queries: [Query.equal('user_id', userId), Query.orderDesc('created_at'), Query.limit(50)],
+        queries: [aw.Query.equal('user_id', userId), aw.Query.orderDesc('created_at'), aw.Query.limit(50)],
       );
       final notifications = res.documents.map((e) => NotificationModel.fromJson(e.data)).toList();
       await notificationBox.put('notifications_$userId', notifications.map((e) => e.toJson()).toList());

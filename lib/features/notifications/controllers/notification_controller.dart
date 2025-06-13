@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_app_badge/flutter_app_badge.dart';
 
 import '../../../controllers/auth_controller.dart';
@@ -11,8 +11,8 @@ class NotificationController extends GetxController {
   final unreadCount = 0.obs;
   final isLoading = false.obs;
 
-  Realtime? _realtime;
-  RealtimeSubscription? _subscription;
+  aw.Realtime? _realtime;
+  aw.RealtimeSubscription? _subscription;
 
   @override
   void onInit() {
@@ -21,7 +21,7 @@ class NotificationController extends GetxController {
     final service = Get.find<NotificationService>();
     final userId = auth?.userId;
     if (auth != null && userId != null) {
-      _realtime = Realtime(auth.client);
+      _realtime = aw.Realtime(auth.client);
       _subscription = _realtime!.subscribe([
         'databases.${service.databaseId}.collections.${service.collectionId}.documents'
       ]);

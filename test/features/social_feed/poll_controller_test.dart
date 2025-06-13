@@ -2,12 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/features/social_feed/controllers/poll_controller.dart';
 import 'package:myapp/features/social_feed/models/poll_vote.dart';
 import 'package:myapp/features/social_feed/services/poll_service.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 
 class FakePollService extends PollService {
   FakePollService()
       : super(
-          databases: Databases(Client()),
+          databases: aw.Databases(aw.Client()),
           databaseId: 'db',
           pollsCollectionId: 'polls',
           votesCollectionId: 'votes',

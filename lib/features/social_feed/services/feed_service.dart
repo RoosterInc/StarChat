@@ -1,7 +1,7 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
@@ -12,9 +12,9 @@ import '../models/post_repost.dart';
 import '../../bookmarks/models/bookmark.dart';
 
 class FeedService {
-  final Databases databases;
-  final Storage storage;
-  final Functions functions;
+  final aw.Databases databases;
+  final aw.Storage storage;
+  final aw.Functions functions;
   final String databaseId;
   final String postsCollectionId;
   final String commentsCollectionId;
@@ -53,11 +53,11 @@ class FeedService {
       {List<String> blockedIds = const []}) async {
     try {
       final queries = [
-        Query.equal('room_id', roomId),
-        Query.orderDesc('\$createdAt'),
+        aw.Query.equal('room_id', roomId),
+        aw.Query.orderDesc('\$createdAt'),
       ];
       for (final id in blockedIds) {
-        queries.add(Query.notEqual('user_id', id));
+        queries.add(aw.Query.notEqual('user_id', id));
       }
       final res = await databases.listDocuments(
         databaseId: databaseId,
@@ -92,8 +92,8 @@ class FeedService {
       databaseId: databaseId,
       collectionId: postsCollectionId,
       queries: [
-        Query.search('hashtags', tag),
-        Query.orderDesc('\$createdAt'),
+        aw.Query.search('hashtags', tag),
+        aw.Query.orderDesc('\$createdAt'),
       ],
     );
     return res.documents
@@ -107,7 +107,7 @@ class FeedService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: postsCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: post.toJson(),
       );
     } catch (_) {
@@ -119,7 +119,7 @@ class FeedService {
     }
   }
 
-  Future<String> uploadImage(File image) async {
+  Future<String> uploadImage(io.File image) async {
     final compressed = await FlutterImageCompress.compressAndGetFile(
       image.path,
       '${image.path}_compressed.jpg',
@@ -127,8 +127,8 @@ class FeedService {
     );
     final result = await storage.createFile(
       bucketId: 'post_images',
-      fileId: ID.unique(),
-      file: InputFile.fromPath(path: compressed!.path),
+      fileId: aw.ID.unique(),
+      file: aw.InputFile.fromPath(path: compressed!.path),
     );
     return '${storage.client.endPoint}/storage/buckets/post_images/files/${result.\$id}/view?project=${storage.client.config['project']}';
   }
@@ -138,7 +138,7 @@ class FeedService {
     String username,
     String content,
     String? roomId,
-    File image,
+    io.File image,
     {List<String> hashtags = const [], List<String> mentions = const []},
   ) async {
     try {
@@ -222,8 +222,8 @@ class FeedService {
         databaseId: databaseId,
         collectionId: commentsCollectionId,
         queries: [
-          Query.equal('post_id', postId),
-          Query.orderAsc('\$createdAt'),
+          aw.Query.equal('post_id', postId),
+          aw.Query.orderAsc('\$createdAt'),
         ],
       );
       final comments = res.documents
@@ -254,7 +254,7 @@ class FeedService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: commentsCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: comment.toJson(),
       );
     } catch (_) {
@@ -275,7 +275,7 @@ class FeedService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: likesCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: like,
       );
     } catch (_) {
@@ -292,7 +292,7 @@ class FeedService {
       final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: repostsCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: repost,
       );
       return doc.$id;
@@ -320,13 +320,13 @@ class FeedService {
         final existing = await databases.listDocuments(
           databaseId: databaseId,
           collectionId: 'hashtags',
-          queries: [Query.equal('hashtag', tag)],
+          queries: [aw.Query.equal('hashtag', tag)],
         );
         if (existing.documents.isEmpty) {
           await databases.createDocument(
             databaseId: databaseId,
             collectionId: 'hashtags',
-            documentId: ID.unique(),
+            documentId: aw.ID.unique(),
             data: {
               'hashtag': tag,
               'usage_count': 1,
@@ -361,8 +361,8 @@ class FeedService {
       databaseId: databaseId,
       collectionId: likesCollectionId,
       queries: [
-        Query.equal('item_id', itemId),
-        Query.equal('user_id', userId),
+        aw.Query.equal('item_id', itemId),
+        aw.Query.equal('user_id', userId),
       ],
     );
     if (res.documents.isEmpty) return null;
@@ -406,8 +406,8 @@ class FeedService {
       databaseId: databaseId,
       collectionId: repostsCollectionId,
       queries: [
-        Query.equal('post_id', postId),
-        Query.equal('user_id', userId),
+        aw.Query.equal('post_id', postId),
+        aw.Query.equal('user_id', userId),
       ],
     );
     if (res.documents.isEmpty) return null;
@@ -528,7 +528,7 @@ class FeedService {
       }
       try {
         if (item['action'] == 'post_with_image') {
-          final file = File(item['image_path']);
+          final file = io.File(item['image_path']);
           await createPostWithImage(
             item['user_id'],
             item['username'],
@@ -549,7 +549,7 @@ class FeedService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: bookmarksCollectionId,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'user_id': userId,
           'post_id': postId,
@@ -624,8 +624,8 @@ class FeedService {
       databaseId: databaseId,
       collectionId: bookmarksCollectionId,
       queries: [
-        Query.equal('post_id', postId),
-        Query.equal('user_id', userId),
+        aw.Query.equal('post_id', postId),
+        aw.Query.equal('user_id', userId),
       ],
     );
     if (res.documents.isEmpty) return null;
@@ -638,8 +638,8 @@ class FeedService {
         databaseId: databaseId,
         collectionId: bookmarksCollectionId,
         queries: [
-          Query.equal('user_id', userId),
-          Query.orderDesc('created_at'),
+          aw.Query.equal('user_id', userId),
+          aw.Query.orderDesc('created_at'),
         ],
       );
       final items = <BookmarkedPost>[];
@@ -685,7 +685,7 @@ class FeedService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: 'follows',
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: follow,
       );
     } catch (_) {
@@ -698,20 +698,20 @@ class FeedService {
   }
 
   Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
-    final queries = <String>[Query.limit(20)];
+    final queries = <String>[aw.Query.limit(20)];
     if (roomId != null) {
-      queries.add(Query.equal('room_id', roomId));
+      queries.add(aw.Query.equal('room_id', roomId));
     }
     switch (sortType) {
       case 'chronological':
       case 'most-recent':
-        queries.add(Query.orderDesc('\$createdAt'));
+        queries.add(aw.Query.orderDesc('\$createdAt'));
         break;
       case 'most-commented':
-        queries.add(Query.orderDesc('comment_count'));
+        queries.add(aw.Query.orderDesc('comment_count'));
         break;
       case 'most-liked':
-        queries.add(Query.orderDesc('like_count'));
+        queries.add(aw.Query.orderDesc('like_count'));
         break;
     }
     final key = 'posts_${sortType}_${roomId ?? 'home'}';

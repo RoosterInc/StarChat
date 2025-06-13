@@ -5,7 +5,7 @@ import 'package:myapp/features/social_feed/widgets/post_card.dart';
 import 'package:get/get.dart';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/models/post_repost.dart';
@@ -77,9 +77,9 @@ void main() {
 class FakeFeedService extends FeedService {
   FakeFeedService()
       : super(
-          databases: Databases(Client()),
-          storage: Storage(Client()),
-          functions: Functions(Client()),
+          databases: aw.Databases(aw.Client()),
+          storage: aw.Storage(aw.Client()),
+          functions: aw.Functions(aw.Client()),
           databaseId: 'db',
           postsCollectionId: 'posts',
           commentsCollectionId: 'comments',

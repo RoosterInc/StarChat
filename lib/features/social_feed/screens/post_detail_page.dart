@@ -7,7 +7,7 @@ import '../models/post_comment.dart';
 import '../../../controllers/auth_controller.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/post_card.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 
@@ -32,7 +32,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       final res = await auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: profilesId,
-        queries: [Query.equal('username', name)],
+        queries: [aw.Query.equal('username', name)],
       );
       if (res.documents.isNotEmpty) {
         await Get.find<NotificationService>().createNotification(

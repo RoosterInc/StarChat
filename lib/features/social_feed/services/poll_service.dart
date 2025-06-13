@@ -1,9 +1,9 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import '../models/poll.dart';
 import '../models/poll_vote.dart';
 
 class PollService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String pollsCollectionId;
   final String votesCollectionId;
@@ -19,7 +19,7 @@ class PollService {
     final res = await databases.createDocument(
       databaseId: databaseId,
       collectionId: pollsCollectionId,
-      documentId: ID.unique(),
+      documentId: aw.ID.unique(),
       data: poll.toJson(),
     );
     return Poll.fromJson(res.data);
@@ -29,7 +29,7 @@ class PollService {
     await databases.createDocument(
       databaseId: databaseId,
       collectionId: votesCollectionId,
-      documentId: ID.unique(),
+      documentId: aw.ID.unique(),
       data: vote.toJson(),
     );
   }
@@ -38,7 +38,7 @@ class PollService {
     final res = await databases.listDocuments(
       databaseId: databaseId,
       collectionId: votesCollectionId,
-      queries: [Query.equal('poll_id', pollId)],
+      queries: [aw.Query.equal('poll_id', pollId)],
     );
     return res.documents.map((e) => PollVote.fromJson(e.data)).toList();
   }

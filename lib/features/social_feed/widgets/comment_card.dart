@@ -7,7 +7,7 @@ import '../screens/comment_thread_page.dart';
 import 'reaction_bar.dart';
 import '../../../controllers/auth_controller.dart';
 import 'package:flutter/gestures.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
@@ -50,7 +50,7 @@ class CommentCard extends StatelessWidget {
     final res = await auth.databases.listDocuments(
       databaseId: dbId,
       collectionId: profilesId,
-      queries: [Query.equal('username', username)],
+      queries: [aw.Query.equal('username', username)],
     );
     if (res.documents.isNotEmpty) {
       Get.to(

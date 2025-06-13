@@ -1,14 +1,13 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
-import 'package:appwrite/appwrite.dart' as aw;
 
-class OfflineDatabases extends Databases {
-  OfflineDatabases() : super(Client());
+class OfflineDatabases extends aw.Databases {
+  OfflineDatabases() : super(aw.Client());
 
   @override
   Future<DocumentList> listDocuments({
@@ -31,14 +30,14 @@ class OfflineDatabases extends Databases {
   }
 }
 
-class OfflineStorage extends Storage {
-  OfflineStorage() : super(Client());
+class OfflineStorage extends aw.Storage {
+  OfflineStorage() : super(aw.Client());
 
   @override
-  Future<File> createFile({
+  Future<io.File> createFile({
     required String bucketId,
     required String fileId,
-    required InputFile file,
+    required aw.InputFile file,
     List<String>? permissions,
     bool? onProgress,
   }) {
@@ -47,11 +46,11 @@ class OfflineStorage extends Storage {
 }
 
 void main() {
-  late Directory dir;
+  late io.Directory dir;
   late FeedService service;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp();
+    dir = await io.Directory.systemTemp.createTemp();
     Hive.init(dir.path);
     await Hive.openBox('posts');
     await Hive.openBox('comments');
@@ -101,7 +100,7 @@ void main() {
   });
 
   test('createPostWithImage queues when offline', () async {
-    final file = File('${dir.path}/img.jpg');
+    final file = io.File('${dir.path}/img.jpg');
     await file.writeAsBytes(List.filled(10, 0));
     await service.createPostWithImage('u', 'name', 'hi', 'room', file,
         hashtags: ['tag']);

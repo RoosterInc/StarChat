@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:myapp/features/profile/controllers/profile_controller.dart';
 import 'package:myapp/features/profile/services/profile_service.dart';
 import 'package:myapp/features/profile/models/user_profile.dart';
@@ -9,7 +9,7 @@ import 'package:myapp/controllers/auth_controller.dart';
 class FakeProfileService extends ProfileService {
   FakeProfileService()
       : super(
-          databases: Databases(Client()),
+          databases: aw.Databases(aw.Client()),
           databaseId: 'db',
           profilesCollection: 'profiles',
           followsCollection: 'follows',

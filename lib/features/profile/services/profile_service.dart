@@ -1,11 +1,11 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/user_profile.dart';
 import '../../notifications/services/notification_service.dart';
 
 class ProfileService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String profilesCollection;
   final String followsCollection;
@@ -27,7 +27,7 @@ class ProfileService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: followsCollection,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'follower_id': followerId,
           'followed_id': followedId,
@@ -64,7 +64,7 @@ class ProfileService {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: blocksCollection,
-        documentId: ID.unique(),
+        documentId: aw.ID.unique(),
         data: {
           'blocker_id': blockerId,
           'blocked_id': blockedId,
@@ -83,8 +83,8 @@ class ProfileService {
         databaseId: databaseId,
         collectionId: blocksCollection,
         queries: [
-          Query.equal('blocker_id', blockerId),
-          Query.equal('blocked_id', blockedId),
+          aw.Query.equal('blocker_id', blockerId),
+          aw.Query.equal('blocked_id', blockedId),
         ],
       );
       for (final doc in res.documents) {

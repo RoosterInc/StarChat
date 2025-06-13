@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
@@ -10,9 +10,9 @@ import 'package:myapp/features/social_feed/services/feed_service.dart';
 class FakeFeedService extends FeedService {
   FakeFeedService()
       : super(
-          databases: Databases(Client()),
-          storage: Storage(Client()),
-          functions: Functions(Client()),
+          databases: aw.Databases(aw.Client()),
+          storage: aw.Storage(aw.Client()),
+          functions: aw.Functions(aw.Client()),
           databaseId: 'db',
           postsCollectionId: 'posts',
           commentsCollectionId: 'comments',

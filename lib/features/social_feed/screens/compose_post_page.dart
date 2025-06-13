@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../design_system/modern_ui_system.dart';
@@ -34,7 +34,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
       final res = await auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: profilesId,
-        queries: [Query.equal('username', name)],
+        queries: [aw.Query.equal('username', name)],
       );
       if (res.documents.isNotEmpty) {
         await Get.find<NotificationService>().createNotification(
@@ -89,7 +89,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
               Padding(
                 padding: EdgeInsets.only(top: DesignTokens.sm(context)),
                 child: Image.file(
-                  File(_image!.path),
+                  io.File(_image!.path),
                   height: 150,
                 ),
               ),
@@ -142,7 +142,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         uname,
                         _controller.text,
                         widget.roomId,
-                        File(_image!.path),
+                        io.File(_image!.path),
                         hashtags: tags,
                         mentions: mentions,
                       );

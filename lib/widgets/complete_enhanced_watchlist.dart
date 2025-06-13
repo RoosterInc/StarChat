@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/modern_ui_system.dart';
@@ -285,7 +285,7 @@ class WatchlistController extends GetxController {
       final rashiResult = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: 'rasi_master',
-        queries: [Query.orderAsc('name'), Query.limit(50)],
+        queries: [aw.Query.orderAsc('name'), aw.Query.limit(50)],
       );
 
       final rashiList = rashiResult.documents
@@ -300,7 +300,7 @@ class WatchlistController extends GetxController {
       final nakshatraResult = await _auth.databases.listDocuments(
         databaseId: dbId,
         collectionId: 'nakshatra_master',
-        queries: [Query.orderAsc('name'), Query.limit(100)],
+        queries: [aw.Query.orderAsc('name'), aw.Query.limit(100)],
       );
 
       final nakshatraList = nakshatraResult.documents
@@ -430,8 +430,8 @@ class WatchlistController extends GetxController {
         databaseId: dbId,
         collectionId: collectionId,
         queries: [
-          Query.equal('userId', uid),
-          Query.orderAsc('order'),
+          aw.Query.equal('userId', uid),
+          aw.Query.orderAsc('order'),
         ],
       );
 
@@ -490,9 +490,9 @@ class WatchlistController extends GetxController {
     for (int i = 0; i < _items.length; i++) {
       final item = _items[i];
       try {
-        List<String> queries = [Query.equal('is_active', true)];
+        List<String> queries = [aw.Query.equal('is_active', true)];
         if (item.combinationKey != null) {
-          queries.add(Query.equal('combination_key', item.combinationKey!));
+          queries.add(aw.Query.equal('combination_key', item.combinationKey!));
         } else if (item.chatRoomId != null) {
           final doc = await _auth.databases.getDocument(
             databaseId: dbId,
@@ -506,10 +506,10 @@ class WatchlistController extends GetxController {
           continue;
         } else {
           if (item.rashiId != null) {
-            queries.add(Query.equal('rashi_id', item.rashiId!));
+            queries.add(aw.Query.equal('rashi_id', item.rashiId!));
           }
           if (item.nakshatraId != null) {
-            queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+            queries.add(aw.Query.equal('nakshatra_id', item.nakshatraId!));
           }
         }
         final res = await _auth.databases.listDocuments(
@@ -545,16 +545,16 @@ class WatchlistController extends GetxController {
 
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
     try {
-      final queries = <String>[Query.equal('is_active', true)];
+      final queries = <String>[aw.Query.equal('is_active', true)];
 
       if (item.combinationKey != null) {
-        queries.add(Query.equal('combination_key', item.combinationKey!));
+        queries.add(aw.Query.equal('combination_key', item.combinationKey!));
       } else {
         if (item.rashiId != null) {
-          queries.add(Query.equal('rashi_id', item.rashiId!));
+          queries.add(aw.Query.equal('rashi_id', item.rashiId!));
         }
         if (item.nakshatraId != null) {
-          queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+          queries.add(aw.Query.equal('nakshatra_id', item.nakshatraId!));
         }
       }
 
@@ -624,7 +624,7 @@ class WatchlistController extends GetxController {
 
       final items = [
         WatchlistItem(
-          id: ID.unique(),
+          id: aw.ID.unique(),
           name: rashi.name,
           count: 0,
           color: color,
@@ -632,7 +632,7 @@ class WatchlistController extends GetxController {
           watchlistKey: rashi.rashiId,
         ),
         WatchlistItem(
-          id: ID.unique(),
+          id: aw.ID.unique(),
           name: nakshatra.name,
           count: 0,
           color: color,
@@ -640,7 +640,7 @@ class WatchlistController extends GetxController {
           watchlistKey: nakshatra.nakshatraId,
         ),
         WatchlistItem(
-          id: ID.unique(),
+          id: aw.ID.unique(),
           name: '${rashi.name}-${nakshatra.name}',
           count: 0,
           color: color,
@@ -670,9 +670,9 @@ class WatchlistController extends GetxController {
                 order: _items.length - items.length + i,
                 updatedAt: DateTime.now()),
             permissions: [
-              Permission.read(Role.user(uid)),
-              Permission.update(Role.user(uid)),
-              Permission.delete(Role.user(uid)),
+              aw.Permission.read(aw.Role.user(uid)),
+              aw.Permission.update(aw.Role.user(uid)),
+              aw.Permission.delete(aw.Role.user(uid)),
             ],
           );
           logger.i('Successfully added item ${it.name} to database');
@@ -711,9 +711,9 @@ class WatchlistController extends GetxController {
           documentId: item.id,
           data: _itemDataForDb(item, uid, updatedAt: DateTime.now()),
           permissions: [
-            Permission.read(Role.user(uid)),
-            Permission.update(Role.user(uid)),
-            Permission.delete(Role.user(uid)),
+            aw.Permission.read(aw.Role.user(uid)),
+            aw.Permission.update(aw.Role.user(uid)),
+            aw.Permission.delete(aw.Role.user(uid)),
           ],
         );
       } catch (e, st) {
@@ -781,9 +781,9 @@ class WatchlistController extends GetxController {
                 data: _itemDataForDb(item, uid,
                     order: itemIndex, updatedAt: DateTime.now()),
                 permissions: [
-                  Permission.read(Role.user(uid)),
-                  Permission.update(Role.user(uid)),
-                  Permission.delete(Role.user(uid)),
+                  aw.Permission.read(aw.Role.user(uid)),
+                  aw.Permission.update(aw.Role.user(uid)),
+                  aw.Permission.delete(aw.Role.user(uid)),
                 ],
               );
             } catch (e, st) {
@@ -913,7 +913,7 @@ class WatchlistController extends GetxController {
         final docs = await _auth.databases.listDocuments(
           databaseId: dbId,
           collectionId: collectionId,
-          queries: [Query.equal('userId', uid)],
+          queries: [aw.Query.equal('userId', uid)],
         );
         for (final doc in docs.documents) {
           await _auth.databases.deleteDocument(

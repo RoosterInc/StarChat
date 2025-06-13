@@ -7,7 +7,7 @@ import '../features/social_feed/services/feed_service.dart';
 import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
 import '../features/bookmarks/controllers/bookmark_controller.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 
 class FeedBinding extends Bindings {
   @override
@@ -18,7 +18,7 @@ class FeedBinding extends Bindings {
       final service = FeedService(
         databases: auth.databases,
         storage: auth.storage,
-        functions: Functions(auth.client),
+        functions: aw.Functions(auth.client),
         databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
         postsCollectionId:
             dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',

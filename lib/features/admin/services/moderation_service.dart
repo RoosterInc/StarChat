@@ -1,8 +1,8 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import '../models/report.dart';
 
 class ModerationService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
 
   ModerationService({required this.databases, required this.databaseId});
@@ -11,7 +11,7 @@ class ModerationService {
     final result = await databases.listDocuments(
       databaseId: databaseId,
       collectionId: 'user_reports',
-      queries: [Query.equal('status', 'pending')],
+      queries: [aw.Query.equal('status', 'pending')],
     );
     return result.documents.map((doc) => Report.fromJson(doc.data)).toList();
   }

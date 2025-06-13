@@ -1,10 +1,10 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:appwrite/models.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../profile/models/user_profile.dart';
 
 class SearchService {
-  final Databases databases;
+  final aw.Databases databases;
   final String databaseId;
   final String profilesCollection;
   final String namesHistoryCollection;
@@ -22,12 +22,12 @@ class SearchService {
       final profiles = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: profilesCollection,
-        queries: [Query.search('username', query), Query.search('bio', query)],
+        queries: [aw.Query.search('username', query), aw.Query.search('bio', query)],
       );
       final history = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: namesHistoryCollection,
-        queries: [Query.search('username', query)],
+        queries: [aw.Query.search('username', query)],
       );
       final userIds = history.documents.map((d) => d.data['userId']).toSet();
       List<Document> additional = [];
@@ -35,7 +35,7 @@ class SearchService {
         additional = (await databases.listDocuments(
           databaseId: databaseId,
           collectionId: profilesCollection,
-          queries: [Query.equal('\$id', userIds.toList())],
+          queries: [aw.Query.equal('\$id', userIds.toList())],
         )).documents;
       }
       final all = [...profiles.documents, ...additional]

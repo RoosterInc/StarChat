@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'dart:ui' as ui;
 import '../../models/chat_room.dart';
 import '../../design_system/modern_ui_system.dart';
 
@@ -99,7 +99,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(

@@ -1,14 +1,14 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:myapp/features/social_feed/controllers/comments_controller.dart';
 
-class OfflineDatabases extends Databases {
-  OfflineDatabases() : super(Client());
+class OfflineDatabases extends aw.Databases {
+  OfflineDatabases() : super(aw.Client());
 
   @override
   Future<DocumentList> listDocuments({
@@ -32,11 +32,11 @@ class OfflineDatabases extends Databases {
 }
 
 void main() {
-  late Directory dir;
+  late io.Directory dir;
   late CommentsController controller;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp();
+    dir = await io.Directory.systemTemp.createTemp();
     Hive.init(dir.path);
     await Hive.openBox('posts');
     await Hive.openBox('comments');
@@ -44,8 +44,8 @@ void main() {
     await Hive.openBox('preferences');
     final service = FeedService(
       databases: OfflineDatabases(),
-      storage: Storage(Client()),
-      functions: Functions(Client()),
+      storage: aw.Storage(aw.Client()),
+      functions: aw.Functions(aw.Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,7 +17,7 @@ class ProfilePage extends GetView<AuthController> {
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
     final cropped = await ImageCropper().cropImage(sourcePath: picked.path);
-    final file = File(cropped?.path ?? picked.path);
+    final file = io.File(cropped?.path ?? picked.path);
     await controller.updateProfilePicture(file);
   }
 

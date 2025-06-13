@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart' as aw;
 import 'package:myapp/features/notifications/controllers/notification_controller.dart';
 import 'package:myapp/features/notifications/services/notification_service.dart';
 import 'package:myapp/features/notifications/models/notification_model.dart';
@@ -8,7 +8,7 @@ import 'package:myapp/features/notifications/models/notification_model.dart';
 class FakeNotificationService extends NotificationService {
   FakeNotificationService()
       : super(
-          databases: Databases(Client()),
+          databases: aw.Databases(aw.Client()),
           databaseId: 'db',
           collectionId: 'notifications',
         );
