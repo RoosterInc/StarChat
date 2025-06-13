@@ -17,10 +17,7 @@ class CommentCard extends StatelessWidget {
     final auth = Get.find<AuthController>();
     void handleLike() => controller.toggleLikeComment(comment.id);
     void handleReply() {
-      final thread = controller.comments
-          .where((c) => c.id == comment.id || c.parentId == comment.id)
-          .toList();
-      Get.to(() => CommentThreadPage(thread: thread));
+      Get.to(() => CommentThreadPage(rootComment: comment));
     }
 
     Future<void> handleDelete() async {
