@@ -32,8 +32,9 @@ class SplashScreen extends GetView<SplashController> {
               SizedBox(height: DesignTokens.lg(context)),
               Obx(() {
                 if (controller.isLoading.value) {
-                  return const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  return SkeletonLoader(
+                    height: DesignTokens.xl(context),
+                    width: DesignTokens.xl(context),
                   );
                 }
                 return Padding(

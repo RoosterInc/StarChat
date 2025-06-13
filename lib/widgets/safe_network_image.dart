@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../design_system/modern_ui_system.dart';
 
 class SafeNetworkImage extends StatelessWidget {
   final String? imageUrl;
@@ -31,8 +32,11 @@ class SafeNetworkImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (context, url) =>
-          placeholder ?? const CircularProgressIndicator(),
+      placeholder: (context, url) => placeholder ??
+          SkeletonLoader(
+            height: DesignTokens.xl(context),
+            width: DesignTokens.xl(context),
+          ),
       errorWidget: (context, url, error) {
         debugPrint('SafeNetworkImage error: $error for URL: $url');
         return errorWidget ?? const Icon(Icons.person);
