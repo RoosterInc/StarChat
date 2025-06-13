@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'features/social_feed/services/feed_service.dart';
+import 'controllers/auth_controller.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
 import 'pages/set_username_page.dart';
@@ -39,11 +40,36 @@ Future<void> main() async {
   await Hive.openBox('posts');
   await Hive.openBox('comments');
   await Hive.openBox('action_queue');
-  await dotenv.load(fileName: '.env');
-  await Hive.initFlutter();
   await Hive.openBox('profiles');
   await Hive.openBox('notifications');
   await Hive.openBox('follows');
+  await dotenv.load(fileName: '.env');
+
+  AuthBinding().dependencies();
+  final auth = Get.find<AuthController>();
+  final feedService = FeedService(
+    databases: auth.databases,
+    databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+    postsCollectionId:
+        dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
+    commentsCollectionId:
+        dotenv.env['POST_COMMENTS_COLLECTION_ID'] ?? 'post_comments',
+    likesCollectionId:
+        dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
+    repostsCollectionId:
+        dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
+    connectivity: Connectivity(),
+  );
+  Get.put(feedService, permanent: true);
+  if (await Connectivity().checkConnectivity() != ConnectivityResult.none) {
+    await feedService.syncQueuedActions();
+  }
+  Connectivity().onConnectivityChanged.listen((result) async {
+    if (result != ConnectivityResult.none) {
+      await feedService.syncQueuedActions();
+    }
+  });
+
   runApp(const MyApp());
 }
 

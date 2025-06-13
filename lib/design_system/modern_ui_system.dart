@@ -1054,6 +1054,23 @@ extension PaddingExtensions on double {
   EdgeInsets get bottom => EdgeInsets.only(bottom: this);
 }
 
+extension ColorTokens on BuildContext {
+  /// Border color used for glassmorphism effects
+  Color get glassBorderColor => colorScheme.onSurface.withOpacity(
+        colorScheme.brightness == Brightness.dark ? 0.15 : 0.25,
+      );
+
+  /// High overlay color for glassmorphism backgrounds
+  Color get glassOverlayHigh => colorScheme.onSurface.withOpacity(
+        colorScheme.brightness == Brightness.dark ? 0.1 : 0.25,
+      );
+
+  /// Low overlay color for glassmorphism backgrounds
+  Color get glassOverlayLow => colorScheme.onSurface.withOpacity(
+        colorScheme.brightness == Brightness.dark ? 0.05 : 0.15,
+      );
+}
+
 // ============================================================================
 // EXAMPLE USAGE DEMONSTRATION
 // ============================================================================
