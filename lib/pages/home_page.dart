@@ -10,6 +10,7 @@ import '../widgets/enhanced_sliver_app_bar.dart';
 import '../widgets/simple_astrologer_fab.dart';
 import '../controllers/user_type_controller.dart';
 import '../controllers/enhanced_planet_house_controller.dart';
+import '../features/notifications/controllers/notification_controller.dart';
 import '../widgets/safe_network_image.dart';
 import '../widgets/complete_enhanced_watchlist.dart';
 import '../controllers/chat_controller.dart';
