@@ -218,7 +218,7 @@ class AuthController extends GetxController {
 
     // Check network connectivity
     ConnectivityResult connectivityResult =
-        await Connectivity().checkConnectivity();
+        (await Connectivity().checkConnectivity()) as ConnectivityResult;
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
         'no_internet'.tr,
@@ -308,7 +308,7 @@ class AuthController extends GetxController {
 
     // Check network connectivity
     ConnectivityResult connectivityResult =
-        await Connectivity().checkConnectivity();
+        (await Connectivity().checkConnectivity()) as ConnectivityResult;
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
         'no_internet'.tr,

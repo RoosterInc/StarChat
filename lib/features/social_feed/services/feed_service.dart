@@ -47,7 +47,7 @@ class FeedService {
       if (result != ConnectivityResult.none) {
         await syncQueuedActions();
       }
-    });
+    } as void Function(List<ConnectivityResult> event)?);
   }
 
   Future<List<FeedPost>> getPosts(String roomId,
