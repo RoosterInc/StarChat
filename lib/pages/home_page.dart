@@ -14,6 +14,8 @@ import '../controllers/chat_controller.dart';
 import '../widgets/chat/modern_chat_room_card.dart';
 import '../widgets/responsive_sizes.dart';
 import 'empty_page.dart';
+import '../features/search/screens/search_page.dart';
+import '../features/notifications/screens/notification_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -98,9 +100,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     final pages = [
       _buildHomeBody(context),
+      const SearchPage(),
       const EmptyPage(),
-      const EmptyPage(),
-      const EmptyPage(),
+      const NotificationPage(),
       const EmptyPage(),
       const EmptyPage(),
     ];
