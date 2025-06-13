@@ -59,6 +59,16 @@ class _FakeService extends FeedService {
   }
 
   @override
+  Future<void> likeComment(String commentId, String userId) async {
+    likes[commentId] = '1';
+  }
+
+  @override
+  Future<void> unlikeComment(String likeId) async {
+    likes.removeWhere((key, value) => value == likeId);
+  }
+
+  @override
   Future<PostLike?> getUserLike(String itemId, String userId) async {
     final id = likes[itemId];
     return id == null

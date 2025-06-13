@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../design_system/modern_ui_system.dart';
 
+enum ReactionTarget { post, comment, repost }
+
 class ReactionBar extends StatelessWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
@@ -11,6 +13,7 @@ class ReactionBar extends StatelessWidget {
   final int likeCount;
   final int commentCount;
   final int repostCount;
+  final ReactionTarget target;
   const ReactionBar({
     super.key,
     this.onLike,
@@ -22,6 +25,7 @@ class ReactionBar extends StatelessWidget {
     this.likeCount = 0,
     this.commentCount = 0,
     this.repostCount = 0,
+    this.target = ReactionTarget.post,
   });
 
   @override
@@ -50,34 +54,66 @@ class ReactionBar extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        buildItem(
-          icon: Icon(
-            isLiked ? Icons.favorite : Icons.favorite_border,
-            color: isLiked
-                ? context.colorScheme.primary
-                : context.theme.iconTheme.color,
-          ),
-          label: isLiked ? 'Unlike post' : 'Like post',
-          onTap: onLike,
-          count: likeCount,
+    String targetName() {
+      switch (target) {
+        case ReactionTarget.comment:
+          return 'comment';
+        case ReactionTarget.repost:
+          return 'repost';
+        case ReactionTarget.post:
+        default:
+          return 'post';
+      }
+    }
+
+    final children = <Widget>[];
+
+    void addItem(Widget item) {
+      if (children.isNotEmpty) {
+        children.add(SizedBox(width: DesignTokens.sm(context)));
+      }
+      children.add(item);
+    }
+
+    addItem(
+      buildItem(
+        icon: Icon(
+          isLiked ? Icons.favorite : Icons.favorite_border,
+          color:
+              isLiked ? context.colorScheme.primary : context.theme.iconTheme.color,
         ),
-        SizedBox(width: DesignTokens.sm(context)),
+        label: isLiked ? 'Unlike ${targetName()}' : 'Like ${targetName()}',
+        onTap: onLike,
+        count: likeCount,
+      ),
+    );
+
+    if (onComment != null || commentCount > 0) {
+      addItem(
         buildItem(
           icon: const Icon(Icons.mode_comment_outlined),
-          label: 'Comment on post',
+          label: target == ReactionTarget.comment
+              ? 'Reply to comment'
+              : 'Comment on ${targetName()}',
           onTap: onComment,
           count: commentCount,
         ),
-        SizedBox(width: DesignTokens.sm(context)),
+      );
+    }
+
+    if ((onRepost != null || repostCount > 0) && target == ReactionTarget.post) {
+      addItem(
         buildItem(
           icon: const Icon(Icons.repeat),
           label: 'Repost',
           onTap: onRepost,
           count: repostCount,
         ),
-        SizedBox(width: DesignTokens.sm(context)),
+      );
+    }
+
+    if (onBookmark != null) {
+      addItem(
         buildItem(
           icon: Icon(
             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
@@ -88,7 +124,9 @@ class ReactionBar extends StatelessWidget {
           label: isBookmarked ? 'Remove bookmark' : 'Bookmark',
           onTap: onBookmark,
         ),
-      ],
-    );
+      );
+    }
+
+    return Row(children: children);
   }
 }

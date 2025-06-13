@@ -75,6 +75,7 @@ class CommentCard extends StatelessWidget {
             ReactionBar(
               onLike: handleLike,
               onComment: handleReply,
+              target: ReactionTarget.comment,
               isLiked: controller.isCommentLiked(comment.id),
               likeCount: controller.commentLikeCount(comment.id),
               commentCount: comment.replyCount,
