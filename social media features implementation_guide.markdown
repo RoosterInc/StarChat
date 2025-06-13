@@ -59,7 +59,7 @@ This guide provides detailed instructions  to implement 26 social media features
      flutter_image_compress: ^2.0.4
      cached_network_image: ^3.2.3
      share_plus: ^7.0.0
-     url_validator: ^1.0.0
+     validators: ^3.0.0
      html_unescape: ^2.0.0
      flutter_app_badge: ^0.1.0
      flutter_local_notifications: ^15.0.0
@@ -348,7 +348,7 @@ Below are instructions for implementing the 26 features, mapped to your project 
 
 - **Production Tips**:
 
-  - Validate URLs with `url_validator`.
+  - Validate URLs with `validators`.
   - Cache metadata in Hive.
   - Display previews in `post_card.dart` with clickable links.
   - Use HTTPS-only URLs.
