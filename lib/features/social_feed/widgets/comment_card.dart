@@ -5,6 +5,7 @@ import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../screens/comment_thread_page.dart';
 import 'reaction_bar.dart';
+import '../../../controllers/auth_controller.dart';
 
 class CommentCard extends StatelessWidget {
   final PostComment comment;
@@ -13,6 +14,7 @@ class CommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<CommentsController>();
+    final auth = Get.find<AuthController>();
     void handleLike() => controller.toggleLikeComment(comment.id);
     void handleReply() {
       final thread = controller.comments
@@ -21,15 +23,51 @@ class CommentCard extends StatelessWidget {
       Get.to(() => CommentThreadPage(thread: thread));
     }
 
+    Future<void> handleDelete() async {
+      final confirm = await Get.dialog<bool>(
+        AlertDialog(
+          title: const Text('Delete Comment?'),
+          content: const Text('This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Get.back(result: true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) {
+        await controller.deleteComment(comment.id);
+      }
+    }
+
     return Obx(
       () => GlassmorphicCard(
         padding: DesignTokens.sm(context).all,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              comment.username,
-              style: Theme.of(context).textTheme.bodyMedium,
+            Row(
+              children: [
+                Text(
+                  comment.username,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const Spacer(),
+                if (auth.userId == comment.userId)
+                  AccessibilityWrapper(
+                    semanticLabel: 'Delete comment',
+                    isButton: true,
+                    child: AnimatedButton(
+                      onPressed: handleDelete,
+                      child: const Text('Delete'),
+                    ),
+                  ),
+              ],
             ),
             SizedBox(height: DesignTokens.xs(context)),
             Text(comment.content),

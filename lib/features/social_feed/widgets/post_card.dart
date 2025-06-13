@@ -63,6 +63,28 @@ class PostCard extends StatelessWidget {
     controller.toggleBookmark(userId, post.id);
   }
 
+  Future<void> _handleDelete(FeedController controller) async {
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Delete Post?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await controller.deletePost(post.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<FeedController>();
@@ -89,7 +111,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 const Spacer(),
-                if (auth.userId == post.userId)
+                if (auth.userId == post.userId) ...[
                   AccessibilityWrapper(
                     semanticLabel: 'Edit post',
                     isButton: true,
@@ -100,6 +122,16 @@ class PostCard extends StatelessWidget {
                       child: const Text('Edit'),
                     ),
                   ),
+                  SizedBox(width: DesignTokens.xs(context)),
+                  AccessibilityWrapper(
+                    semanticLabel: 'Delete post',
+                    isButton: true,
+                    child: AnimatedButton(
+                      onPressed: () => _handleDelete(controller),
+                      child: const Text('Delete'),
+                    ),
+                  ),
+                ],
               ],
             ),
             SizedBox(height: DesignTokens.sm(context)),

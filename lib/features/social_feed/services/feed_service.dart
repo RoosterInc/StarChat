@@ -59,8 +59,10 @@ class FeedService {
           Query.orderDesc('\$createdAt'),
         ],
       );
-      final posts =
-          res.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+      final posts = res.documents
+          .map((e) => FeedPost.fromJson(e.data))
+          .where((p) => !p.isDeleted)
+          .toList();
       final cache = posts
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
@@ -75,6 +77,7 @@ class FeedService {
             return ts == null || ts.isAfter(expiry);
           })
           .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
+          .where((p) => !p.isDeleted)
           .toList();
     }
   }
@@ -88,7 +91,10 @@ class FeedService {
         Query.orderDesc('\$createdAt'),
       ],
     );
-    return res.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+    return res.documents
+        .map((e) => FeedPost.fromJson(e.data))
+        .where((p) => !p.isDeleted)
+        .toList();
   }
 
   Future<void> createPost(FeedPost post) async {
@@ -211,8 +217,10 @@ class FeedService {
           Query.orderAsc('\$createdAt'),
         ],
       );
-      final comments =
-          res.documents.map((e) => PostComment.fromJson(e.data)).toList();
+      final comments = res.documents
+          .map((e) => PostComment.fromJson(e.data))
+          .where((c) => !c.isDeleted)
+          .toList();
       final cache = comments
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
@@ -227,6 +235,7 @@ class FeedService {
             return ts == null || ts.isAfter(expiry);
           })
           .map((e) => PostComment.fromJson(Map<String, dynamic>.from(e)))
+          .where((c) => !c.isDeleted)
           .toList();
     }
   }
@@ -517,6 +526,52 @@ class FeedService {
       collectionId: bookmarksCollectionId,
       documentId: bookmarkId,
     );
+  }
+
+  Future<void> deletePost(String postId) async {
+    try {
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {'is_deleted': true},
+      );
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == postId || p['\$id'] == postId,
+        );
+        if (index != -1) {
+          cached[index] = {...cached[index], 'is_deleted': true};
+          await postsBox.put(key, cached);
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to delete post: $e');
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: commentsCollectionId,
+        documentId: commentId,
+        data: {'is_deleted': true},
+      );
+      for (final key in commentsBox.keys) {
+        final cached = commentsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (c) => c['id'] == commentId || c['\$id'] == commentId,
+        );
+        if (index != -1) {
+          cached[index] = {...cached[index], 'is_deleted': true};
+          await commentsBox.put(key, cached);
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to delete comment: $e');
+    }
   }
 
   Future<Bookmark?> getUserBookmark(String postId, String userId) async {

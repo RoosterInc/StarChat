@@ -168,6 +168,15 @@ class FeedController extends GetxController {
     }
   }
 
+  Future<void> deletePost(String postId) async {
+    await service.deletePost(postId);
+    _posts.removeWhere((p) => p.id == postId);
+    _likedIds.remove(postId);
+    _repostedIds.remove(postId);
+    _likeCounts.remove(postId);
+    _repostCounts.remove(postId);
+  }
+
   bool isPostLiked(String postId) => _likedIds.containsKey(postId);
   bool isPostReposted(String postId) => _repostedIds.containsKey(postId);
   int postLikeCount(String postId) => _likeCounts[postId] ?? 0;
