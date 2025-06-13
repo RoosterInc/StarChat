@@ -13,7 +13,7 @@
         {
           "key": "username",
           "type": "string",
-          "required": false,
+          "required": true,
           "array": false,
           "size": 50
         },
@@ -45,7 +45,7 @@
           "array": false
         },
         {
-          "key": "UpdateAt",
+          "key": "updatedAt",
           "type": "datetime",
           "required": false,
           "array": false
@@ -58,208 +58,54 @@
           "size": 1000
         },
         {
-          "key": "userType",
+          "key": "bio",
           "type": "string",
           "required": false,
           "array": false,
-          "size": 15,
-          "default": "Regular User"
+          "size": 200
         },
         {
-          "key": "subscriptionType",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 20,
-          "default": "Free"
-        },
-        {
-          "key": "birth_rashi",
+          "key": "location",
           "type": "string",
           "required": false,
           "array": false,
           "size": 100
         },
         {
-          "key": "birth_nakshatra",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 100
-        },
-        {
-          "key": "birth_details",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 1000
-        },
-        {
-          "key": "chat_settings",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 1000
-        },
-        {
-          "key": "last_daily_reset",
-          "type": "datetime",
-          "required": false,
-          "array": false
-        },
-        {
-          "key": "joined_rooms",
+          "key": "website",
           "type": "string",
           "required": false,
           "array": false,
           "size": 255
         },
         {
-          "key": "blocked_users",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 255
-        },
-        {
-          "key": "chat_reputation",
-          "type": "integer",
-          "required": false,
-          "array": false,
-          "default": 100
-        },
-        {
-          "key": "total_messages",
-          "type": "integer",
-          "required": false,
-          "array": false,
-          "default": 0
-        },
-        {
-          "key": "daily_messages",
-          "type": "integer",
-          "required": false,
-          "array": false,
-          "default": 0
-        },
-        {
-          "key": "is_chat_verified",
+          "key": "is_private",
           "type": "boolean",
           "required": false,
           "array": false,
           "default": false
-        },
-        {
-          "key": "rashi_id",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 15
         }
       ],
       "indexes": [
         {
           "key": "username_unique",
           "type": "unique",
-          "attributes": [
-            "username"
-          ]
+          "attributes": ["username"]
         },
         {
           "key": "userId_index",
           "type": "key",
-          "attributes": [
-            "userId"
-          ]
-        }
-      ],
-      "seed_data": []
-    },
-    {
-      "collection_id": "watchlist_items",
-      "name": "Watchlist Items",
-      "permissions": [
-        "create(\"users\")",
-        "read(\"users\")",
-        "update(\"users\")",
-        "delete(\"users\")"
-      ],
-      "attributes": [
-        {
-          "key": "userId",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 255
+          "attributes": ["userId"]
         },
         {
-          "key": "name",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 255
+          "key": "search_username",
+          "type": "fulltext",
+          "attributes": ["username"]
         },
         {
-          "key": "count",
-          "type": "integer",
-          "required": false,
-          "array": false,
-          "default": 0
-        },
-        {
-          "key": "colorValue",
-          "type": "integer",
-          "required": false,
-          "array": false
-        },
-        {
-          "key": "iconCodePoint",
-          "type": "integer",
-          "required": false,
-          "array": false
-        },
-        {
-          "key": "iconFontFamily",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 255,
-          "default": "MaterialIcons"
-        },
-        {
-          "key": "order",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "createdAt",
-          "type": "datetime",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "watchlistKey",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 20
-        }
-      ],
-      "indexes": [
-        {
-          "key": "user_order",
-          "type": "key",
-          "attributes": [
-            "userId",
-            "order"
-          ]
+          "key": "search_bio",
+          "type": "fulltext",
+          "attributes": ["bio"]
         }
       ],
       "seed_data": []
@@ -289,7 +135,21 @@
         {
           "key": "reported_user_id",
           "type": "string",
-          "required": true,
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "reported_post_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "reported_comment_id",
+          "type": "string",
+          "required": false,
           "array": false,
           "size": 255
         },
@@ -303,7 +163,7 @@
         {
           "key": "room_id",
           "type": "string",
-          "required": true,
+          "required": false,
           "array": false,
           "size": 255
         },
@@ -354,18 +214,22 @@
         {
           "key": "pending_reports",
           "type": "key",
-          "attributes": [
-            "status",
-            "$createdAt"
-          ]
+          "attributes": ["status", "$createdAt"]
         },
         {
           "key": "user_reports",
           "type": "key",
-          "attributes": [
-            "reported_user_id",
-            "$createdAt"
-          ]
+          "attributes": ["reported_user_id", "$createdAt"]
+        },
+        {
+          "key": "post_reports",
+          "type": "key",
+          "attributes": ["reported_post_id", "$createdAt"]
+        },
+        {
+          "key": "comment_reports",
+          "type": "key",
+          "attributes": ["reported_comment_id", "$createdAt"]
         }
       ],
       "seed_data": []
@@ -406,17 +270,12 @@
         {
           "key": "blocker_blocked_unique",
           "type": "unique",
-          "attributes": [
-            "blocker_id",
-            "blocked_id"
-          ]
+          "attributes": ["blocker_id", "blocked_id"]
         },
         {
           "key": "user_blocked_list",
           "type": "key",
-          "attributes": [
-            "blocker_id"
-          ]
+          "attributes": ["blocker_id"]
         }
       ],
       "seed_data": []
@@ -485,25 +344,17 @@
         {
           "key": "user_unique",
           "type": "unique",
-          "attributes": [
-            "user_id"
-          ]
+          "attributes": ["user_id"]
         },
         {
           "key": "room_online_users",
           "type": "key",
-          "attributes": [
-            "current_room_id",
-            "status"
-          ]
+          "attributes": ["current_room_id", "status"]
         },
         {
           "key": "typing_users",
           "type": "key",
-          "attributes": [
-            "typing_in_room",
-            "is_typing"
-          ]
+          "attributes": ["typing_in_room", "is_typing"]
         }
       ],
       "seed_data": []
@@ -613,18 +464,12 @@
         {
           "key": "room_messages_desc",
           "type": "key",
-          "attributes": [
-            "room_id",
-            "$createdAt"
-          ]
+          "attributes": ["room_id", "$createdAt"]
         },
         {
           "key": "user_messages",
           "type": "key",
-          "attributes": [
-            "user_id",
-            "$createdAt"
-          ]
+          "attributes": ["user_id", "$createdAt"]
         }
       ],
       "seed_data": []
@@ -691,17 +536,12 @@
         {
           "key": "room_user_unique",
           "type": "unique",
-          "attributes": [
-            "room_id",
-            "user_id"
-          ]
+          "attributes": ["room_id", "user_id"]
         },
         {
           "key": "user_rooms",
           "type": "key",
-          "attributes": [
-            "user_id"
-          ]
+          "attributes": ["user_id"]
         }
       ],
       "seed_data": []
@@ -736,34 +576,6 @@
           "required": true,
           "array": false,
           "size": 50
-        },
-        {
-          "key": "rashi_id",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "nakshatra_id",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "combination_key",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 100
-        },
-        {
-          "key": "symbol",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 10
         },
         {
           "key": "description",
@@ -852,532 +664,22 @@
         {
           "key": "type_category_order",
           "type": "key",
-          "attributes": [
-            "type",
-            "category",
-            "order"
-          ]
+          "attributes": ["type", "category", "order"]
         },
         {
           "key": "active_category",
           "type": "key",
-          "attributes": [
-            "is_active",
-            "category"
-          ]
-        },
-        {
-          "key": "combination_lookup",
-          "type": "key",
-          "attributes": [
-            "combination_key"
-          ]
+          "attributes": ["is_active", "category"]
         },
         {
           "key": "name_search",
           "type": "key",
-          "attributes": [
-            "name_lc"
-          ]
+          "attributes": ["name_lc"]
         },
         {
           "key": "room_latest",
           "type": "key",
-          "attributes": [
-            "$createdAt"
-          ]
-        }
-      ],
-      "seed_data": []
-    },
-    {
-      "collection_id": "planetary_positions",
-      "name": "Planetary Positions",
-      "permissions": [
-        "create(\"users\")",
-        "read(\"users\")",
-        "update(\"users\")",
-        "delete(\"users\")"
-      ],
-      "attributes": [
-        {
-          "key": "date",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        },
-        {
-          "key": "date_key",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 8
-        },
-        {
-          "key": "year",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "month",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "day",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "zodiac_sign",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 12
-        },
-        {
-          "key": "zodiac_symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 2
-        },
-        {
-          "key": "zodiac_index",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "planet",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        },
-        {
-          "key": "planet_sign",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 12
-        },
-        {
-          "key": "planet_symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 2
-        },
-        {
-          "key": "planet_degrees",
-          "type": "double",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "planet_longitude",
-          "type": "double",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "relationship",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 15
-        },
-        {
-          "key": "influence",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "aspect",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 20
-        },
-        {
-          "key": "degrees_from_user_sign",
-          "type": "double",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "description",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 500
-        },
-        {
-          "key": "generated_at",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 50
-        }
-      ],
-      "indexes": [
-        {
-          "key": "zodiac_sign",
-          "type": "key",
-          "attributes": [
-            "zodiac_sign"
-          ]
-        },
-        {
-          "key": "date_key",
-          "type": "key",
-          "attributes": [
-            "date_key"
-          ]
-        },
-        {
-          "key": "zodiac_date_compound",
-          "type": "key",
-          "attributes": [
-            "zodiac_sign",
-            "date_key"
-          ]
-        },
-        {
-          "key": "zodiac_year_month",
-          "type": "key",
-          "attributes": [
-            "zodiac_sign",
-            "year",
-            "month"
-          ]
-        },
-        {
-          "key": "planet",
-          "type": "key",
-          "attributes": [
-            "planet"
-          ]
-        }
-      ],
-      "seed_data": []
-    },
-    {
-      "collection_id": "planet_house_interpretations",
-      "name": "Planet House Interpretations",
-      "permissions": [
-        "create(\"users\")",
-        "read(\"users\")",
-        "update(\"users\")"
-      ],
-      "attributes": [
-        {
-          "key": "ascendant_sign",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 12
-        },
-        {
-          "key": "ascendant_symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 2
-        },
-        {
-          "key": "ascendant_index",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "planet",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        },
-        {
-          "key": "house_number",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "house_name",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 15
-        },
-        {
-          "key": "house_area",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 25
-        },
-        {
-          "key": "overall_effect",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 20
-        },
-        {
-          "key": "strength_rating",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "positive_effects",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 1000
-        },
-        {
-          "key": "negative_effects",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 1000
-        },
-        {
-          "key": "career_impact",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "relationship_impact",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "health_impact",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "financial_impact",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "spiritual_impact",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "remedies",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 500
-        },
-        {
-          "key": "lucky_colors",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 100
-        },
-        {
-          "key": "lucky_numbers",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "lucky_days",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 100
-        },
-        {
-          "key": "gemstone_recommendation",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 100
-        },
-        {
-          "key": "mantra_recommendation",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 200
-        },
-        {
-          "key": "summary",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 500
-        },
-        {
-          "key": "generated_at",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 15
-        }
-      ],
-      "indexes": [
-        {
-          "key": "ascendant_sign",
-          "type": "key",
-          "attributes": [
-            "ascendant_sign"
-          ]
-        },
-        {
-          "key": "planet",
-          "type": "key",
-          "attributes": [
-            "planet"
-          ]
-        },
-        {
-          "key": "house_number",
-          "type": "key",
-          "attributes": [
-            "house_number"
-          ]
-        }
-      ],
-      "seed_data": []
-    },
-    {
-      "collection_id": "rasi_master",
-      "name": "Rasi Master",
-      "permissions": [
-        "read(\"any\")",
-        "create(\"users\")",
-        "update(\"users\")",
-        "delete(\"users\")"
-      ],
-      "attributes": [
-        {
-          "key": "name",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 200
-        },
-        {
-          "key": "rashi_id",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        }
-      ],
-      "indexes": [
-        {
-          "key": "rashi_id_unique",
-          "type": "unique",
-          "attributes": [
-            "rashi_id"
-          ]
-        },
-        {
-          "key": "name_search",
-          "type": "key",
-          "attributes": [
-            "name"
-          ]
-        }
-      ],
-      "seed_data": []
-    },
-    {
-      "collection_id": "nakshatra_master",
-      "name": "Nakshatra Master",
-      "permissions": [
-        "read(\"any\")",
-        "create(\"users\")",
-        "update(\"users\")",
-        "delete(\"users\")"
-      ],
-      "attributes": [
-        {
-          "key": "name",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 200
-        },
-        {
-          "key": "nakshatra_id",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "rashi_id",
-          "type": "string",
-          "required": false,
-          "array": false,
-          "size": 50
-        },
-        {
-          "key": "symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        }
-      ],
-      "indexes": [
-        {
-          "key": "nakshatra_id_unique",
-          "type": "unique",
-          "attributes": [
-            "nakshatra_id"
-          ]
-        },
-        {
-          "key": "name_search",
-          "type": "key",
-          "attributes": [
-            "name"
-          ]
-        },
-        {
-          "key": "rashi_id_lookup",
-          "type": "key",
-          "attributes": [
-            "rashi_id"
-          ]
+          "attributes": ["$createdAt"]
         }
       ],
       "seed_data": []
@@ -1415,7 +717,7 @@
           "default": "Free"
         },
         {
-          "key": "UpdateAt",
+          "key": "updatedAt",
           "type": "datetime",
           "required": false,
           "array": false
@@ -1431,16 +733,12 @@
         {
           "key": "username_unique",
           "type": "unique",
-          "attributes": [
-            "username"
-          ]
+          "attributes": ["username"]
         },
         {
           "key": "userId_index",
           "type": "key",
-          "attributes": [
-            "userId"
-          ]
+          "attributes": ["userId"]
         }
       ],
       "seed_data": []
@@ -1498,11 +796,32 @@
           "size": 255
         },
         {
-          "key": "poll_id",
+          "key": "link_url",
           "type": "string",
           "required": false,
           "array": false,
           "size": 255
+        },
+        {
+          "key": "link_metadata",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 1000
+        },
+        {
+          "key": "hashtags",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 50
+        },
+        {
+          "key": "mentions",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 50
         },
         {
           "key": "like_count",
@@ -1533,6 +852,19 @@
           "default": 0
         },
         {
+          "key": "is_edited",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false
+        },
+        {
+          "key": "edited_at",
+          "type": "datetime",
+          "required": false,
+          "array": false
+        },
+        {
           "key": "is_deleted",
           "type": "boolean",
           "required": false,
@@ -1544,18 +876,27 @@
         {
           "key": "room_posts_desc",
           "type": "key",
-          "attributes": [
-            "room_id",
-            "$createdAt"
-          ]
+          "attributes": ["room_id", "$createdAt"]
         },
         {
           "key": "user_posts",
           "type": "key",
-          "attributes": [
-            "user_id",
-            "$createdAt"
-          ]
+          "attributes": ["user_id", "$createdAt"]
+        },
+        {
+          "key": "hashtag_search",
+          "type": "key", 
+          "attributes": ["hashtags"]
+        },
+        {
+          "key": "most_liked",
+          "type": "key",
+          "attributes": ["like_count", "$createdAt"]
+        },
+        {
+          "key": "most_commented",
+          "type": "key",
+          "attributes": ["comment_count", "$createdAt"]
         }
       ],
       "seed_data": []
@@ -1658,18 +999,12 @@
         {
           "key": "post_comments_desc",
           "type": "key",
-          "attributes": [
-            "post_id",
-            "$createdAt"
-          ]
+          "attributes": ["post_id", "$createdAt"]
         },
         {
           "key": "comment_thread",
           "type": "key",
-          "attributes": [
-            "parent_id",
-            "$createdAt"
-          ]
+          "attributes": ["parent_id", "$createdAt"]
         }
       ],
       "seed_data": []
@@ -1709,10 +1044,7 @@
         {
           "key": "user_item_unique",
           "type": "unique",
-          "attributes": [
-            "user_id",
-            "item_id"
-          ]
+          "attributes": ["user_id", "item_id"]
         }
       ],
       "seed_data": []
@@ -1752,86 +1084,69 @@
         {
           "key": "user_post_unique",
           "type": "unique",
-          "attributes": [
-            "user_id",
-            "post_id"
-          ]
+          "attributes": ["user_id", "post_id"]
         }
       ],
       "seed_data": []
     },
     {
-      "collection_id": "polls",
-      "name": "Polls",
+      "collection_id": "hashtags",
+      "name": "Hashtags",
       "permissions": [
         "read(\"any\")",
         "create(\"users\")",
-        "update(\"users\")",
-        "delete(\"users\")"
+        "update(\"users\")"
       ],
       "attributes": [
         {
-          "key": "post_id",
+          "key": "hashtag",
           "type": "string",
           "required": true,
           "array": false,
-          "size": 255
+          "size": 50
         },
         {
-          "key": "question",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 255
-        },
-        {
-          "key": "options",
-          "type": "string",
-          "required": true,
-          "array": true,
-          "size": 255
-        },
-        {
-          "key": "expires_at",
-          "type": "datetime",
-          "required": false,
-          "array": false
-        },
-        {
-          "key": "total_votes",
+          "key": "usage_count",
           "type": "integer",
           "required": false,
           "array": false,
-          "default": 0
+          "default": 1
+        },
+        {
+          "key": "last_used_at",
+          "type": "datetime",
+          "required": true,
+          "array": false
         }
       ],
       "indexes": [
         {
-          "key": "poll_post_unique",
+          "key": "hashtag_unique",
           "type": "unique",
-          "attributes": [
-            "post_id"
-          ]
+          "attributes": ["hashtag"]
+        },
+        {
+          "key": "trending_hashtags",
+          "type": "key",
+          "attributes": ["usage_count", "last_used_at"]
+        },
+        {
+          "key": "hashtag_search",
+          "type": "fulltext",
+          "attributes": ["hashtag"]
         }
       ],
       "seed_data": []
     },
     {
-      "collection_id": "poll_votes",
-      "name": "Poll Votes",
+      "collection_id": "bookmarks",
+      "name": "Bookmarks",
       "permissions": [
-        "create(\"users\")",
         "read(\"users\")",
+        "create(\"users\")",
         "delete(\"users\")"
       ],
       "attributes": [
-        {
-          "key": "poll_id",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 255
-        },
         {
           "key": "user_id",
           "type": "string",
@@ -1840,228 +1155,203 @@
           "size": 255
         },
         {
-          "key": "option_index",
-          "type": "integer",
+          "key": "post_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "created_at",
+          "type": "datetime",
           "required": true,
           "array": false
         }
       ],
       "indexes": [
         {
-          "key": "vote_unique",
+          "key": "user_post_unique",
           "type": "unique",
-          "attributes": [
-            "poll_id",
-            "user_id"
-          ]
+          "attributes": ["user_id", "post_id"]
+        },
+        {
+          "key": "user_bookmarks",
+          "type": "key",
+          "attributes": ["user_id", "created_at"]
         }
       ],
       "seed_data": []
     },
     {
-      "collection_id": "planetary_houses",
-      "name": "Planetary Houses",
+      "collection_id": "follows",
+      "name": "Follows",
       "permissions": [
+        "read(\"any\")",
         "create(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "follower_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "followed_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "created_at",
+          "type": "datetime",
+          "required": true,
+          "array": false
+        }
+      ],
+      "indexes": [
+        {
+          "key": "follower_followed_unique",
+          "type": "unique",
+          "attributes": ["follower_id", "followed_id"]
+        },
+        {
+          "key": "follower_list",
+          "type": "key",
+          "attributes": ["follower_id"]
+        },
+        {
+          "key": "followed_list",
+          "type": "key",
+          "attributes": ["followed_id"]
+        }
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "activity_logs",
+      "name": "Activity Logs",
+      "permissions": [
         "read(\"users\")",
+        "create(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "user_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "action_type",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50
+        },
+        {
+          "key": "item_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "item_type",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 50
+        },
+        {
+          "key": "created_at",
+          "type": "datetime",
+          "required": true,
+          "array": false
+        }
+      ],
+      "indexes": [
+        {
+          "key": "user_activity",
+          "type": "key",
+          "attributes": ["user_id", "created_at"]
+        }
+      ],
+      "seed_data": []
+    },
+    {
+      "collection_id": "notifications",
+      "name": "Notifications",
+      "permissions": [
+        "read(\"users\")",
+        "create(\"users\")",
         "update(\"users\")",
         "delete(\"users\")"
       ],
       "attributes": [
         {
-          "key": "date",
+          "key": "user_id",
           "type": "string",
           "required": true,
           "array": false,
-          "size": 10
+          "size": 255
         },
         {
-          "key": "date_key",
+          "key": "actor_id",
           "type": "string",
           "required": true,
           "array": false,
-          "size": 8
+          "size": 255
         },
         {
-          "key": "year",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "month",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "day",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "ascendant_sign",
+          "key": "action_type",
           "type": "string",
           "required": true,
           "array": false,
-          "size": 12
+          "size": 50
         },
         {
-          "key": "ascendant_symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 2
-        },
-        {
-          "key": "ascendant_index",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "planet",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 10
-        },
-        {
-          "key": "planet_sign",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 12
-        },
-        {
-          "key": "planet_sign_symbol",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 2
-        },
-        {
-          "key": "planet_degrees",
-          "type": "double",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "planet_longitude",
-          "type": "double",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "house_number",
-          "type": "integer",
-          "required": true,
-          "array": false
-        },
-        {
-          "key": "house_name",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 15
-        },
-        {
-          "key": "house_area",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 25
-        },
-        {
-          "key": "house_meaning",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 200
-        },
-        {
-          "key": "description",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 300
-        },
-        {
-          "key": "generated_at",
-          "type": "string",
-          "required": true,
-          "array": false,
-          "size": 15
-        },
-        {
-          "key": "rashi_id",
+          "key": "item_id",
           "type": "string",
           "required": false,
           "array": false,
-          "size": 15
+          "size": 255
+        },
+        {
+          "key": "item_type",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 50
+        },
+        {
+          "key": "is_read",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false
+        },
+        {
+          "key": "created_at",
+          "type": "datetime",
+          "required": true,
+          "array": false
         }
       ],
       "indexes": [
         {
-          "key": "ascendant_sign",
+          "key": "user_notifications",
           "type": "key",
-          "attributes": [
-            "ascendant_sign"
-          ]
+          "attributes": ["user_id", "created_at"]
         },
         {
-          "key": "date_key",
+          "key": "unread_notifications",
           "type": "key",
-          "attributes": [
-            "date_key"
-          ]
-        },
-        {
-          "key": "ascendant_date_compound",
-          "type": "key",
-          "attributes": [
-            "ascendant_sign",
-            "date_key"
-          ]
-        },
-        {
-          "key": "planet_index",
-          "type": "key",
-          "attributes": [
-            "planet"
-          ]
-        },
-        {
-          "key": "house_number_index",
-          "type": "key",
-          "attributes": [
-            "house_number"
-          ]
-        },
-        {
-          "key": "year_month_index",
-          "type": "key",
-          "attributes": [
-            "year",
-            "month"
-          ]
-        },
-        {
-          "key": "planet_ascendant_compound",
-          "type": "key",
-          "attributes": [
-            "planet",
-            "ascendant_sign"
-          ]
-        },
-        {
-          "key": "house_ascendant_compound",
-          "type": "key",
-          "attributes": [
-            "house_number",
-            "ascendant_sign"
-          ]
+          "attributes": ["user_id", "is_read", "created_at"]
         }
       ],
       "seed_data": []
