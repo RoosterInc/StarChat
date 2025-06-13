@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:io';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
 import '../models/feed_post.dart';
 import '../models/post_comment.dart';
 import '../models/post_like.dart';
@@ -12,11 +13,13 @@ import '../models/post_repost.dart';
 class FeedService {
   final Databases databases;
   final Storage storage;
+  final Functions functions;
   final String databaseId;
   final String postsCollectionId;
   final String commentsCollectionId;
   final String likesCollectionId;
   final String repostsCollectionId;
+  final String linkMetadataFunctionId;
   final Connectivity connectivity;
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
@@ -26,12 +29,14 @@ class FeedService {
   FeedService({
     required this.databases,
     required this.storage,
+    required this.functions,
     required this.databaseId,
     required this.postsCollectionId,
     required this.commentsCollectionId,
     required this.likesCollectionId,
     required this.repostsCollectionId,
     required this.connectivity,
+    required this.linkMetadataFunctionId,
   }) {
     connectivity.onConnectivityChanged.listen((result) async {
       if (result != ConnectivityResult.none) {
@@ -130,6 +135,47 @@ class FeedService {
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Image post queued for syncing');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchLinkMetadata(String url) async {
+    final result = await functions.createExecution(
+      functionId: linkMetadataFunctionId,
+      data: jsonEncode({'url': url}),
+    );
+    return jsonDecode(result.response) as Map<String, dynamic>;
+  }
+
+  Future<void> createPostWithLink(
+    String userId,
+    String username,
+    String content,
+    String? roomId,
+    String linkUrl,
+  ) async {
+    try {
+      final metadata = await fetchLinkMetadata(linkUrl);
+      final post = FeedPost(
+        id: DateTime.now().toIso8601String(),
+        roomId: roomId ?? '',
+        userId: userId,
+        username: username,
+        content: content,
+        linkUrl: linkUrl,
+        linkMetadata: metadata,
+      );
+      await createPost(post);
+    } catch (_) {
+      await queueBox.add({
+        'action': 'post_with_link',
+        'user_id': userId,
+        'username': username,
+        'content': content,
+        'room_id': roomId,
+        'link_url': linkUrl,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+      Get.snackbar('Offline', 'Link post queued for syncing');
     }
   }
 
@@ -277,6 +323,15 @@ class FeedService {
           case 'post':
             await createPost(FeedPost.fromJson(
                 Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'post_with_link':
+            await createPostWithLink(
+              item['user_id'],
+              item['username'],
+              item['content'],
+              item['room_id'],
+              item['link_url'],
+            );
             break;
           case 'follow':
             await createFollow(Map<String, dynamic>.from(item['data']));

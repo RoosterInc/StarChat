@@ -68,6 +68,35 @@ class FeedController extends GetxController {
     );
   }
 
+  Future<void> createPostWithLink(
+    String userId,
+    String username,
+    String content,
+    String roomId,
+    String linkUrl,
+    Map<String, dynamic> metadata,
+  ) async {
+    await service.createPostWithLink(
+      userId,
+      username,
+      content,
+      roomId,
+      linkUrl,
+    );
+    _posts.insert(
+      0,
+      FeedPost(
+        id: DateTime.now().toIso8601String(),
+        roomId: roomId,
+        userId: userId,
+        username: username,
+        content: content,
+        linkUrl: linkUrl,
+        linkMetadata: metadata,
+      ),
+    );
+  }
+
   Future<void> toggleLikePost(String postId) async {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;

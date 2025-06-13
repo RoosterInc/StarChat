@@ -43,12 +43,15 @@ void main() {
     await Hive.openBox('action_queue');
     final service = FeedService(
       databases: OfflineDatabases(),
+      storage: Storage(Client()),
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
       likesCollectionId: 'likes',
       repostsCollectionId: 'reposts',
       connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
     );
     controller = CommentsController(service: service);
   });

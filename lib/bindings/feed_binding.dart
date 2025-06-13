@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../features/social_feed/services/feed_service.dart';
 import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
+import 'package:appwrite/appwrite.dart';
 
 class FeedBinding extends Bindings {
   @override
@@ -15,6 +16,8 @@ class FeedBinding extends Bindings {
     if (!Get.isRegistered<FeedController>()) {
       final service = FeedService(
         databases: auth.databases,
+        storage: auth.storage,
+        functions: Functions(auth.client),
         databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
         postsCollectionId:
             dotenv.env['FEED_POSTS_COLLECTION_ID'] ?? 'feed_posts',
@@ -25,6 +28,8 @@ class FeedBinding extends Bindings {
         repostsCollectionId:
             dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
         connectivity: Get.put(Connectivity()),
+        linkMetadataFunctionId:
+            dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
       );
       Get.put<FeedController>(FeedController(service: service));
     }
