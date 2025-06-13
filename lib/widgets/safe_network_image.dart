@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../utils/logger.dart';
 
 class SafeNetworkImage extends StatelessWidget {
   final String? imageUrl;
@@ -34,13 +35,13 @@ class SafeNetworkImage extends StatelessWidget {
       placeholder: (context, url) =>
           placeholder ?? const CircularProgressIndicator(),
       errorWidget: (context, url, error) {
-        debugPrint('SafeNetworkImage error: $error for URL: $url');
+        logger.e('SafeNetworkImage error: $error for URL: $url');
         return errorWidget ?? const Icon(Icons.person);
       },
       fadeInDuration: const Duration(milliseconds: 200),
       fadeOutDuration: const Duration(milliseconds: 200),
       errorListener: (exception) {
-        debugPrint('SafeNetworkImage exception: $exception');
+        logger.e('SafeNetworkImage exception: $exception');
       },
     );
   }
