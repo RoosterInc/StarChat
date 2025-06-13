@@ -9,6 +9,8 @@ import 'reaction_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/safe_network_image.dart';
 import '../../discovery/screens/hashtag_search_page.dart';
+import '../../bookmarks/controllers/bookmark_controller.dart';
+import '../../../controllers/auth_controller.dart';
 import 'package:flutter/gestures.dart';
 
 class PostCard extends StatelessWidget {
@@ -56,9 +58,15 @@ class PostCard extends StatelessWidget {
     controller.repostPost(post.id);
   }
 
+  void _handleBookmark(BookmarkController controller, String userId) {
+    controller.toggleBookmark(userId, post.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<FeedController>();
+    final bookmarkController = Get.find<BookmarkController>();
+    final auth = Get.find<AuthController>();
     return Obx(
       () => GlassmorphicCard(
         padding: DesignTokens.md(context).all,
@@ -125,7 +133,9 @@ class PostCard extends StatelessWidget {
               onLike: () => _handleLike(controller),
               onComment: _handleComment,
               onRepost: () => _handleRepost(controller),
+              onBookmark: () => _handleBookmark(bookmarkController, auth.userId ?? ''),
               isLiked: controller.isPostLiked(post.id),
+              isBookmarked: bookmarkController.isBookmarked(post.id),
               likeCount: controller.postLikeCount(post.id),
               commentCount: post.commentCount,
               repostCount: controller.postRepostCount(post.id),

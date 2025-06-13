@@ -57,6 +57,7 @@ void main() {
     await Hive.openBox('comments');
     await Hive.openBox('action_queue');
     await Hive.openBox('post_queue');
+    await Hive.openBox('bookmarks');
     service = FeedService(
       databases: OfflineDatabases(),
       storage: OfflineStorage(),
@@ -65,6 +66,7 @@ void main() {
       commentsCollectionId: 'comments',
       likesCollectionId: 'likes',
       repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
     );
   });
@@ -112,6 +114,12 @@ void main() {
 
   test('saveHashtags queues when offline', () async {
     await service.saveHashtags(['tag']);
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+  });
+
+  test('bookmarkPost queues when offline', () async {
+    await service.bookmarkPost('u', '1');
     final queue = Hive.box('action_queue');
     expect(queue.isNotEmpty, isTrue);
   });

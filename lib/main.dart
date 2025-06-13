@@ -16,6 +16,7 @@ import 'pages/chat_rooms_list_page.dart';
 import 'features/social_feed/screens/compose_post_page.dart';
 import 'features/search/screens/search_page.dart';
 import 'features/notifications/screens/notification_page.dart';
+import 'features/bookmarks/screens/bookmark_list_page.dart';
 import 'features/profile/screens/profile_page.dart';
 import 'pages/empty_page.dart';
 import 'pages/splash_screen.dart';
@@ -43,6 +44,7 @@ Future<void> main() async {
   await Hive.openBox('profiles');
   await Hive.openBox('notifications');
   await Hive.openBox('follows');
+  await Hive.openBox('bookmarks');
   await dotenv.load(fileName: '.env');
 
   AuthBinding().dependencies();
@@ -59,6 +61,8 @@ Future<void> main() async {
         dotenv.env['POST_LIKES_COLLECTION_ID'] ?? 'post_likes',
     repostsCollectionId:
         dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
+    bookmarksCollectionId:
+        dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
     connectivity: Connectivity(),
   );
   Get.put(feedService, permanent: true);
@@ -169,6 +173,11 @@ class MyApp extends StatelessWidget {
               name: '/notifications',
               page: () => const NotificationPage(),
               binding: NotificationBinding(),
+            ),
+            GetPage(
+              name: '/bookmarks',
+              page: () => const BookmarkListPage(),
+              bindings: [AuthBinding(), FeedBinding()],
             ),
             GetPage(
               name: '/user-profile/:userId',
