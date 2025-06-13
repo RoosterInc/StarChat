@@ -64,9 +64,17 @@ class FeedController extends GetxController {
     String roomId,
     File image,
     List<String> hashtags,
+    List<String> mentions,
   ) async {
     await service.createPostWithImage(
-        userId, username, content, roomId, image, hashtags);
+      userId,
+      username,
+      content,
+      roomId,
+      image,
+      hashtags,
+      mentions,
+    );
     _posts.insert(
       0,
       FeedPost(
@@ -77,6 +85,7 @@ class FeedController extends GetxController {
         content: content,
         mediaUrls: [image.path],
         hashtags: hashtags,
+        mentions: mentions,
       ),
     );
   }
@@ -88,6 +97,7 @@ class FeedController extends GetxController {
     String roomId,
     String linkUrl,
     List<String> hashtags,
+    List<String> mentions,
   ) async {
     final metadata = await service.fetchLinkMetadata(linkUrl);
     await service.createPostWithLink(
@@ -97,6 +107,7 @@ class FeedController extends GetxController {
       roomId,
       linkUrl,
       hashtags,
+      mentions,
     );
     _posts.insert(
       0,
@@ -109,6 +120,7 @@ class FeedController extends GetxController {
         linkUrl: linkUrl,
         linkMetadata: metadata,
         hashtags: hashtags,
+        mentions: mentions,
       ),
     );
   }
@@ -186,6 +198,7 @@ class FeedController extends GetxController {
         repostCount: post.repostCount,
         shareCount: post.shareCount,
         hashtags: hashtags,
+        mentions: mentions,
         isEdited: true,
         editedAt: DateTime.now(),
       );

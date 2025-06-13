@@ -7,6 +7,9 @@ import '../models/post_comment.dart';
 import '../../../controllers/auth_controller.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/post_card.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../notifications/services/notification_service.dart';
 
 class PostDetailPage extends StatefulWidget {
   final FeedPost post;
@@ -18,6 +21,30 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   final _textController = TextEditingController();
+
+  Future<void> _notifyMentions(List<String> mentions, String commentId) async {
+    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
+    final auth = Get.find<AuthController>();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final profilesId =
+        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
+    for (final name in mentions) {
+      final res = await auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: profilesId,
+        queries: [Query.equal('username', name)],
+      );
+      if (res.documents.isNotEmpty) {
+        await Get.find<NotificationService>().createNotification(
+          res.documents.first.data['\$id'],
+          auth.userId ?? '',
+          'mention',
+          itemId: commentId,
+          itemType: 'comment',
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -64,11 +91,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 ),
                 SizedBox(width: DesignTokens.sm(context)),
                 AnimatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final uid = auth.userId ?? '';
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+                    final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
+                        .allMatches(_textController.text)
+                        .map((m) => m.group(1)!)
+                        .toSet()
+                        .toList();
                     final comment = PostComment(
                       id: DateTime.now().toIso8601String(),
                       postId: widget.post.id,
@@ -77,6 +109,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       content: _textController.text,
                     );
                     commentsController.addComment(comment);
+                    await _notifyMentions(mentions, comment.id);
                     _textController.clear();
                   },
                   child: const Text('Send'),

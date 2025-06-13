@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../notifications/services/notification_service.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
@@ -20,6 +23,30 @@ class _ComposePostPageState extends State<ComposePostPage> {
   final _controller = TextEditingController();
   final _linkController = TextEditingController();
   XFile? _image;
+
+  Future<void> _notifyMentions(List<String> mentions, String itemId) async {
+    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
+    final auth = Get.find<AuthController>();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final profilesId =
+        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
+    for (final name in mentions) {
+      final res = await auth.databases.listDocuments(
+        databaseId: dbId,
+        collectionId: profilesId,
+        queries: [Query.equal('username', name)],
+      );
+      if (res.documents.isNotEmpty) {
+        await Get.find<NotificationService>().createNotification(
+          res.documents.first.data['\$id'],
+          auth.userId ?? '',
+          'mention',
+          itemId: itemId,
+          itemType: 'post',
+        );
+      }
+    }
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -85,6 +112,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         .map((m) => m.group(1)!.toLowerCase())
                         .toSet()
                         .toList();
+                    final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
+                        .allMatches(_controller.text)
+                        .map((m) => m.group(1)!)
+                        .toSet()
+                        .toList();
                     if (tags.isNotEmpty) {
                       await feedController.service.saveHashtags(tags);
                     }
@@ -97,7 +129,12 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         _controller.text,
                         widget.roomId,
                         linkText,
-                        tags,
+                        hashtags: tags,
+                        mentions: mentions,
+                      );
+                      await _notifyMentions(
+                        mentions,
+                        feedController.posts.first.id,
                       );
                     } else if (_image != null) {
                       await feedController.createPostWithImage(
@@ -106,7 +143,12 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         _controller.text,
                         widget.roomId,
                         File(_image!.path),
-                        tags,
+                        hashtags: tags,
+                        mentions: mentions,
+                      );
+                      await _notifyMentions(
+                        mentions,
+                        feedController.posts.first.id,
                       );
                     } else {
                       final post = FeedPost(
@@ -116,8 +158,10 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         username: uname,
                         content: _controller.text,
                         hashtags: tags,
+                        mentions: mentions,
                       );
                       await feedController.createPost(post);
+                      await _notifyMentions(mentions, post.id);
                     }
                     Get.back();
                   },

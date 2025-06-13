@@ -6,10 +6,59 @@ import '../controllers/comments_controller.dart';
 import '../screens/comment_thread_page.dart';
 import 'reaction_bar.dart';
 import '../../../controllers/auth_controller.dart';
+import 'package:flutter/gestures.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../profile/screens/profile_page.dart';
+import '../../../bindings/profile_binding.dart';
 
 class CommentCard extends StatelessWidget {
   final PostComment comment;
   const CommentCard({super.key, required this.comment});
+
+  Widget _buildContent(BuildContext context) {
+    final spans = <TextSpan>[];
+    final words = comment.content.split(RegExp(r'(\s+)'));
+    for (final word in words) {
+      if (word.startsWith('@')) {
+        final name = word.substring(1);
+        spans.add(TextSpan(
+          text: '$word ',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              _openProfile(name);
+            },
+        ));
+      } else {
+        spans.add(TextSpan(text: '$word '));
+      }
+    }
+    return RichText(
+      text: TextSpan(
+        style: Theme.of(context).textTheme.bodyMedium,
+        children: spans,
+      ),
+    );
+  }
+
+  Future<void> _openProfile(String username) async {
+    final auth = Get.find<AuthController>();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final profilesId =
+        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
+    final res = await auth.databases.listDocuments(
+      databaseId: dbId,
+      collectionId: profilesId,
+      queries: [Query.equal('username', username)],
+    );
+    if (res.documents.isNotEmpty) {
+      Get.to(
+        () => UserProfilePage(userId: res.documents.first.data['\$id']),
+        binding: ProfileBinding(),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +116,7 @@ class CommentCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: DesignTokens.xs(context)),
-            Text(comment.content),
+            _buildContent(context),
             SizedBox(height: DesignTokens.xs(context)),
             ReactionBar(
               onLike: handleLike,

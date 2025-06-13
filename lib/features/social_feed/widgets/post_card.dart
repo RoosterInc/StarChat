@@ -16,15 +16,34 @@ import '../../../controllers/auth_controller.dart';
 import '../../reports/screens/report_post_page.dart';
 import '../../../bindings/report_binding.dart';
 import 'package:flutter/gestures.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../profile/screens/profile_page.dart';
+import '../../../bindings/profile_binding.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
   const PostCard({super.key, required this.post});
 
-  Widget _buildContent(BuildContext context) {
-    if (post.hashtags.isEmpty) {
-      return Text(post.content);
+  Future<void> _openProfile(String username) async {
+    final auth = Get.find<AuthController>();
+    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final profilesId =
+        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
+    final res = await auth.databases.listDocuments(
+      databaseId: dbId,
+      collectionId: profilesId,
+      queries: [Query.equal('username', username)],
+    );
+    if (res.documents.isNotEmpty) {
+      Get.to(
+        () => UserProfilePage(userId: res.documents.first.data['\$id']),
+        binding: ProfileBinding(),
+      );
     }
+  }
+
+  Widget _buildContent(BuildContext context) {
     final spans = <TextSpan>[];
     final words = post.content.split(RegExp(r'(\s+)'));
     for (final word in words) {
@@ -36,6 +55,16 @@ class PostCard extends StatelessWidget {
           recognizer: TapGestureRecognizer()
             ..onTap = () {
               Get.to(() => HashtagSearchPage(hashtag: tag));
+            },
+        ));
+      } else if (word.startsWith('@')) {
+        final name = word.substring(1);
+        spans.add(TextSpan(
+          text: '$word ',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              _openProfile(name);
             },
         ));
       } else {

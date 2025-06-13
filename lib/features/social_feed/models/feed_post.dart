@@ -16,6 +16,7 @@ class FeedPost {
   final int repostCount;
   final int shareCount;
   final List<String> hashtags;
+  final List<String> mentions;
   final bool isEdited;
   final bool isDeleted;
   final DateTime? editedAt;
@@ -36,6 +37,7 @@ class FeedPost {
     this.repostCount = 0,
     this.shareCount = 0,
     this.hashtags = const [],
+    this.mentions = const [],
     this.isEdited = false,
     this.isDeleted = false,
     this.editedAt,
@@ -58,6 +60,7 @@ class FeedPost {
       repostCount: json['repost_count'] ?? 0,
       shareCount: json['share_count'] ?? 0,
       hashtags: (json['hashtags'] as List?)?.cast<String>() ?? const [],
+      mentions: (json['mentions'] as List?)?.cast<String>() ?? const [],
       isEdited: json['is_edited'] ?? false,
       isDeleted: json['is_deleted'] ?? false,
       editedAt: json['edited_at'] != null
@@ -82,6 +85,7 @@ class FeedPost {
       'repost_count': repostCount,
       'share_count': shareCount,
       'hashtags': hashtags,
+      'mentions': mentions,
       'is_edited': isEdited,
       'is_deleted': isDeleted,
       'edited_at': editedAt?.toIso8601String(),
