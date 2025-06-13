@@ -42,10 +42,11 @@ void main() {
         label: 'Search',
       ),
     ];
-    tester.binding.window.physicalSizeTestValue = const Size(400, 800);
-    tester.binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.resetView);
 
-    await tester.pumpWidget(_TestApp(destinations));
+    await tester.pumpWidget(const _TestApp(destinations));
 
     final NavigationBar navBar =
         tester.widget(find.byType(NavigationBar));

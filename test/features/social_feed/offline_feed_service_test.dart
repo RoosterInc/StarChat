@@ -3,13 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 
 class OfflineDatabases extends Databases {
   OfflineDatabases() : super(Client());
 
   @override
-  Future listDocuments({
+  Future<DocumentList> listDocuments({
     required String databaseId,
     required String collectionId,
     List<String>? queries,
@@ -18,7 +19,7 @@ class OfflineDatabases extends Databases {
   }
 
   @override
-  Future createDocument({
+  Future<Document> createDocument({
     required String databaseId,
     required String collectionId,
     required String documentId,

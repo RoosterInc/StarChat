@@ -76,7 +76,7 @@ class _ChatRoomSliverAppBar extends GetView<ChatController> {
             child: Obx(() {
               final room = controller.getRoomById(roomId);
               final title = room?.name ?? 'Chat Room';
-              final activeUsers = 0;
+              const activeUsers = 0;
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

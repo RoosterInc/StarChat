@@ -47,10 +47,6 @@ class EnhancedPlanetHouseController extends GetxController {
   String get _fetchDateKey =>
       '\${_cacheKeyFetchDate}_\${_auth.userId}_\${_currentRashiId.value}';
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
   Future<void> initialize() async {
     _currentRashiId.value =

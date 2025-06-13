@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../controllers/auth_controller.dart';
 import '../controllers/notification_controller.dart';
 
 class NotificationPage extends StatefulWidget {
@@ -13,7 +14,8 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   void initState() {
     super.initState();
-    final userId = Get.findOrNull<dynamic>('authUserId') ?? Get.find<AuthController>().userId;
+    final userId =
+        Get.isRegistered<AuthController>() ? Get.find<AuthController>().userId : null;
     if (userId != null) {
       Get.find<NotificationController>().loadNotifications(userId);
     }

@@ -14,6 +14,7 @@ class FakeFeedService extends FeedService {
           commentsCollectionId: 'comments',
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
+          connectivity: Connectivity(),
         );
 
   final List<PostComment> store = [];

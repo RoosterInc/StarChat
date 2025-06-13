@@ -5,7 +5,6 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/logger.dart';
 import '../utils/modern_color_palettes.dart';
-import '../design_system/modern_ui_system.dart';
 
 import '../models/chat_room.dart';
 import 'auth_controller.dart';
