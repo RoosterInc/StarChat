@@ -104,4 +104,10 @@ void main() {
     final queue = Hive.box('post_queue');
     expect(queue.isNotEmpty, isTrue);
   });
+  test('createPostWithLink queues when offline', () async {
+    await service.createPostWithLink('u', 'name', 'hi', 'room', 'https://x.com');
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+  });
+
 }

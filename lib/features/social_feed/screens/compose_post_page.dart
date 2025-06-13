@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:validators/validators.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
@@ -17,6 +18,7 @@ class ComposePostPage extends StatefulWidget {
 
 class _ComposePostPageState extends State<ComposePostPage> {
   final _controller = TextEditingController();
+  final _linkController = TextEditingController();
   XFile? _image;
 
   Future<void> _pickImage() async {
@@ -27,6 +29,13 @@ class _ComposePostPageState extends State<ComposePostPage> {
         _image = picked;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _linkController.dispose();
+    super.dispose();
   }
 
   @override
@@ -43,6 +52,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
               controller: _controller,
               maxLines: 5,
               decoration: const InputDecoration(hintText: 'What\'s happening?'),
+            ),
+            SizedBox(height: DesignTokens.sm(context)),
+            TextField(
+              controller: _linkController,
+              decoration: const InputDecoration(hintText: 'Link (https://...)'),
             ),
             if (_image != null)
               Padding(
@@ -66,7 +80,20 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
-                    if (_image != null) {
+                    final linkText = _linkController.text.trim();
+                    if (linkText.isNotEmpty && isURL(linkText) &&
+                        linkText.startsWith('http')) {
+                      final meta =
+                          await feedController.service.fetchLinkMetadata(linkText);
+                      await feedController.createPostWithLink(
+                        uid,
+                        uname,
+                        _controller.text,
+                        widget.roomId,
+                        linkText,
+                        meta,
+                      );
+                    } else if (_image != null) {
                       await feedController.createPostWithImage(
                         uid,
                         uname,

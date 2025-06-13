@@ -11,12 +11,15 @@ class FakeFeedService extends FeedService {
   FakeFeedService()
       : super(
           databases: Databases(Client()),
+          storage: Storage(Client()),
+          functions: Functions(Client()),
           databaseId: 'db',
           postsCollectionId: 'posts',
           commentsCollectionId: 'comments',
           likesCollectionId: 'likes',
           repostsCollectionId: 'reposts',
           connectivity: Connectivity(),
+          linkMetadataFunctionId: 'fetch_link_metadata',
         );
 
   final List<FeedPost> store = [];

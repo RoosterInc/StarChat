@@ -6,6 +6,8 @@ import '../controllers/feed_controller.dart';
 import '../screens/post_detail_page.dart';
 import 'media_gallery.dart';
 import 'reaction_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../widgets/safe_network_image.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
@@ -42,6 +44,50 @@ class PostCard extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(top: DesignTokens.sm(context)),
                 child: MediaGallery(urls: post.mediaUrls),
+              ),
+            if (post.linkUrl != null && post.linkMetadata != null)
+              Padding(
+                padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                child: GlassmorphicCard(
+                  padding: DesignTokens.sm(context).all,
+                  onTap: () {
+                    final uri = Uri.parse(post.linkUrl!);
+                    launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                  child: Row(
+                    children: [
+                      if (post.linkMetadata!['image'] != null)
+                        Padding(
+                          padding: EdgeInsets.only(right: DesignTokens.sm(context)),
+                          child: SafeNetworkImage(
+                            imageUrl: post.linkMetadata!['image'] as String?,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post.linkMetadata!['title'] ?? post.linkUrl!,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (post.linkMetadata!['description'] != null)
+                              Text(
+                                post.linkMetadata!['description'],
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             SizedBox(height: DesignTokens.sm(context)),
             ReactionBar(
