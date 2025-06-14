@@ -143,6 +143,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       userId: uid,
                       username: uname,
                       content: sanitized,
+                      mentions: mentions,
                     );
                     commentsController.addComment(comment);
                     await Get.find<MentionService>().notifyMentions(

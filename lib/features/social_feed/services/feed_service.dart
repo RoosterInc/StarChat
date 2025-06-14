@@ -825,11 +825,15 @@ class FeedService {
             final c =
                 PostComment.fromJson(Map<String, dynamic>.from(item['data']));
             final newId = await createComment(c);
-            final mentionNames = _limitMentions(RegExp(r'@([A-Za-z0-9_]+)')
-                .allMatches(c.content)
-                .map((m) => m.group(1)!)
-                .toSet()
-                .toList());
+            final mentionNames = _limitMentions(
+              c.mentions.isNotEmpty
+                  ? c.mentions
+                  : RegExp(r'@([A-Za-z0-9_]+)')
+                      .allMatches(c.content)
+                      .map((m) => m.group(1)!)
+                      .toSet()
+                      .toList(),
+            );
             await commentsBox.delete(c.id);
             final listKey = 'comments_${c.postId}';
             final list = (commentsBox.get(listKey, defaultValue: []) as List)
