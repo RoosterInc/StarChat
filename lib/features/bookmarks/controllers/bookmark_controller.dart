@@ -25,7 +25,9 @@ class BookmarkController extends GetxController {
   Future<void> toggleBookmark(String userId, String postId) async {
     if (_bookmarkIds.containsKey(postId)) {
       final id = _bookmarkIds.remove(postId)!;
-      await service.removeBookmark(id);
+      try {
+        await service.removeBookmark(id);
+      } catch (_) {}
       bookmarks.removeWhere((b) => b.post.id == postId);
     } else {
       await service.bookmarkPost(userId, postId);
