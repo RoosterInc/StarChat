@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../design_system/modern_ui_system.dart';
 import 'package:get/get.dart';
 import '../widgets/comment_thread.dart';
+import '../utils/comment_validation.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../../../controllers/auth_controller.dart';
@@ -90,13 +91,23 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                 SizedBox(width: DesignTokens.sm(context)),
                 AnimatedButton(
                   onPressed: () async {
+                    final text = _controller.text.trim();
+                    if (!isValidComment(text)) {
+                      Get.snackbar(
+                        'error'.tr,
+                        'Comment must be between 1 and 2000 characters.',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
+
                     final root = widget.rootComment;
                     final uid = auth.userId ?? '';
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(_controller.text)
+                        .allMatches(text)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -106,7 +117,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       userId: uid,
                       username: uname,
                       parentId: root.id,
-                      content: _controller.text,
+                      content: text,
                     );
                     commentsController.replyToComment(comment);
                     await _notifyMentions(mentions, comment.id);
