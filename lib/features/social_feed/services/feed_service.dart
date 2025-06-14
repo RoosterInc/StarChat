@@ -419,11 +419,19 @@ class FeedService {
   }
 
   Future<void> deleteLike(String likeId) async {
-    await databases.deleteDocument(
-      databaseId: databaseId,
-      collectionId: likesCollectionId,
-      documentId: likeId,
-    );
+    try {
+      await databases.deleteDocument(
+        databaseId: databaseId,
+        collectionId: likesCollectionId,
+        documentId: likeId,
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'unlike',
+        'data': {'like_id': likeId},
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> likeComment(String commentId, String userId) async {
@@ -530,6 +538,10 @@ class FeedService {
         switch (item['action']) {
           case 'like':
             await createLike(Map<String, dynamic>.from(item['data']));
+            break;
+          case 'unlike':
+            final data = Map<String, dynamic>.from(item['data']);
+            await deleteLike(data['like_id']);
             break;
           case 'repost':
             await createRepost(Map<String, dynamic>.from(item['data']));

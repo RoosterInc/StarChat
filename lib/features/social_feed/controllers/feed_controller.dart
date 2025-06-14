@@ -185,8 +185,10 @@ class FeedController extends GetxController {
     if (uid == null) return;
     if (_likedIds.containsKey(postId)) {
       final likeId = _likedIds.remove(postId)!;
-      await service.deleteLike(likeId);
       _likeCounts[postId] = (_likeCounts[postId] ?? 1) - 1;
+      try {
+        await service.deleteLike(likeId);
+      } catch (_) {}
     } else {
       await service.createLike({
         'item_id': postId,

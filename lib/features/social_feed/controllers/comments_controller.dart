@@ -56,8 +56,10 @@ class CommentsController extends GetxController {
     if (uid == null) return;
     if (_likedIds.containsKey(commentId)) {
       final likeId = _likedIds.remove(commentId)!;
-      await service.unlikeComment(likeId);
       _likeCounts[commentId] = (_likeCounts[commentId] ?? 1) - 1;
+      try {
+        await service.unlikeComment(likeId);
+      } catch (_) {}
     } else {
       await service.likeComment(commentId, uid);
       try {

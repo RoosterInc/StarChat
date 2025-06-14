@@ -28,6 +28,15 @@ class OfflineDatabases extends Databases {
   }) {
     return Future.error('offline');
   }
+
+  @override
+  Future<void> deleteDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+  }) {
+    return Future.error('offline');
+  }
 }
 
 class OfflineStorage extends Storage {
@@ -149,6 +158,15 @@ void main() {
     }
     final queue = Hive.box('action_queue');
     expect(queue.length, 50);
+  });
+
+  test('deleteLike queues when offline', () async {
+    await service.deleteLike('like1');
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(0) as Map?;
+    expect(item?['action'], 'unlike');
+    expect((item?['data'] as Map?)?['like_id'], 'like1');
   });
 
 }
