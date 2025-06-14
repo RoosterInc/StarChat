@@ -298,6 +298,14 @@ class FeedService {
         documentId: ID.unique(),
         data: comment.toJson(),
       );
+      await functions.createExecution(
+        functionId: comment.parentId == null
+            ? 'increment_comment_count'
+            : 'increment_reply_count',
+        body: jsonEncode(comment.parentId == null
+            ? {'post_id': comment.postId}
+            : {'comment_id': comment.parentId}),
+      );
     } catch (_) {
       await commentsBox.put(
         comment.id,
@@ -308,6 +316,46 @@ class FeedService {
         'data': comment.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+    }
+
+    if (comment.parentId == null) {
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['comment_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'comment_count': count + 1,
+          };
+          await postsBox.put(key, cached);
+        }
+      }
+    } else {
+      for (final key in commentsBox.keys) {
+        final cached = commentsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (c) => c['id'] == comment.parentId || c['\$id'] == comment.parentId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['reply_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'reply_count': count + 1,
+          };
+          await commentsBox.put(key, cached);
+        }
+      }
+      final parent = commentsBox.get(comment.parentId);
+      if (parent is Map) {
+        final count = (parent['reply_count'] ?? 0) as int;
+        await commentsBox.put(
+          comment.parentId,
+          {...parent, 'reply_count': count + 1},
+        );
+      }
     }
   }
 
@@ -756,22 +804,59 @@ class FeedService {
     }
   }
 
-  Future<void> deleteComment(String commentId) async {
+  Future<void> deleteComment(PostComment comment) async {
     try {
       await databases.updateDocument(
         databaseId: databaseId,
         collectionId: commentsCollectionId,
-        documentId: commentId,
+        documentId: comment.id,
         data: {'is_deleted': true},
+      );
+      await functions.createExecution(
+        functionId: comment.parentId == null
+            ? 'decrement_comment_count'
+            : 'decrement_reply_count',
+        body: jsonEncode(comment.parentId == null
+            ? {'post_id': comment.postId}
+            : {'comment_id': comment.parentId}),
       );
       for (final key in commentsBox.keys) {
         final cached = commentsBox.get(key, defaultValue: []) as List;
         final index = cached.indexWhere(
-          (c) => c['id'] == commentId || c['\$id'] == commentId,
+          (c) => c['id'] == comment.id || c['\$id'] == comment.id,
         );
         if (index != -1) {
           cached[index] = {...cached[index], 'is_deleted': true};
           await commentsBox.put(key, cached);
+        }
+        if (comment.parentId != null) {
+          final pIndex = cached.indexWhere(
+            (c) => c['id'] == comment.parentId || c['\$id'] == comment.parentId,
+          );
+          if (pIndex != -1) {
+            final count = (cached[pIndex]['reply_count'] ?? 0) as int;
+            cached[pIndex] = {
+              ...cached[pIndex],
+              'reply_count': count > 0 ? count - 1 : 0,
+            };
+            await commentsBox.put(key, cached);
+          }
+        }
+      }
+      if (comment.parentId == null) {
+        for (final key in postsBox.keys) {
+          final cached = postsBox.get(key, defaultValue: []) as List;
+          final index = cached.indexWhere(
+            (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
+          );
+          if (index != -1) {
+            final count = (cached[index]['comment_count'] ?? 0) as int;
+            cached[index] = {
+              ...cached[index],
+              'comment_count': count > 0 ? count - 1 : 0,
+            };
+            await postsBox.put(key, cached);
+          }
         }
       }
     } catch (e) {

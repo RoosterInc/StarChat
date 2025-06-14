@@ -78,11 +78,11 @@ class CommentsController extends GetxController {
     }
   }
 
-  Future<void> deleteComment(String commentId) async {
-    await service.deleteComment(commentId);
-    _comments.removeWhere((c) => c.id == commentId);
-    _likedIds.remove(commentId);
-    _likeCounts.remove(commentId);
+  Future<void> deleteComment(PostComment comment) async {
+    await service.deleteComment(comment);
+    _comments.removeWhere((c) => c.id == comment.id);
+    _likedIds.remove(comment.id);
+    _likeCounts.remove(comment.id);
   }
 
   bool isCommentLiked(String id) => _likedIds.containsKey(id);
