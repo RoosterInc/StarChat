@@ -32,13 +32,27 @@ class CommentsController extends GetxController {
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
-  Future<void> loadComments(String postId) async {
+  String? _nextCursor;
+
+  Future<void> loadComments(
+    String postId, {
+    int limit = 20,
+    bool loadMore = false,
+  }) async {
     _isLoading.value = true;
     try {
-      final data = await service.getComments(postId);
-      _comments.assignAll(data);
-      _likeCounts.assignAll({for (final c in data) c.id: c.likeCount});
-      _replyCounts.assignAll({for (final c in data) c.id: c.replyCount});
+      final data = await service.getComments(
+        postId,
+        limit: limit,
+        cursor: loadMore ? _nextCursor : null,
+      );
+      if (loadMore) {
+        _comments.addAll(data);
+      } else {
+        _comments.assignAll(data);
+      }
+      _likeCounts.addAll({for (final c in data) c.id: c.likeCount});
+      _replyCounts.addAll({for (final c in data) c.id: c.replyCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null) {
@@ -47,6 +61,7 @@ class CommentsController extends GetxController {
           if (like != null) _likedIds[c.id] = like.id;
         }
       }
+      if (data.isNotEmpty) _nextCursor = data.last.id;
       _listenToRealtime(postId);
     } finally {
       _isLoading.value = false;

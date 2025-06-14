@@ -33,7 +33,11 @@ class TestFeedService extends FeedService {
   final List<PostComment> commentStore = [];
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return commentStore.where((c) => c.postId == postId).toList();
   }
 

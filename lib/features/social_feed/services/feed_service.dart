@@ -257,24 +257,37 @@ class FeedService {
     }
   }
 
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     try {
+      final queries = [
+        Query.equal('post_id', postId),
+        Query.orderAsc('\$createdAt'),
+        Query.limit(limit),
+      ];
+      if (cursor != null) queries.add(Query.cursorAfter(cursor));
       final res = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: commentsCollectionId,
-        queries: [
-          Query.equal('post_id', postId),
-          Query.orderAsc('\$createdAt'),
-        ],
+        queries: queries,
       );
       final comments = res.documents
           .map((e) => PostComment.fromJson(e.data))
           .where((c) => !c.isDeleted)
           .toList();
+      final cacheKey = 'comments_$postId';
+      final existing =
+          (commentsBox.get(cacheKey, defaultValue: []) as List).cast<dynamic>();
       final cache = comments
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
-      await commentsBox.put('comments_$postId', cache);
+      await commentsBox.put(
+        cacheKey,
+        cursor == null ? cache : [...existing, ...cache],
+      );
       return comments;
     } catch (_) {
       final listKey = 'comments_$postId';
@@ -294,7 +307,7 @@ class FeedService {
         }
       }
       final expiry = DateTime.now().subtract(const Duration(days: 30));
-      return merged.values
+      var list = merged.values
           .where((e) {
             final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
             return ts == null || ts.isAfter(expiry);
@@ -302,6 +315,11 @@ class FeedService {
           .map(PostComment.fromJson)
           .where((c) => !c.isDeleted)
           .toList();
+      if (cursor != null) {
+        final index = list.indexWhere((c) => c.id == cursor);
+        if (index != -1) list = list.sublist(index + 1);
+      }
+      return list.take(limit).toList();
     }
   }
 

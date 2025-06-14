@@ -27,7 +27,11 @@ class _RecordingFeedService extends FeedService {
   final List<PostComment> store = [];
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return store.where((c) => c.postId == postId).toList();
   }
 

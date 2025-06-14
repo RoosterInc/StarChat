@@ -24,7 +24,11 @@ class FakeFeedService extends FeedService {
         );
 
   @override
-  Future<List<PostComment>> getComments(String postId) async => [];
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async => [];
 }
 
 class FakeAuthController extends AuthController {
