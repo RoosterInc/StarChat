@@ -57,6 +57,36 @@ class FeedService {
     await box.add(data);
   }
 
+  Future<void> _incrementCommentCount(String postId) async {
+    try {
+      await functions.createExecution(
+        functionId: 'increment_comment_count',
+        body: jsonEncode({'post_id': postId}),
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'increment_comment_count',
+        'data': {'post_id': postId},
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> _incrementLikeCount(Map<String, dynamic> data) async {
+    try {
+      await functions.createExecution(
+        functionId: 'increment_like_count',
+        body: jsonEncode(data),
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'increment_like_count',
+        'data': data,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
   Future<List<FeedPost>> getPosts(String roomId,
       {List<String> blockedIds = const []}) async {
     try {
@@ -267,6 +297,7 @@ class FeedService {
         documentId: ID.unique(),
         data: comment.toJson(),
       );
+      await _incrementCommentCount(comment.postId);
     } catch (_) {
       await commentsBox.put(
         comment.id,
@@ -288,6 +319,10 @@ class FeedService {
         documentId: ID.unique(),
         data: like,
       );
+      await _incrementLikeCount({
+        'item_id': like['item_id'],
+        'item_type': like['item_type'],
+      });
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'like',
@@ -491,6 +526,10 @@ class FeedService {
           case 'like':
             await createLike(Map<String, dynamic>.from(item['data']));
             break;
+          case 'increment_like_count':
+            await _incrementLikeCount(
+                Map<String, dynamic>.from(item['data']));
+            break;
           case 'repost':
             await createRepost(Map<String, dynamic>.from(item['data']));
             break;
@@ -501,6 +540,9 @@ class FeedService {
           case 'comment':
             await createComment(PostComment.fromJson(
                 Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'increment_comment_count':
+            await _incrementCommentCount(item['data']['post_id'] as String);
             break;
           case 'post':
             await createPost(FeedPost.fromJson(
