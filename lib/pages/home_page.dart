@@ -227,6 +227,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             delay: 200,
           ),
           _buildAnimatedListTile(
+            icon: Icons.bookmark,
+            title: 'bookmarks'.tr,
+            onTap: () {
+              Navigator.pop(context);
+              Get.toNamed('/bookmarks');
+            },
+            delay: 250,
+          ),
+          _buildAnimatedListTile(
             icon: Icons.logout,
             title: 'logout'.tr,
             onTap: () async {
