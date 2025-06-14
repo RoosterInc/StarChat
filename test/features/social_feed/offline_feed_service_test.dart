@@ -169,4 +169,13 @@ void main() {
     expect(item?['like_id'], 'like1');
   });
 
+  test('deleteRepost queues when offline', () async {
+    await service.deleteRepost('repost1');
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(0) as Map?;
+    expect(item?['action'], 'undo_repost');
+    expect(item?['repost_id'], 'repost1');
+  });
+
 }

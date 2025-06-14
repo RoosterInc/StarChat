@@ -358,11 +358,19 @@ class FeedService {
   }
 
   Future<void> deleteRepost(String repostId) async {
-    await databases.deleteDocument(
-      databaseId: databaseId,
-      collectionId: repostsCollectionId,
-      documentId: repostId,
-    );
+    try {
+      await databases.deleteDocument(
+        databaseId: databaseId,
+        collectionId: repostsCollectionId,
+        documentId: repostId,
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'undo_repost',
+        'repost_id': repostId,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> saveHashtags(List<String> tags) async {
@@ -592,6 +600,9 @@ class FeedService {
               itemId: item['item_id'],
               itemType: item['item_type'],
             );
+            break;
+          case 'undo_repost':
+            await deleteRepost(item['repost_id']);
             break;
           case 'post':
             await createPost(FeedPost.fromJson(
