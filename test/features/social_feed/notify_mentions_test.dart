@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
-import 'package:myapp/features/social_feed/screens/compose_post_page.dart';
+import 'package:myapp/features/social_feed/utils/mention_notifier.dart';
 import 'package:myapp/features/notifications/services/notification_service.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
@@ -39,6 +39,18 @@ class ThrowingNotificationService extends NotificationService {
   }
 }
 
+class RecordingNotificationService extends NotificationService {
+  int count = 0;
+  RecordingNotificationService()
+      : super(databases: Databases(Client()), databaseId: 'db', collectionId: 'col');
+
+  @override
+  Future<void> createNotification(String userId, String actorId, String actionType,
+      {String? itemId, String? itemType}) async {
+    count++;
+  }
+}
+
 class FakeAuthController extends AuthController {
   FakeAuthController() {
     account = Account(client);
@@ -57,7 +69,6 @@ void main() {
   setUp(() {
     Get.testMode = true;
     Get.put<AuthController>(FakeAuthController());
-    Get.put<NotificationService>(ThrowingNotificationService());
   });
 
   tearDown(() {
@@ -65,6 +76,14 @@ void main() {
   });
 
   test('notifyMentions handles errors gracefully', () async {
-    await notifyMentionsForTest(['bob'], '1');
+    Get.put<NotificationService>(ThrowingNotificationService());
+    await notifyMentions(['bob'], '1', itemType: 'post');
+  });
+
+  test('notifyMentions triggers notification', () async {
+    final recorder = RecordingNotificationService();
+    Get.put<NotificationService>(recorder);
+    await notifyMentions(['bob'], '1', itemType: 'post');
+    expect(recorder.count, 1);
   });
 }
