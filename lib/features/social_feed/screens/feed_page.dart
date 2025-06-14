@@ -21,7 +21,10 @@ class _FeedPageState extends State<FeedPage> {
   Widget _buildSortMenu(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
-      child: DropdownButton<String>(
+      child: Tooltip(
+        message:
+            'Chronological shows the oldest posts first. Most Recent lists the newest posts first.',
+        child: DropdownButton<String>(
         value: controller.sortType,
         onChanged: (value) {
           if (value == null) return;
@@ -37,6 +40,10 @@ class _FeedPageState extends State<FeedPage> {
           DropdownMenuItem(
             value: 'chronological',
             child: Text('Chronological'),
+          ),
+          DropdownMenuItem(
+            value: 'most-recent',
+            child: Text('Most Recent'),
           ),
           DropdownMenuItem(
             value: 'most-commented',
