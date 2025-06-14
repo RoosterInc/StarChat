@@ -1517,6 +1517,9 @@ Below are instructions for implementing the 26 features, mapped to your project 
 ### 24. Feed Algorithms
 
 - **Description**: Sort feeds by chronological, most commented, or most liked.
+- **Sort Modes**:
+  - *Chronological*: Oldest to newest.
+  - *Most Recent*: Newest to oldest.
 
 - **Collections**: `feed_posts` (`like_count`, `comment_count`).
 
