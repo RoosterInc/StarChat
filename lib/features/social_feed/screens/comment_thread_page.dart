@@ -147,6 +147,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       username: uname,
                       parentId: root.id,
                       content: sanitized,
+                      mentions: mentions,
                     );
                     commentsController.replyToComment(comment);
                     await Get.find<MentionService>().notifyMentions(

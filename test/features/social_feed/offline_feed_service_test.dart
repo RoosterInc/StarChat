@@ -206,12 +206,14 @@ void main() {
         'user_id': 'u',
         'username': 'name',
         'content': 'hi',
+        'mentions': ['bob'],
         '_cachedAt': DateTime.now().toIso8601String(),
       }
     ]);
     final posts = await service.getPosts('room');
     expect(posts, isNotEmpty);
     expect(posts.first.content, 'hi');
+    expect(posts.first.mentions, ['bob']);
   });
 
   test('createLike queues when offline', () async {
@@ -368,6 +370,7 @@ void main() {
       userId: 'u',
       username: 'name',
       content: 'hi',
+      mentions: ['alice'],
     );
     await service.createComment(comment);
     expect((Hive.box('comments').get('comments_p_restart') as List).isNotEmpty, isTrue);
@@ -399,6 +402,7 @@ void main() {
     final comments = await newService.getComments('p_restart');
     expect(comments.length, 1);
     expect(comments.first.id, 'c_restart');
+    expect(comments.first.mentions, ['alice']);
   });
 
   test('syncQueuedActions removes offline placeholder comments', () async {

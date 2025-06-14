@@ -7,6 +7,7 @@ class PostComment {
   final String? parentId;
   final String content;
   final List<String> mediaUrls;
+  final List<String> mentions;
   final int likeCount;
   final int replyCount;
   final bool isDeleted;
@@ -20,6 +21,7 @@ class PostComment {
     this.parentId,
     required this.content,
     this.mediaUrls = const [],
+    this.mentions = const [],
     this.likeCount = 0,
     this.replyCount = 0,
     this.isDeleted = false,
@@ -35,6 +37,7 @@ class PostComment {
       parentId: json['parent_id'],
       content: json['content'] ?? '',
       mediaUrls: (json['media_urls'] as List?)?.cast<String>() ?? const [],
+      mentions: (json['mentions'] as List?)?.cast<String>() ?? const [],
       likeCount: json['like_count'] ?? 0,
       replyCount: json['reply_count'] ?? 0,
       isDeleted: json['is_deleted'] ?? false,
@@ -51,6 +54,7 @@ class PostComment {
       'parent_id': parentId,
       'content': content,
       'media_urls': mediaUrls,
+      'mentions': mentions,
       'like_count': likeCount,
       'reply_count': replyCount,
       'is_deleted': isDeleted,
