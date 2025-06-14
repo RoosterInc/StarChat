@@ -6,6 +6,8 @@ import 'package:validators/validators.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
+import '../../../utils/logger.dart';
+import 'package:flutter/foundation.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
@@ -26,24 +28,32 @@ class _ComposePostPageState extends State<ComposePostPage> {
 
   Future<void> _notifyMentions(List<String> mentions, String itemId) async {
     if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
-    final auth = Get.find<AuthController>();
-    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final profilesId =
-        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-    for (final name in mentions) {
-      final res = await auth.databases.listDocuments(
-        databaseId: dbId,
-        collectionId: profilesId,
-        queries: [Query.equal('username', name)],
-      );
-      if (res.documents.isNotEmpty) {
-        await Get.find<NotificationService>().createNotification(
-          res.documents.first.data['\$id'],
-          auth.userId ?? '',
-          'mention',
-          itemId: itemId,
-          itemType: 'post',
+    try {
+      final auth = Get.find<AuthController>();
+      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+      final profilesId =
+          dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
+      for (final name in mentions) {
+        final res = await auth.databases.listDocuments(
+          databaseId: dbId,
+          collectionId: profilesId,
+          queries: [Query.equal('username', name)],
         );
+        if (res.documents.isNotEmpty) {
+          await Get.find<NotificationService>().createNotification(
+            res.documents.first.data['\$id'],
+            auth.userId ?? '',
+            'mention',
+            itemId: itemId,
+            itemType: 'post',
+          );
+        }
+      }
+    } catch (e, st) {
+      logger.e('Error notifying mentions', error: e, stackTrace: st);
+      if (Get.context != null) {
+        Get.snackbar('Error', 'Failed to notify mentions',
+            snackPosition: SnackPosition.BOTTOM);
       }
     }
   }
@@ -174,4 +184,10 @@ class _ComposePostPageState extends State<ComposePostPage> {
       ),
     );
   }
+}
+
+@visibleForTesting
+Future<void> notifyMentionsForTest(List<String> mentions, String itemId) async {
+  final state = _ComposePostPageState();
+  await state._notifyMentions(mentions, itemId);
 }
