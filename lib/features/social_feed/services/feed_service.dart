@@ -776,8 +776,10 @@ class FeedService {
         collectionId: postsCollectionId,
         queries: queries,
       );
-      final posts =
-          result.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+      final posts = result.documents
+          .map((e) => FeedPost.fromJson(e.data))
+          .where((p) => !p.isDeleted)
+          .toList();
       final cache = posts
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
@@ -787,6 +789,7 @@ class FeedService {
       final cached = postsBox.get(key, defaultValue: []) as List;
       return cached
           .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
+          .where((p) => !p.isDeleted)
           .toList();
     }
   }
