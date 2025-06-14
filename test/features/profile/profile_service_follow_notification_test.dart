@@ -31,6 +31,21 @@ class _FakeDatabases extends Databases {
   }
 }
 
+class _OfflineDatabases extends Databases {
+  _OfflineDatabases() : super(Client());
+
+  @override
+  Future<Document> createDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    required Map<dynamic, dynamic> data,
+    List<String>? permissions,
+  }) {
+    return Future.error('offline');
+  }
+}
+
 class _RecordingNotificationService extends NotificationService {
   int calls = 0;
   _RecordingNotificationService()
@@ -86,5 +101,20 @@ void main() {
   test('followUser triggers notification creation', () async {
     await service.followUser('u1', 'u2');
     expect(notification.calls, 1);
+  });
+
+  test('offline followUser skips notification', () async {
+    service = ProfileService(
+      databases: _OfflineDatabases(),
+      databaseId: 'db',
+      profilesCollection: 'profiles',
+      followsCollection: 'follows',
+      blocksCollection: 'blocks',
+    );
+
+    await service.followUser('u1', 'u2');
+
+    expect(notification.calls, 0);
+    expect(Hive.box('follows').containsKey('u1_u2'), isTrue);
   });
 }
