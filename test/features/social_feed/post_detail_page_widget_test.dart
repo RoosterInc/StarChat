@@ -66,6 +66,19 @@ class DelayedCommentService extends TestFeedService {
   }
 }
 
+class CountingService extends TestFeedService {
+  int calls = 0;
+
+  @override
+  Future<List<PostComment>> getComments(String postId) async {
+    calls++;
+    return [];
+  }
+
+  @override
+  Future<PostLike?> getUserLike(String itemId, String userId) async => null;
+}
+
 class MockNotificationService extends NotificationService {
   MockNotificationService()
       : super(
@@ -247,5 +260,26 @@ void main() {
     expect(find.byType(SkeletonLoader), findsWidgets);
 
     await tester.pump(const Duration(milliseconds: 150));
+  });
+
+  testWidgets('loadComments runs only once on build', (tester) async {
+    final service = CountingService();
+    final controller = CommentsController(service: service);
+    Get.put<CommentsController>(controller);
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: PostDetailPage(post: post),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump();
+
+    expect(service.calls, 1);
   });
 }
