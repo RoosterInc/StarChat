@@ -3,6 +3,10 @@ import 'package:myapp/features/social_feed/controllers/comments_controller.dart'
 import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
+import 'package:myapp/features/profile/services/activity_service.dart';
+import 'package:get/get.dart';
+import 'dart:io';
+import 'package:hive/hive.dart';
 import 'package:appwrite/appwrite.dart';
 
 class FakeFeedService extends FeedService {
@@ -73,6 +77,32 @@ class OfflineUnlikeService extends FakeFeedService {
   }
 }
 
+class RecordingActivityService extends ActivityService {
+  final List<String> actions = [];
+
+  RecordingActivityService()
+      : super(
+          databases: Databases(Client()),
+          databaseId: 'db',
+          collectionId: 'activities',
+        );
+
+  @override
+  Future<void> logActivity(
+    String userId,
+    String actionType, {
+    String? itemId,
+    String? itemType,
+  }) async {
+    actions.add(actionType);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchActivities(String userId) async {
+    return [];
+  }
+}
+
 void main() {
   test('loadComments returns empty', () async {
     final controller = CommentsController(service: FakeFeedService());
@@ -133,5 +163,62 @@ void main() {
     await controller.toggleLikeComment('1');
     expect(controller.isCommentLiked('1'), isFalse);
     expect(controller.commentLikeCount('1'), 0);
+  });
+
+  test('addComment logs comment activity', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('activities');
+
+    Get.testMode = true;
+    final activity = RecordingActivityService();
+    Get.put<ActivityService>(activity);
+
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service);
+    final comment = PostComment(
+      id: 'c1',
+      postId: 'p1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hi',
+    );
+
+    await controller.addComment(comment);
+
+    expect(activity.actions, ['comment']);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.reset();
+  });
+
+  test('addComment logs reply activity', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('activities');
+
+    Get.testMode = true;
+    final activity = RecordingActivityService();
+    Get.put<ActivityService>(activity);
+
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service);
+    final reply = PostComment(
+      id: 'c2',
+      postId: 'p1',
+      parentId: 'c1',
+      userId: 'u1',
+      username: 'user',
+      content: 'reply',
+    );
+
+    await controller.addComment(reply);
+
+    expect(activity.actions, ['reply']);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.reset();
   });
 }
