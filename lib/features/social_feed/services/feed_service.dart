@@ -10,6 +10,7 @@ import '../models/post_comment.dart';
 import '../models/post_like.dart';
 import '../models/post_repost.dart';
 import '../../bookmarks/models/bookmark.dart';
+import '../../notifications/services/notification_service.dart';
 
 class FeedService {
   final Databases databases;
@@ -346,6 +347,29 @@ class FeedService {
         documentId: ID.unique(),
         data: repost,
       );
+      await functions.createExecution(
+        functionId: 'increment_repost_count',
+        body: jsonEncode({'post_id': repost['post_id']}),
+      );
+      final comment = repost['comment'];
+      if (comment != null && comment.toString().isNotEmpty &&
+          Get.isRegistered<NotificationService>()) {
+        try {
+          final res = await databases.getDocument(
+            databaseId: databaseId,
+            collectionId: postsCollectionId,
+            documentId: repost['post_id'],
+          );
+          final userId = res.data['user_id'];
+          await Get.find<NotificationService>().createNotification(
+            userId,
+            repost['user_id'],
+            'repost',
+            itemId: repost['post_id'],
+            itemType: 'post',
+          );
+        } catch (_) {}
+      }
       return doc.$id;
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
