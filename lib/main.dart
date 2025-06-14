@@ -49,8 +49,10 @@ Future<void> main() async {
   await Hive.openBox('post_queue');
   await Hive.openBox('profiles');
   await Hive.openBox('notifications');
+  await Hive.openBox('notification_queue');
   await Hive.openBox('follows');
   await Hive.openBox('bookmarks');
+  await Hive.openBox('hashtags');
   await Hive.openBox('blocks');
   await Hive.openBox('preferences');
   await Hive.openBox('activities');
@@ -58,6 +60,7 @@ Future<void> main() async {
 
   AuthBinding().dependencies();
   final auth = Get.find<AuthController>();
+  final connectivity = Connectivity();
   final feedService = FeedService(
     databases: auth.databases,
     storage: auth.storage,
@@ -70,23 +73,29 @@ Future<void> main() async {
     repostsCollectionId:
         dotenv.env['POST_REPOSTS_COLLECTION_ID'] ?? 'post_reposts',
     bookmarksCollectionId: dotenv.env['BOOKMARKS_COLLECTION_ID'] ?? 'bookmarks',
-    connectivity: Connectivity(),
+    connectivity: connectivity,
     linkMetadataFunctionId:
         dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
   );
+  final notificationService = NotificationService(
+    databases: auth.databases,
+    databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+    collectionId: dotenv.env['NOTIFICATIONS_COLLECTION_ID'] ?? 'notifications',
+    connectivity: connectivity,
+  );
   Get.put(feedService, permanent: true);
-  if (!(await Connectivity()
-          .checkConnectivity())
-      .contains(ConnectivityResult.none)) {
+  Get.put(notificationService, permanent: true);
+  if (!(await connectivity.checkConnectivity()).contains(ConnectivityResult.none)) {
     await feedService.syncQueuedActions();
+    await notificationService.syncQueuedNotifications();
   }
-  Connectivity()
-      .onConnectivityChanged
+  connectivity.onConnectivityChanged
       .listen((List<ConnectivityResult> results) async {
-        if (results.any((r) => r != ConnectivityResult.none)) {
-          await feedService.syncQueuedActions();
-        }
-      });
+    if (results.any((r) => r != ConnectivityResult.none)) {
+      await feedService.syncQueuedActions();
+      await notificationService.syncQueuedNotifications();
+    }
+  });
 
   runApp(const MyApp());
 }

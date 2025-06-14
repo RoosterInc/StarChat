@@ -26,6 +26,7 @@ class FeedService {
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
   final Box bookmarksBox = Hive.box('bookmarks');
+  final Box hashtagsBox = Hive.box('hashtags');
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
@@ -56,6 +57,9 @@ class FeedService {
     }
     await box.add(data);
   }
+
+  List<String> _limitHashtags(List<String> tags) =>
+      tags.length > 10 ? tags.sublist(0, 10) : tags;
 
   Future<List<FeedPost>> getPosts(String roomId,
       {List<String> blockedIds = const []}) async {
@@ -111,17 +115,41 @@ class FeedService {
   }
 
   Future<void> createPost(FeedPost post) async {
+    final limited = _limitHashtags(post.hashtags);
+    final toSave = limited.length == post.hashtags.length
+        ? post
+        : FeedPost(
+            id: post.id,
+            roomId: post.roomId,
+            userId: post.userId,
+            username: post.username,
+            userAvatar: post.userAvatar,
+            content: post.content,
+            mediaUrls: post.mediaUrls,
+            pollId: post.pollId,
+            linkUrl: post.linkUrl,
+            linkMetadata: post.linkMetadata,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            shareCount: post.shareCount,
+            hashtags: limited,
+            mentions: post.mentions,
+            isEdited: post.isEdited,
+            isDeleted: post.isDeleted,
+            editedAt: post.editedAt,
+          );
     try {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: postsCollectionId,
         documentId: ID.unique(),
-        data: post.toJson(),
+        data: toSave.toJson(),
       );
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'post',
-        'data': post.toJson(),
+        'data': toSave.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
     }
@@ -150,6 +178,7 @@ class FeedService {
     List<String> hashtags = const [],
     List<String> mentions = const [],
   }) async {
+    final limited = _limitHashtags(hashtags);
     try {
       final imageUrl = await uploadImage(image);
       final post = FeedPost(
@@ -159,7 +188,7 @@ class FeedService {
         username: username,
         content: content,
         mediaUrls: [imageUrl],
-        hashtags: hashtags,
+        hashtags: limited,
         mentions: mentions,
       );
       await createPost(post);
@@ -171,7 +200,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'image_path': image.path,
-        'hashtags': hashtags,
+        'hashtags': limited,
         'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
@@ -196,6 +225,7 @@ class FeedService {
     List<String> hashtags = const [],
     List<String> mentions = const [],
   }) async {
+    final limited = _limitHashtags(hashtags);
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
       final post = FeedPost(
@@ -206,7 +236,7 @@ class FeedService {
         content: content,
         linkUrl: linkUrl,
         linkMetadata: metadata,
-        hashtags: hashtags,
+        hashtags: limited,
         mentions: mentions,
       );
       await createPost(post);
@@ -218,7 +248,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'link_url': linkUrl,
-        'hashtags': hashtags,
+        'hashtags': limited,
         'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
@@ -325,7 +355,8 @@ class FeedService {
   }
 
   Future<void> saveHashtags(List<String> tags) async {
-    for (final tag in tags) {
+    final uniqueTags = <String>{for (final t in tags) t.toLowerCase()};
+    for (final tag in uniqueTags) {
       try {
         final existing = await databases.listDocuments(
           databaseId: databaseId,
@@ -356,7 +387,15 @@ class FeedService {
             },
           );
         }
+        await hashtagsBox.put(tag, {
+          'hashtag': tag,
+          'last_used_at': DateTime.now().toIso8601String(),
+        });
       } catch (_) {
+        await hashtagsBox.put(tag, {
+          'hashtag': tag,
+          'last_used_at': DateTime.now().toIso8601String(),
+        });
         await _addToBoxWithLimit(queueBox, {
           'action': 'hashtag',
           'data': tag,
@@ -430,6 +469,7 @@ class FeedService {
     List<String> hashtags,
     List<String> mentions,
   ) async {
+    final limited = _limitHashtags(hashtags);
     try {
       final doc = await databases.getDocument(
         databaseId: databaseId,
@@ -449,7 +489,7 @@ class FeedService {
         documentId: postId,
         data: {
           'content': content,
-          'hashtags': hashtags,
+          'hashtags': limited,
           'mentions': mentions,
           'is_edited': true,
           'edited_at': DateTime.now().toIso8601String(),
@@ -463,7 +503,7 @@ class FeedService {
           cached[index] = {
             ...cached[index],
             'content': content,
-            'hashtags': hashtags,
+            'hashtags': limited,
             'mentions': mentions,
             'is_edited': true,
             'edited_at': DateTime.now().toIso8601String(),
@@ -518,7 +558,12 @@ class FeedService {
             );
             break;
           case 'hashtag':
-            await saveHashtags([item['data'] as String]);
+            final tag = (item['data'] as String).toLowerCase();
+            await saveHashtags([tag]);
+            await hashtagsBox.put(tag, {
+              'hashtag': tag,
+              'last_used_at': DateTime.now().toIso8601String(),
+            });
             break;
           case 'follow':
             await createFollow(Map<String, dynamic>.from(item['data']));
