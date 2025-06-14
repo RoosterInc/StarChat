@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
 import 'package:html_unescape/html_unescape.dart';
 import '../../../utils/logger.dart';
-import '../../notifications/services/mention_service.dart';
+import '../services/mention_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
@@ -132,9 +132,8 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       );
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        actorId: uid,
-                        itemId: feedController.posts.first.id,
-                        itemType: 'post',
+                        feedController.posts.first.id,
+                        'post',
                       );
                     } else if (_image != null) {
                       await feedController.createPostWithImage(
@@ -148,9 +147,8 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       );
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        actorId: uid,
-                        itemId: feedController.posts.first.id,
-                        itemType: 'post',
+                        feedController.posts.first.id,
+                        'post',
                       );
                     } else {
                       final post = FeedPost(
@@ -165,9 +163,8 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       await feedController.createPost(post);
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        actorId: uid,
-                        itemId: post.id,
-                        itemType: 'post',
+                        post.id,
+                        'post',
                       );
                     }
                     Get.back();

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:myapp/features/notifications/services/notification_service.dart';
-import 'package:myapp/features/notifications/services/mention_service.dart';
+import 'package:myapp/features/social_feed/services/mention_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
@@ -95,9 +95,8 @@ void main() {
     );
     await service.notifyMentions(
       ['bob'],
-      actorId: 'actor',
-      itemId: '1',
-      itemType: 'post',
+      '1',
+      'post',
     );
   });
 
@@ -112,9 +111,8 @@ void main() {
     );
     await service.notifyMentions(
       ['bob'],
-      actorId: 'actor',
-      itemId: '1',
-      itemType: 'post',
+      '1',
+      'post',
     );
     expect(recorder.count, 1);
   });
