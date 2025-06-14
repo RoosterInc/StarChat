@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
 import '../models/post_comment.dart';
@@ -56,8 +57,11 @@ class CommentsController extends GetxController {
     if (uid == null) return;
     if (_likedIds.containsKey(commentId)) {
       final likeId = _likedIds.remove(commentId)!;
-      await service.unlikeComment(likeId, commentId);
-      _likeCounts[commentId] = (_likeCounts[commentId] ?? 1) - 1;
+      try {
+        await service.unlikeComment(likeId, commentId);
+      } catch (_) {}
+      _likeCounts[commentId] =
+          math.max(0, (_likeCounts[commentId] ?? 1) - 1);
     } else {
       await service.likeComment(commentId, uid);
       try {
