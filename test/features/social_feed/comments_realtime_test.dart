@@ -141,5 +141,67 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(controller.comments.length, 1);
   });
+
+  test('realtime like events update counts', () async {
+    Get.testMode = true;
+    final realtime = FakeRealtime();
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service, realtime: realtime);
+    Get.put<AuthController>(FakeAuthController());
+
+    await controller.loadComments('p1');
+
+    final comment = PostComment(
+      id: 'c1',
+      postId: 'p1',
+      userId: 'u',
+      username: 'user',
+      content: 'hi',
+    );
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['create'],
+        payload: {...comment.toJson(), '\$id': 'c1'},
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.commentLikeCount('c1'), 0);
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['create'],
+        payload: {
+          '\$id': 'l1',
+          'item_id': 'c1',
+          'item_type': 'comment',
+        },
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.commentLikeCount('c1'), 1);
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['delete'],
+        payload: {
+          '\$id': 'l1',
+          'item_id': 'c1',
+          'item_type': 'comment',
+        },
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.commentLikeCount('c1'), 0);
+  });
 }
 

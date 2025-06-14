@@ -155,36 +155,52 @@ class CommentsController extends GetxController {
     _realtime ??= Realtime(auth.client);
     _subscription?.close();
     _subscription = _realtime!.subscribe([
-      'databases.${service.databaseId}.collections.${service.commentsCollectionId}.documents'
+      'databases.${service.databaseId}.collections.${service.commentsCollectionId}.documents',
+      'databases.${service.databaseId}.collections.${service.likesCollectionId}.documents',
     ]);
     _subscription!.stream.listen((event) {
       final payload = event.payload;
-      if (payload['post_id'] != postId) return;
-      final id = payload['\$id'] ?? payload['id'];
-      if (event.events.any((e) => e.contains('.create'))) {
-        final comment = PostComment.fromJson(payload);
-        if (!_comments.any((c) => c.id == id) && !comment.isDeleted) {
-          _comments.add(comment);
-          _likeCounts[id] = comment.likeCount;
-          _replyCounts[id] = comment.replyCount;
-          if (comment.parentId != null) {
-            incrementReplyCount(comment.parentId!);
+
+      // Comment events
+      if (payload['post_id'] == postId) {
+        final id = payload['\$id'] ?? payload['id'];
+        if (event.events.any((e) => e.contains('.create'))) {
+          final comment = PostComment.fromJson(payload);
+          if (!_comments.any((c) => c.id == id) && !comment.isDeleted) {
+            _comments.add(comment);
+            _likeCounts[id] = comment.likeCount;
+            _replyCounts[id] = comment.replyCount;
+            if (comment.parentId != null) {
+              incrementReplyCount(comment.parentId!);
+            } else if (Get.isRegistered<FeedController>()) {
+              Get.find<FeedController>().incrementCommentCount(comment.postId);
+            }
+          }
+        } else if ((event.events.any((e) => e.contains('.update')) &&
+                payload['is_deleted'] == true) ||
+            event.events.any((e) => e.contains('.delete'))) {
+          _comments.removeWhere((c) => c.id == id);
+          _likedIds.remove(id);
+          _likeCounts.remove(id);
+          _replyCounts.remove(id);
+          final parentId = payload['parent_id'];
+          if (parentId != null) {
+            decrementReplyCount(parentId as String);
           } else if (Get.isRegistered<FeedController>()) {
-            Get.find<FeedController>().incrementCommentCount(comment.postId);
+            Get.find<FeedController>().decrementCommentCount(payload['post_id']);
           }
         }
-      } else if ((event.events.any((e) => e.contains('.update')) &&
-              payload['is_deleted'] == true) ||
-          event.events.any((e) => e.contains('.delete'))) {
-        _comments.removeWhere((c) => c.id == id);
-        _likedIds.remove(id);
-        _likeCounts.remove(id);
-        _replyCounts.remove(id);
-        final parentId = payload['parent_id'];
-        if (parentId != null) {
-          decrementReplyCount(parentId as String);
-        } else if (Get.isRegistered<FeedController>()) {
-          Get.find<FeedController>().decrementCommentCount(payload['post_id']);
+      }
+
+      // Like events
+      if (payload['item_type'] == 'comment') {
+        final commentId = payload['item_id'];
+        if (!_likeCounts.containsKey(commentId)) return;
+        if (event.events.any((e) => e.contains('.create'))) {
+          _likeCounts[commentId] = (_likeCounts[commentId] ?? 0) + 1;
+        } else if (event.events.any((e) => e.contains('.delete'))) {
+          _likeCounts[commentId] =
+              math.max(0, (_likeCounts[commentId] ?? 1) - 1);
         }
       }
     });
