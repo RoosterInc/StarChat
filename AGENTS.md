@@ -6,7 +6,7 @@ Mandatory Requirements Checklist
 Before implementing any feature, ensure you adhere to the following requirements:
 
 All backend functionalities, including authentication, data storage, file management, and serverless functions, must be implemented using Appwrite.
-Use the official Appwrite Flutter SDK (version 17.0.0 as of 2025) for all interactions with Appwrite services.
+Use the official Appwrite Flutter SDK (latest version) for all interactions with Appwrite services.
 Regularly monitor the Appwrite Changelog for new features, deprecations, and updates to maintain app reliability.
 Leverage Appwrite’s real-time capabilities to enhance UI responsiveness for dynamic content.
 HEIC/AVIF Support New image formats for storage (introduced May 2025),Use for efficient image storage; generate previews directly in these formats
