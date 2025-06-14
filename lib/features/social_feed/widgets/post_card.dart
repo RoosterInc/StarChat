@@ -132,6 +132,9 @@ class PostCard extends StatelessWidget {
     final controller = Get.find<FeedController>();
     final bookmarkController = Get.find<BookmarkController>();
     final auth = Get.find<AuthController>();
+    final canEdit =
+        DateTime.now().difference(post.editedAt ?? post.createdAt).inMinutes <=
+            30;
     return Obx(
       () => GlassmorphicCard(
         padding: DesignTokens.md(context).all,
@@ -162,17 +165,18 @@ class PostCard extends StatelessWidget {
                   ),
                 const Spacer(),
                 if (auth.userId == post.userId) ...[
-                  AccessibilityWrapper(
-                    semanticLabel: 'Edit post',
-                    isButton: true,
-                    child: AnimatedButton(
-                      onPressed: () {
-                        Get.to(() => EditPostPage(post: post));
-                      },
-                      child: const Text('Edit'),
+                  if (canEdit)
+                    AccessibilityWrapper(
+                      semanticLabel: 'Edit post',
+                      isButton: true,
+                      child: AnimatedButton(
+                        onPressed: () {
+                          Get.to(() => EditPostPage(post: post));
+                        },
+                        child: const Text('Edit'),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: DesignTokens.xs(context)),
+                  if (canEdit) SizedBox(width: DesignTokens.xs(context)),
                   AccessibilityWrapper(
                     semanticLabel: 'Delete post',
                     isButton: true,

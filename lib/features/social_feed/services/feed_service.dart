@@ -142,6 +142,7 @@ class FeedService {
             isEdited: post.isEdited,
             isDeleted: post.isDeleted,
             editedAt: post.editedAt,
+            createdAt: post.createdAt,
           );
     try {
       await databases.createDocument(
@@ -185,8 +186,9 @@ class FeedService {
     final limited = _limitHashtags(hashtags);
     try {
       final imageUrl = await uploadImage(image);
+      final now = DateTime.now();
       final post = FeedPost(
-        id: DateTime.now().toIso8601String(),
+        id: now.toIso8601String(),
         roomId: roomId ?? '',
         userId: userId,
         username: username,
@@ -194,6 +196,7 @@ class FeedService {
         mediaUrls: [imageUrl],
         hashtags: limited,
         mentions: mentions,
+        createdAt: now,
       );
       await createPost(post);
     } catch (_) {
@@ -232,8 +235,9 @@ class FeedService {
     final limited = _limitHashtags(hashtags);
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
+      final now2 = DateTime.now();
       final post = FeedPost(
-        id: DateTime.now().toIso8601String(),
+        id: now2.toIso8601String(),
         roomId: roomId ?? '',
         userId: userId,
         username: username,
@@ -242,6 +246,7 @@ class FeedService {
         linkMetadata: metadata,
         hashtags: limited,
         mentions: mentions,
+        createdAt: now2,
       );
       await createPost(post);
     } catch (_) {

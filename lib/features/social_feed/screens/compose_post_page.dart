@@ -151,14 +151,16 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         'post',
                       );
                     } else {
+                      final now = DateTime.now();
                       final post = FeedPost(
-                        id: DateTime.now().toIso8601String(),
+                        id: now.toIso8601String(),
                         roomId: widget.roomId,
                         userId: uid,
                         username: uname,
                         content: sanitized,
                         hashtags: tags,
                         mentions: mentions,
+                        createdAt: now,
                       );
                       await feedController.createPost(post);
                       await Get.find<MentionService>().notifyMentions(
