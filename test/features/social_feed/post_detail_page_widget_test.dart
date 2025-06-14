@@ -42,8 +42,9 @@ class TestFeedService extends FeedService {
   }
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     commentStore.add(comment);
+    return null;
   }
 
   @override

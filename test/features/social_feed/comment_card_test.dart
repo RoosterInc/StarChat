@@ -86,7 +86,8 @@ class _FakeService extends FeedService {
   }
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     store.add(comment);
+    return null;
   }
 }

@@ -36,8 +36,9 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     store.add(comment);
+    return null;
   }
 
   @override
@@ -114,8 +115,9 @@ class ServiceWithPosts extends FeedService {
   }
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     comments.add(comment);
+    return null;
   }
 
   @override
