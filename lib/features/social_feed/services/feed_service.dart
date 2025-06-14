@@ -29,6 +29,8 @@ class FeedService {
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
+  static const Duration _timeWindow = Duration(hours: 24);
+
   FeedService({
     required this.databases,
     required this.storage,
@@ -713,6 +715,12 @@ class FeedService {
       queries.add(Query.equal('room_id', roomId));
     }
     switch (sortType) {
+      case 'time-based':
+        final cutoff = DateTime.now().subtract(_timeWindow);
+        queries
+          ..add(Query.greaterThan('\$createdAt', cutoff.toIso8601String()))
+          ..add(Query.orderDesc('\$createdAt'));
+        break;
       case 'chronological':
       case 'most-recent':
         queries.add(Query.orderDesc('\$createdAt'));
@@ -731,8 +739,23 @@ class FeedService {
         collectionId: postsCollectionId,
         queries: queries,
       );
-      final posts =
+      var posts =
           result.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+
+      if (posts.isEmpty && sortType == 'time-based') {
+        final fallbackQueries = <String>[Query.limit(20)];
+        if (roomId != null) {
+          fallbackQueries.add(Query.equal('room_id', roomId));
+        }
+        fallbackQueries.add(Query.orderDesc('\$createdAt'));
+        final fallbackRes = await databases.listDocuments(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          queries: fallbackQueries,
+        );
+        posts.addAll(
+            fallbackRes.documents.map((e) => FeedPost.fromJson(e.data)).toList());
+      }
       final cache = posts
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
