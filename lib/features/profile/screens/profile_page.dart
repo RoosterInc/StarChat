@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
 import '../../../controllers/auth_controller.dart';
+import '../services/profile_service.dart';
 import '../../reports/screens/report_user_page.dart';
 import '../../../bindings/report_binding.dart';
 import '../../../design_system/modern_ui_system.dart';
@@ -34,6 +35,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
         if (profile == null) {
           return const Center(child: Text('Profile not found'));
         }
+        final authId = Get.find<AuthController>().userId;
+        final service = Get.find<ProfileService>();
+        final isFollowing = authId != null &&
+            service.followsBox.containsKey('${authId}_${profile.id}');
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -44,14 +49,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ),
             const SizedBox(height: 16),
             AnimatedButton(
-              onPressed: () => controller.followUser(profile.id),
+              onPressed: () async {
+                if (isFollowing) {
+                  await controller.unfollowUser(profile.id);
+                } else {
+                  await controller.followUser(profile.id);
+                }
+                setState(() {});
+              },
               style: FilledButton.styleFrom(
                 padding: EdgeInsets.symmetric(
                   horizontal: DesignTokens.md(context),
                   vertical: DesignTokens.sm(context),
                 ),
               ),
-              child: const Text('Follow'),
+              child: Text(isFollowing ? 'Unfollow' : 'Follow'),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 8),

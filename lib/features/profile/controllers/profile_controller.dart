@@ -24,6 +24,18 @@ class ProfileController extends GetxController {
     await Get.find<ActivityService>().logActivity(uid, 'follow', itemId: followedId, itemType: 'user');
   }
 
+  Future<void> unfollowUser(String followedId) async {
+    final uid = Get.find<AuthController>().userId;
+    if (uid == null) return;
+    await Get.find<ProfileService>().unfollowUser(uid, followedId);
+    await Get.find<ActivityService>().logActivity(
+      uid,
+      'unfollow',
+      itemId: followedId,
+      itemType: 'user',
+    );
+  }
+
   Future<void> blockUser(String blockedId) async {
     final uid = Get.find<AuthController>().userId;
     if (uid == null) return;
