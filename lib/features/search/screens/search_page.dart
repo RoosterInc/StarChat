@@ -33,20 +33,35 @@ class _SearchPageState extends State<SearchPage> {
               decoration: const InputDecoration(labelText: 'Search users'),
               onChanged: (q) => searchController.searchUsers(q),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: DesignTokens.md(context)),
             Expanded(
-              child: Obx(() => searchController.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: searchController.searchResults.length,
-                      itemBuilder: (context, index) {
-                        final user = searchController.searchResults[index];
-                        return ListTile(
-                          title: Text(user.username),
-                          subtitle: user.bio != null ? Text(user.bio!) : null,
-                        );
-                      },
-                    )),
+              child: Obx(() {
+                if (searchController.isLoading.value) {
+                  return Column(
+                    children: List.generate(
+                      3,
+                      (_) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: DesignTokens.sm(context),
+                        ),
+                        child: SkeletonLoader(
+                          height: DesignTokens.xl(context),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return OptimizedListView(
+                  itemCount: searchController.searchResults.length,
+                  itemBuilder: (context, index) {
+                    final user = searchController.searchResults[index];
+                    return ListTile(
+                      title: Text(user.username),
+                      subtitle: user.bio != null ? Text(user.bio!) : null,
+                    );
+                  },
+                );
+              }),
             ),
           ],
         ),
