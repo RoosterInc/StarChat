@@ -83,6 +83,63 @@ class _CountingService extends FeedService {
   }
 }
 
+class _RecordingFunctions extends Functions {
+  _RecordingFunctions() : super(Client());
+
+  final List<Map<String, String?>> calls = [];
+
+  @override
+  Future<Execution> createExecution({
+    required String functionId,
+    String? body,
+    Map<String, dynamic>? xHeaders,
+    String? path,
+  }) async {
+    calls.add({'id': functionId, 'body': body});
+    return Execution.fromMap({
+      '\$id': '1',
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      'functionId': functionId,
+      'trigger': 'http',
+      'status': 'completed',
+      'requestMethod': 'GET',
+      'requestPath': '/',
+      'requestHeaders': [],
+      'responseStatusCode': 200,
+      'responseBody': '',
+      'responseHeaders': [],
+      'logs': '',
+      'errors': '',
+      'duration': 0.0,
+    });
+  }
+}
+
+class _FakeDatabases extends Databases {
+  _FakeDatabases() : super(Client());
+
+  @override
+  Future<Document> createDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    required Map<dynamic, dynamic> data,
+    List<String>? permissions,
+  }) async {
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...data,
+    });
+  }
+}
+
 void main() {
   late Directory dir;
   late FeedService service;
@@ -198,6 +255,22 @@ void main() {
     expect(queue.length, 50);
   });
 
+  test('createComment queues when offline', () async {
+    final comment = PostComment(
+      id: 'c1',
+      postId: 'p1',
+      parentId: 'p0',
+      userId: 'u',
+      username: 'name',
+      content: 'hi',
+    );
+    await service.createComment(comment);
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(queue.length - 1) as Map?;
+    expect(item?['action'], 'comment');
+  });
+
   test('deleteLike queues when offline', () async {
     await service.deleteLike('like1', itemId: 'p1', itemType: 'post');
     final queue = Hive.box('action_queue');
@@ -232,6 +305,36 @@ void main() {
     expect(counterService.removedBookmarks.contains('b2'), isTrue);
     final queue = Hive.box('action_queue');
     expect(queue.isEmpty, isTrue);
+  });
+
+  test('syncQueuedActions processes queued reply comments', () async {
+    await service.createComment(
+      PostComment(
+        id: 'c2',
+        postId: 'p2',
+        parentId: 'c1',
+        userId: 'u',
+        username: 'name',
+        content: 'reply',
+      ),
+    );
+    final functions = _RecordingFunctions();
+    final onlineService = FeedService(
+      databases: _FakeDatabases(),
+      storage: Storage(Client()),
+      functions: functions,
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
+    );
+    await onlineService.syncQueuedActions();
+    expect(functions.calls.any((c) => c['id'] == 'increment_reply_count'), isTrue);
+    expect(Hive.box('action_queue').isEmpty, isTrue);
   });
 
 }
