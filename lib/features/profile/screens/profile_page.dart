@@ -65,6 +65,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
+  double _halfSpacing(BuildContext context) {
+    return ResponsiveUtils.adaptiveValue(
+      context,
+      mobile: DesignTokens.xs(context),
+      tablet: DesignTokens.sm(context),
+      desktop: DesignTokens.spacing(context, 12),
+    );
+  }
+
   EdgeInsets _pagePadding(BuildContext context) {
     final value = ResponsiveUtils.adaptiveValue(
       context,
@@ -78,6 +87,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget _buildPortraitLayout(
       BuildContext context, UserProfile profile, bool isFollowing, int count) {
     final spacing = _spacing(context);
+    final halfSpacing = _halfSpacing(context);
     return SingleChildScrollView(
       padding: _pagePadding(context),
       child: Center(
@@ -95,14 +105,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ),
             SizedBox(height: spacing),
             _buildFollowButton(context, profile.id, isFollowing),
-            SizedBox(height: spacing * 0.5),
+            SizedBox(height: halfSpacing),
             Text('Followers: \$count'),
-            SizedBox(height: spacing * 0.5),
+            SizedBox(height: halfSpacing),
             _buildBlockButton(context, profile.id),
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
               Padding(
-                padding: EdgeInsets.only(top: spacing * 0.5),
+                padding: EdgeInsets.only(top: halfSpacing),
                 child: _buildReportButton(context, profile.id),
               ),
           ],
@@ -114,6 +124,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget _buildLandscapeLayout(
       BuildContext context, UserProfile profile, bool isFollowing, int count) {
     final spacing = _spacing(context);
+    final halfSpacing = _halfSpacing(context);
     return SingleChildScrollView(
       padding: _pagePadding(context),
       child: Center(
@@ -142,14 +153,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildFollowButton(context, profile.id, isFollowing),
-                SizedBox(height: spacing * 0.5),
+                SizedBox(height: halfSpacing),
                 Text('Followers: \$count'),
-                SizedBox(height: spacing * 0.5),
+                SizedBox(height: halfSpacing),
                 _buildBlockButton(context, profile.id),
                 if (Get.find<AuthController>().userId != null &&
                     Get.find<AuthController>().userId != profile.id)
                   Padding(
-                    padding: EdgeInsets.only(top: spacing * 0.5),
+                    padding: EdgeInsets.only(top: halfSpacing),
                     child: _buildReportButton(context, profile.id),
                   ),
               ],
