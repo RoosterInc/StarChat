@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:hive/hive.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
@@ -185,12 +186,15 @@ class FeedController extends GetxController {
     if (uid == null) return;
     if (_likedIds.containsKey(postId)) {
       final likeId = _likedIds.remove(postId)!;
-      await service.deleteLike(
-        likeId,
-        itemId: postId,
-        itemType: 'post',
-      );
-      _likeCounts[postId] = (_likeCounts[postId] ?? 1) - 1;
+      try {
+        await service.deleteLike(
+          likeId,
+          itemId: postId,
+          itemType: 'post',
+        );
+      } catch (_) {}
+      _likeCounts[postId] =
+          math.max(0, (_likeCounts[postId] ?? 1) - 1);
     } else {
       await service.createLike({
         'item_id': postId,

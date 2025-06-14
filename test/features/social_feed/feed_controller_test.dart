@@ -184,6 +184,53 @@ void main() {
     expect(controller.postLikeCount('1'), 1);
   });
 
+  test('post like count never below zero', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    service.store.add(
+      FeedPost(
+        id: '2',
+        roomId: 'room',
+        userId: 'u1',
+        username: 'user',
+        content: 'text',
+      ),
+    );
+    service.likes['2'] = 'l1';
+    await controller.loadPosts('room');
+    await controller.toggleLikePost('2');
+    expect(controller.postLikeCount('2'), 0);
+    await controller.toggleLikePost('2');
+    expect(controller.postLikeCount('2'), 1);
+  });
+
+  test('toggleLikePost offline unlike updates count', () async {
+    class OfflineDeleteService extends FakeFeedService {
+      @override
+      Future<void> deleteLike(String likeId, {required String itemId, required String itemType}) {
+        return Future.error('offline');
+      }
+    }
+
+    final service = OfflineDeleteService();
+    final controller = FeedController(service: service);
+    service.store.add(
+      FeedPost(
+        id: '1',
+        roomId: 'room',
+        userId: 'u1',
+        username: 'user',
+        content: 'text',
+        likeCount: 1,
+      ),
+    );
+    service.likes['1'] = 'l1';
+    await controller.loadPosts('room');
+    await controller.toggleLikePost('1');
+    expect(controller.isPostLiked('1'), isFalse);
+    expect(controller.postLikeCount('1'), 0);
+  });
+
   test('repostPost stores id and increases count', () async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);

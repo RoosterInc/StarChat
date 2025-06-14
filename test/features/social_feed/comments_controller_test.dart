@@ -66,6 +66,13 @@ class FakeFeedService extends FeedService {
   }
 }
 
+class OfflineUnlikeService extends FakeFeedService {
+  @override
+  Future<void> unlikeComment(String likeId, String commentId) {
+    return Future.error('offline');
+  }
+}
+
 void main() {
   test('loadComments returns empty', () async {
     final controller = CommentsController(service: FakeFeedService());
@@ -88,5 +95,43 @@ void main() {
     await controller.toggleLikeComment('1');
     expect(controller.isCommentLiked('1'), isTrue);
     expect(controller.commentLikeCount('1'), 1);
+  });
+
+  test('like counts never drop below zero', () async {
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service);
+    final c = PostComment(
+      id: '1',
+      postId: 'p1',
+      userId: 'u',
+      username: 'user',
+      content: 'hi',
+    );
+    service.store.add(c);
+    service.likes['1'] = 'l1';
+    await controller.loadComments('p1');
+    await controller.toggleLikeComment('1');
+    expect(controller.commentLikeCount('1'), 0);
+    await controller.toggleLikeComment('1');
+    expect(controller.commentLikeCount('1'), 1);
+  });
+
+  test('toggleLikeComment queues unlike when offline', () async {
+    final service = OfflineUnlikeService();
+    final controller = CommentsController(service: service);
+    final c = PostComment(
+      id: '1',
+      postId: 'p1',
+      userId: 'u',
+      username: 'user',
+      content: 'hi',
+      likeCount: 1,
+    );
+    service.store.add(c);
+    service.likes['1'] = 'l1';
+    await controller.loadComments('p1');
+    await controller.toggleLikeComment('1');
+    expect(controller.isCommentLiked('1'), isFalse);
+    expect(controller.commentLikeCount('1'), 0);
   });
 }
