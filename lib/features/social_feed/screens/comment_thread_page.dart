@@ -24,6 +24,17 @@ class CommentThreadPage extends StatefulWidget {
 class _CommentThreadPageState extends State<CommentThreadPage> {
   final _controller = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    final commentsController = Get.find<CommentsController>();
+    if (commentsController.comments.isEmpty ||
+        commentsController.comments.first.postId !=
+            widget.rootComment.postId) {
+      commentsController.loadComments(widget.rootComment.postId);
+    }
+  }
+
   Future<void> _notifyParentAuthor(String authorId, String commentId) async {
     if (!Get.isRegistered<NotificationService>()) return;
     try {
