@@ -318,6 +318,17 @@ class FeedService {
         documentId: ID.unique(),
         data: like,
       );
+      if (like['item_type'] == 'comment') {
+        await functions.createExecution(
+          functionId: 'increment_comment_like_count',
+          body: jsonEncode({'comment_id': like['item_id']}),
+        );
+      } else {
+        await functions.createExecution(
+          functionId: 'increment_like_count',
+          body: jsonEncode({'post_id': like['item_id']}),
+        );
+      }
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'like',
@@ -418,12 +429,37 @@ class FeedService {
     return PostLike.fromJson(res.documents.first.data);
   }
 
-  Future<void> deleteLike(String likeId) async {
-    await databases.deleteDocument(
-      databaseId: databaseId,
-      collectionId: likesCollectionId,
-      documentId: likeId,
-    );
+  Future<void> deleteLike(
+    String likeId, {
+    required String itemId,
+    required String itemType,
+  }) async {
+    try {
+      await databases.deleteDocument(
+        databaseId: databaseId,
+        collectionId: likesCollectionId,
+        documentId: likeId,
+      );
+      if (itemType == 'comment') {
+        await functions.createExecution(
+          functionId: 'decrement_comment_like_count',
+          body: jsonEncode({'comment_id': itemId}),
+        );
+      } else {
+        await functions.createExecution(
+          functionId: 'decrement_like_count',
+          body: jsonEncode({'post_id': itemId}),
+        );
+      }
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'unlike',
+        'like_id': likeId,
+        'item_id': itemId,
+        'item_type': itemType,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> likeComment(String commentId, String userId) async {
@@ -434,8 +470,12 @@ class FeedService {
     });
   }
 
-  Future<void> unlikeComment(String likeId) async {
-    await deleteLike(likeId);
+  Future<void> unlikeComment(String likeId, String commentId) async {
+    await deleteLike(
+      likeId,
+      itemId: commentId,
+      itemType: 'comment',
+    );
   }
 
   Future<void> likeRepost(String repostId, String userId) async {
@@ -446,8 +486,12 @@ class FeedService {
     });
   }
 
-  Future<void> unlikeRepost(String likeId) async {
-    await deleteLike(likeId);
+  Future<void> unlikeRepost(String likeId, String repostId) async {
+    await deleteLike(
+      likeId,
+      itemId: repostId,
+      itemType: 'post',
+    );
   }
 
   Future<PostRepost?> getUserRepost(String postId, String userId) async {
@@ -541,6 +585,13 @@ class FeedService {
           case 'comment':
             await createComment(PostComment.fromJson(
                 Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'unlike':
+            await deleteLike(
+              item['like_id'],
+              itemId: item['item_id'],
+              itemType: item['item_type'],
+            );
             break;
           case 'post':
             await createPost(FeedPost.fromJson(
