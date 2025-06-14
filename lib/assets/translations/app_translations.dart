@@ -56,6 +56,8 @@ class AppTranslations extends Translations {
         'delete_username': 'Delete Username',
         'username_deleted': 'Username deleted',
         'failed_to_delete_username': 'Failed to delete username',
+        'failed_to_delete_post': 'Failed to delete post.',
+        'failed_to_delete_comment': 'Failed to delete comment.',
         'invalid_username': 'Invalid username',
         'invalid_username_message':
             'Usernames must be 3-15 characters and can include letters, numbers, and underscores.',
@@ -132,6 +134,8 @@ class AppTranslations extends Translations {
         'delete_username': 'Eliminar nombre de usuario',
         'username_deleted': 'Nombre de usuario eliminado',
         'failed_to_delete_username': 'No se pudo eliminar el nombre de usuario',
+        'failed_to_delete_post': 'No se pudo eliminar la publicación.',
+        'failed_to_delete_comment': 'No se pudo eliminar el comentario.',
         'invalid_username': 'Nombre de usuario inválido',
         'invalid_username_message':
             'Los nombres deben tener entre 3 y 15 caracteres y solo pueden incluir letras, números y guiones bajos.',

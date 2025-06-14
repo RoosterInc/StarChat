@@ -123,7 +123,16 @@ class PostCard extends StatelessWidget {
       ),
     );
     if (confirm == true) {
-      await controller.deletePost(post.id);
+      try {
+        await controller.deletePost(post.id);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('failed_to_delete_post'.tr),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

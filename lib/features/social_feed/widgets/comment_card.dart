@@ -87,7 +87,16 @@ class CommentCard extends StatelessWidget {
         ),
       );
       if (confirm == true) {
-        await controller.deleteComment(comment.id);
+        try {
+          await controller.deleteComment(comment.id);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('failed_to_delete_comment'.tr),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
 
