@@ -99,8 +99,26 @@ class _PostDetailPageState extends State<PostDetailPage> {
         child: Column(
           children: [
             Expanded(
-              child: Obx(
-                () => OptimizedListView(
+              child: Obx(() {
+                if (_commentsController.isLoading) {
+                  return Column(
+                    children: [
+                      PostCard(post: widget.post),
+                      SizedBox(height: DesignTokens.sm(context)),
+                      ...List.generate(
+                        3,
+                        (_) => Padding(
+                          padding:
+                              EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                          child: SkeletonLoader(
+                            height: DesignTokens.xl(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return OptimizedListView(
                   itemCount: _commentsController.comments.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) return PostCard(post: widget.post);
@@ -110,8 +128,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       child: CommentCard(comment: comment),
                     );
                   },
-                ),
-              ),
+                );
+              }),
             ),
             SizedBox(height: DesignTokens.sm(context)),
             Row(
