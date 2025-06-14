@@ -108,7 +108,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             SizedBox(height: halfSpacing),
             Text('Followers: \$count'),
             SizedBox(height: halfSpacing),
-            _buildBlockButton(context, profile.id),
+            if (Get.find<AuthController>().userId != null &&
+                Get.find<AuthController>().userId != profile.id)
+              _buildBlockButton(context, profile.id),
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
               Padding(
@@ -156,7 +158,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 SizedBox(height: halfSpacing),
                 Text('Followers: \$count'),
                 SizedBox(height: halfSpacing),
-                _buildBlockButton(context, profile.id),
+                if (Get.find<AuthController>().userId != null &&
+                    Get.find<AuthController>().userId != profile.id)
+                  _buildBlockButton(context, profile.id),
                 if (Get.find<AuthController>().userId != null &&
                     Get.find<AuthController>().userId != profile.id)
                   Padding(
