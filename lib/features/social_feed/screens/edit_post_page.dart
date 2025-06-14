@@ -57,13 +57,26 @@ class _EditPostPageState extends State<EditPostPage> {
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
-                    await feedController.editPost(
-                      widget.post.id,
-                      _controller.text,
-                      tags,
-                      mentions,
-                    );
-                    Get.back();
+                    try {
+                      await feedController.editPost(
+                        widget.post.id,
+                        _controller.text,
+                        tags,
+                        mentions,
+                      );
+                      Get.back();
+                    } catch (e) {
+                      final message = e
+                              .toString()
+                              .contains('Edit window expired')
+                          ? 'Edit window expired'
+                          : 'Failed to edit post';
+                      Get.snackbar(
+                        'Error',
+                        message,
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                    }
                   },
                   child: const Text('Save'),
                 ),
