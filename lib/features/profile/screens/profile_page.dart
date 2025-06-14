@@ -29,7 +29,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       appBar: AppBar(title: const Text('Profile')),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: SkeletonLoader(height: DesignTokens.xl(context), width: DesignTokens.xl(context)));
         }
         final profile = controller.profile.value;
         if (profile == null) {
@@ -44,10 +44,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           children: [
             Text(profile.username, style: Theme.of(context).textTheme.headlineSmall),
             if (profile.bio != null) Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: DesignTokens.sm(context)),
               child: Text(profile.bio!),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: DesignTokens.md(context)),
             AnimatedButton(
               onPressed: () async {
                 if (isFollowing) {
@@ -66,7 +66,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: Text(isFollowing ? 'Unfollow' : 'Follow'),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: DesignTokens.sm(context)),
               child: AnimatedButton(
                 onPressed: () async {
                   final confirm = await showDialog<bool>(
@@ -96,7 +96,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: EdgeInsets.only(top: DesignTokens.sm(context)),
                 child: AnimatedButton(
                   onPressed: () {
                     Get.to(
