@@ -1,5 +1,5 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:get/get.dart';
+import '../../../utils/logger.dart';
 
 class ReportService {
   final Databases databases;
@@ -31,7 +31,8 @@ class ReportService {
           'status': 'pending',
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('Failed to report post', error: e, stackTrace: st);
       throw Exception('Failed to report post: $e');
     }
   }
@@ -55,7 +56,8 @@ class ReportService {
           'status': 'pending',
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('Failed to report user', error: e, stackTrace: st);
       throw Exception('Failed to report user: $e');
     }
   }
