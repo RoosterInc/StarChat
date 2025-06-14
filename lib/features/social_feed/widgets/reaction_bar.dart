@@ -20,6 +20,7 @@ class ReactionBar extends StatelessWidget {
   final int repostCount;
   final int shareCount;
   final ReactionTarget target;
+  final bool isReposted;
 
   const ReactionBar({
     super.key,
@@ -36,6 +37,7 @@ class ReactionBar extends StatelessWidget {
     this.repostCount = 0,
     this.shareCount = 0,
     this.target = ReactionTarget.post,
+    this.isReposted = false,
   });
 
   @override
@@ -125,8 +127,13 @@ class ReactionBar extends StatelessWidget {
     if ((onRepost != null || repostCount > 0) && target == ReactionTarget.post) {
       addItem(
         buildItem(
-          icon: const Icon(Icons.repeat),
-          label: 'Repost',
+          icon: Icon(
+            Icons.repeat,
+            color: isReposted
+                ? context.colorScheme.primary
+                : ContextExtensions(context).theme.iconTheme.color,
+          ),
+          label: isReposted ? 'Undo Repost' : 'Repost',
           onTap: onRepost,
           count: repostCount,
         ),

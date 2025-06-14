@@ -252,6 +252,7 @@ class PostCard extends StatelessWidget {
               onRepost: () => _handleRepost(controller),
               onBookmark: () => _handleBookmark(bookmarkController, auth.userId ?? ''),
               postId: post.id,
+              isReposted: controller.isPostReposted(post.id),
               isLiked: controller.isPostLiked(post.id),
               isBookmarked: bookmarkController.isBookmarked(post.id),
               likeCount: controller.postLikeCount(post.id),

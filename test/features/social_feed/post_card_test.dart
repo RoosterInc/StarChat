@@ -72,6 +72,30 @@ void main() {
     await tester.pump();
     expect(find.text('Reposted by you'), findsOneWidget);
   });
+
+  testWidgets('repost button label switches to undo', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+    expect(find.text('Repost'), findsOneWidget);
+    await controller.repostPost('1');
+    await tester.pump();
+    expect(find.text('Undo Repost'), findsOneWidget);
+  });
 }
 
 class FakeFeedService extends FeedService {
