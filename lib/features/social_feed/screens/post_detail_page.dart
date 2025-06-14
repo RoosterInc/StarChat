@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
+import 'package:html_unescape/html_unescape.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/comments_controller.dart';
 import '../models/feed_post.dart';
@@ -118,12 +120,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       return;
                     }
 
+                    final sanitized = HtmlUnescape().convert(text);
+
                     final uid = auth.userId ?? '';
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -132,7 +136,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       postId: widget.post.id,
                       userId: uid,
                       username: uname,
-                      content: text,
+                      content: sanitized,
                     );
                     _commentsController.addComment(comment);
                     await _notifyMentions(mentions, comment.id);
@@ -147,4 +151,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
       ),
     );
   }
+}
+
+@visibleForTesting
+String sanitizeCommentForTest(String text) {
+  return HtmlUnescape().convert(text.trim());
 }
