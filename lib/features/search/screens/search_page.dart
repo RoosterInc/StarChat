@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/search_controller.dart' as my;
+import '../../../design_system/modern_ui_system.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -24,7 +25,7 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Search')),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(DesignTokens.md(context)),
         child: Column(
           children: [
             TextField(
