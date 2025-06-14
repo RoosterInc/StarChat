@@ -6,6 +6,7 @@ import '../models/feed_post.dart';
 import '../models/post_comment.dart';
 import '../../../controllers/auth_controller.dart';
 import '../widgets/comment_card.dart';
+import '../utils/comment_validation.dart';
 import '../widgets/post_card.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -107,12 +108,22 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 SizedBox(width: DesignTokens.sm(context)),
                 AnimatedButton(
                   onPressed: () async {
+                    final text = _textController.text.trim();
+                    if (!isValidComment(text)) {
+                      Get.snackbar(
+                        'error'.tr,
+                        'Comment must be between 1 and 2000 characters.',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
+
                     final uid = auth.userId ?? '';
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(_textController.text)
+                        .allMatches(text)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -121,7 +132,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       postId: widget.post.id,
                       userId: uid,
                       username: uname,
-                      content: _textController.text,
+                      content: text,
                     );
                     _commentsController.addComment(comment);
                     await _notifyMentions(mentions, comment.id);
