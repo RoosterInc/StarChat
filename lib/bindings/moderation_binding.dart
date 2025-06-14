@@ -17,7 +17,8 @@ class ModerationBinding extends Bindings {
       Get.lazyPut<ActivityService>(() => ActivityService(
             databases: auth.databases,
             databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
-            collectionId: 'activity_logs',
+            collectionId:
+                dotenv.env['ACTIVITY_LOGS_COLLECTION_ID'] ?? 'activity_logs',
           ));
     }
     Get.lazyPut<ModerationController>(() => ModerationController(
