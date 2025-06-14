@@ -22,6 +22,7 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   final _textController = TextEditingController();
+  late final CommentsController _commentsController;
 
   Future<void> _notifyMentions(List<String> mentions, String commentId) async {
     if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
@@ -56,6 +57,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _commentsController = Get.find<CommentsController>();
+    _commentsController.loadComments(widget.post.id);
+  }
+
+  @override
   void dispose() {
     _textController.dispose();
     super.dispose();
@@ -63,8 +71,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final commentsController = Get.find<CommentsController>();
-    commentsController.loadComments(widget.post.id);
     final auth = Get.find<AuthController>();
 
     return Scaffold(
@@ -76,10 +82,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Expanded(
               child: Obx(
                 () => OptimizedListView(
-                  itemCount: commentsController.comments.length + 1,
+                  itemCount: _commentsController.comments.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) return PostCard(post: widget.post);
-                    final comment = commentsController.comments[index - 1];
+                    final comment = _commentsController.comments[index - 1];
                     return Padding(
                       padding: EdgeInsets.only(top: DesignTokens.sm(context)),
                       child: CommentCard(comment: comment),
@@ -117,7 +123,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       username: uname,
                       content: _textController.text,
                     );
-                    commentsController.addComment(comment);
+                    _commentsController.addComment(comment);
                     await _notifyMentions(mentions, comment.id);
                     _textController.clear();
                   },
