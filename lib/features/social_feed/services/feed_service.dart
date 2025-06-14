@@ -818,6 +818,10 @@ class FeedService {
           case 'follow':
             await createFollow(Map<String, dynamic>.from(item['data']));
             break;
+          case 'unfollow':
+            final data = Map<String, dynamic>.from(item['data']);
+            await deleteFollow(data['follower_id'], data['followed_id']);
+            break;
         }
         await queueBox.delete(key);
       } catch (_) {}
@@ -1045,6 +1049,36 @@ class FeedService {
         'data': follow,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+    }
+  }
+
+  Future<void> deleteFollow(String followerId, String followedId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: 'follows',
+        queries: [
+          Query.equal('follower_id', followerId),
+          Query.equal('followed_id', followedId),
+        ],
+      );
+      for (final doc in res.documents) {
+        await databases.deleteDocument(
+          databaseId: databaseId,
+          collectionId: 'follows',
+          documentId: doc.$id,
+        );
+      }
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'unfollow',
+        'data': {
+          'follower_id': followerId,
+          'followed_id': followedId,
+        },
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+      rethrow;
     }
   }
 

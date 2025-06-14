@@ -17,6 +17,7 @@ class FakeProfileService extends ProfileService {
         );
   UserProfile? profile;
   bool followed = false;
+  bool unfollowed = false;
   bool blocked = false;
 
   @override
@@ -27,6 +28,11 @@ class FakeProfileService extends ProfileService {
   @override
   Future<void> followUser(String followerId, String followedId) async {
     followed = true;
+  }
+
+  @override
+  Future<void> unfollowUser(String followerId, String followedId) async {
+    unfollowed = true;
   }
 
   @override
@@ -64,5 +70,15 @@ void main() {
     final controller = ProfileController();
     await controller.followUser('1');
     expect(service.followed, isTrue);
+  });
+
+  test('unfollowUser calls service', () async {
+    final service = FakeProfileService();
+    service.profile = UserProfile(id: '1', username: 'user');
+    Get.put<ProfileService>(service);
+    Get.put<AuthController>(FakeAuthController());
+    final controller = ProfileController();
+    await controller.unfollowUser('1');
+    expect(service.unfollowed, isTrue);
   });
 }
