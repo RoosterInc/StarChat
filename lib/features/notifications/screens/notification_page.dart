@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../../design_system/modern_ui_system.dart';
 import '../controllers/notification_controller.dart';
 
 class NotificationPage extends StatefulWidget {
@@ -26,30 +27,50 @@ class _NotificationPageState extends State<NotificationPage> {
     final controller = Get.find<NotificationController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
-      body: Obx(() => controller.isLoading.value
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: controller.notifications.length,
-              itemBuilder: (context, index) {
-                final n = controller.notifications[index];
-                return Semantics(
-                  label:
-                      '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}',
-                  button: true,
-                  child: ListTile(
-                    leading: Icon(_iconForAction(n.actionType)),
-                    title: Text(
-                        '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
-                    subtitle: Text(n.createdAt.toString()),
-                    trailing: n.isRead
-                        ? null
-                        : const Icon(Icons.circle,
-                            color: Colors.blue, size: 10),
-                    onTap: () => controller.markAsRead(n.id),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Padding(
+            padding: EdgeInsets.all(DesignTokens.md(context)),
+            child: Column(
+              children: List.generate(
+                3,
+                (_) => Padding(
+                  padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                  child: SkeletonLoader(
+                    height: DesignTokens.xl(context),
                   ),
-                );
-              },
-            )),
+                ),
+              ),
+            ),
+          );
+        }
+        return OptimizedListView(
+          itemCount: controller.notifications.length,
+          padding: EdgeInsets.all(DesignTokens.md(context)),
+          itemBuilder: (context, index) {
+            final n = controller.notifications[index];
+            return Padding(
+              padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
+              child: Semantics(
+                label:
+                    '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}',
+                button: true,
+                child: ListTile(
+                  leading: Icon(_iconForAction(n.actionType)),
+                  title: Text(
+                      '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
+                  subtitle: Text(n.createdAt.toString()),
+                  trailing: n.isRead
+                      ? null
+                      : const Icon(Icons.circle,
+                          color: Colors.blue, size: 10),
+                  onTap: () => controller.markAsRead(n.id),
+                ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 
