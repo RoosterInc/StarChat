@@ -282,4 +282,34 @@ void main() {
 
     expect(service.calls, 1);
   });
+
+  testWidgets('submitting comment increments feed count', (tester) async {
+    final service = TestFeedService();
+    final feed = FeedController(service: service);
+    service.postStore.add(post);
+    await feed.loadPosts('r1');
+    Get.put<FeedController>(feed);
+
+    final controller = CommentsController(service: service);
+    Get.put<CommentsController>(controller);
+    Get.put<NotificationService>(MockNotificationService());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: PostDetailPage(post: post),
+      ),
+    );
+
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'new comment');
+    await tester.tap(find.text('Send'));
+    await tester.pump();
+
+    expect(find.text('new comment'), findsOneWidget);
+    expect(feed.postCommentCount(post.id), 1);
+  });
 }
