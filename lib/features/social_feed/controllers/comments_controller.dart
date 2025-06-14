@@ -27,6 +27,7 @@ class CommentsController extends GetxController {
 
   final _likedIds = <String, String>{}.obs; // commentId -> likeId
   final _likeCounts = <String, int>{}.obs; // commentId -> likes
+  final _replyCounts = <String, int>{}.obs; // commentId -> replies
 
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
@@ -37,6 +38,7 @@ class CommentsController extends GetxController {
       final data = await service.getComments(postId);
       _comments.assignAll(data);
       _likeCounts.assignAll({for (final c in data) c.id: c.likeCount});
+      _replyCounts.assignAll({for (final c in data) c.id: c.replyCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null) {
@@ -58,7 +60,10 @@ class CommentsController extends GetxController {
     await Get.find<ActivityService>()
         .logActivity(comment.userId, action, itemId: comment.id, itemType: 'comment');
     _likeCounts[comment.id] = comment.likeCount;
-    if (Get.isRegistered<FeedController>()) {
+    _replyCounts[comment.id] = comment.replyCount;
+    if (comment.parentId != null) {
+      incrementReplyCount(comment.parentId!);
+    } else if (Get.isRegistered<FeedController>()) {
       Get.find<FeedController>().incrementCommentCount(comment.postId);
     }
   }
@@ -102,16 +107,30 @@ class CommentsController extends GetxController {
     _comments.removeWhere((c) => c.id == commentId);
     _likedIds.remove(commentId);
     _likeCounts.remove(commentId);
-    if (comment != null && Get.isRegistered<FeedController>()) {
-      Get.find<FeedController>().decrementCommentCount(comment.postId);
+    if (comment != null) {
+      _replyCounts.remove(commentId);
+      if (comment.parentId != null) {
+        decrementReplyCount(comment.parentId!);
+      } else if (Get.isRegistered<FeedController>()) {
+        Get.find<FeedController>().decrementCommentCount(comment.postId);
+      }
     }
   }
 
   bool isCommentLiked(String id) => _likedIds.containsKey(id);
   int commentLikeCount(String id) => _likeCounts[id] ?? 0;
+  int commentReplyCount(String id) => _replyCounts[id] ?? 0;
 
   List<PostComment> getReplies(String commentId) {
     return _comments.where((c) => c.parentId == commentId).toList();
+  }
+
+  void incrementReplyCount(String commentId) {
+    _replyCounts[commentId] = (_replyCounts[commentId] ?? 0) + 1;
+  }
+
+  void decrementReplyCount(String commentId) {
+    _replyCounts[commentId] = math.max(0, (_replyCounts[commentId] ?? 1) - 1);
   }
 
   void _listenToRealtime(String postId) {
@@ -132,6 +151,12 @@ class CommentsController extends GetxController {
         if (!_comments.any((c) => c.id == id) && !comment.isDeleted) {
           _comments.add(comment);
           _likeCounts[id] = comment.likeCount;
+          _replyCounts[id] = comment.replyCount;
+          if (comment.parentId != null) {
+            incrementReplyCount(comment.parentId!);
+          } else if (Get.isRegistered<FeedController>()) {
+            Get.find<FeedController>().incrementCommentCount(comment.postId);
+          }
         }
       } else if ((event.events.any((e) => e.contains('.update')) &&
               payload['is_deleted'] == true) ||
@@ -139,6 +164,13 @@ class CommentsController extends GetxController {
         _comments.removeWhere((c) => c.id == id);
         _likedIds.remove(id);
         _likeCounts.remove(id);
+        _replyCounts.remove(id);
+        final parentId = payload['parent_id'];
+        if (parentId != null) {
+          decrementReplyCount(parentId as String);
+        } else if (Get.isRegistered<FeedController>()) {
+          Get.find<FeedController>().decrementCommentCount(payload['post_id']);
+        }
       }
     });
   }
