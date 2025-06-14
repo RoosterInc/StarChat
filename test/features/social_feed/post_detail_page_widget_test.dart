@@ -175,6 +175,31 @@ void main() {
     expect(find.text('hello'), findsOneWidget);
   });
 
+  testWidgets('HTML entities are unescaped before submission', (tester) async {
+    final service = TestFeedService();
+    final controller = CommentsController(service: service);
+    Get.put<CommentsController>(controller);
+    Get.put<NotificationService>(MockNotificationService());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: PostDetailPage(post: post),
+      ),
+    );
+
+    await tester.pump();
+    const input = 'hello &amp; world';
+    await tester.enterText(find.byType(TextField), input);
+    await tester.tap(find.text('Send'));
+    await tester.pump();
+
+    expect(service.commentStore.first.content, 'hello & world');
+  });
+
   testWidgets('displays skeleton loaders while isLoading true', (tester) async {
     final service = DelayedFeedService();
     final controller = FeedController(service: service);

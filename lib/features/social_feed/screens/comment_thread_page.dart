@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:html_unescape/html_unescape.dart';
 
 class CommentThreadPage extends StatefulWidget {
   final PostComment rootComment;
@@ -124,8 +125,9 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+                    final sanitized = HtmlUnescape().convert(text);
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -135,7 +137,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       userId: uid,
                       username: uname,
                       parentId: root.id,
-                      content: text,
+                      content: sanitized,
                     );
                     commentsController.replyToComment(comment);
                     await _notifyMentions(mentions, comment.id);

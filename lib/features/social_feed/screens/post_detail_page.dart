@@ -13,6 +13,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:html_unescape/html_unescape.dart';
 
 class PostDetailPage extends StatefulWidget {
   final FeedPost post;
@@ -158,8 +159,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+                    final sanitized = HtmlUnescape().convert(text);
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -168,7 +170,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       postId: widget.post.id,
                       userId: uid,
                       username: uname,
-                      content: text,
+                      content: sanitized,
                     );
                     _commentsController.addComment(comment);
                     await _notifyMentions(mentions, comment.id);
