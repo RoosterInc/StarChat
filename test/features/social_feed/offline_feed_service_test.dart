@@ -292,6 +292,7 @@ void main() {
     expect(queue.isNotEmpty, isTrue);
     final item = queue.getAt(queue.length - 1) as Map?;
     expect(item?['action'], 'comment');
+    expect(item?['data']['id'], 'c1');
   });
 
   test('deleteLike queues when offline', () async {
@@ -448,6 +449,10 @@ void main() {
 
     await controller.addComment(comment);
     expect(controller.comments.first.id, 'tmp1');
+    final queued = Hive.box('action_queue').getAt(
+      Hive.box('action_queue').length - 1,
+    ) as Map?;
+    expect(queued?['data']['id'], 'tmp1');
 
     final onlineService = FeedService(
       databases: _FakeDatabases(),

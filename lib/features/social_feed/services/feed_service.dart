@@ -367,20 +367,30 @@ class FeedService {
           }
         } catch (_) {}
       }
-    } catch (_) {
+      } catch (_) {
       await commentsBox.put(
         comment.id,
-        {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()},
+        {
+          ...comment.toJson(),
+          'id': comment.id,
+          '_cachedAt': DateTime.now().toIso8601String(),
+        },
       );
       final listKey = 'comments_${comment.postId}';
       final current =
           (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
-      current.add(
-          {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()});
+      current.add({
+        ...comment.toJson(),
+        'id': comment.id,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
       await commentsBox.put(listKey, current);
       await _addToBoxWithLimit(queueBox, {
         'action': 'comment',
-        'data': comment.toJson(),
+        'data': {
+          ...comment.toJson(),
+          'id': comment.id,
+        },
         '_cachedAt': DateTime.now().toIso8601String(),
       });
     }

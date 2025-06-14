@@ -43,6 +43,7 @@ class PostComment {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'post_id': postId,
       'user_id': userId,
       'username': username,
