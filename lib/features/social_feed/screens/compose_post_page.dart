@@ -4,9 +4,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
 import 'package:html_unescape/html_unescape.dart';
-import 'package:appwrite/appwrite.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../notifications/services/notification_service.dart';
+import '../../notifications/services/mention_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import '../../../design_system/modern_ui_system.dart';
@@ -26,40 +24,6 @@ class _ComposePostPageState extends State<ComposePostPage> {
   final _controller = TextEditingController();
   final _linkController = TextEditingController();
   XFile? _image;
-
-  Future<void> _notifyMentions(List<String> mentions, String itemId) async {
-    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
-    try {
-      final auth = Get.find<AuthController>();
-      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final profilesId =
-          dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-      for (final name in mentions) {
-        try {
-          final res = await auth.databases.listDocuments(
-            databaseId: dbId,
-            collectionId: profilesId,
-            queries: [Query.equal('username', name)],
-          );
-          if (res.documents.isNotEmpty) {
-            await Get.find<NotificationService>().createNotification(
-              res.documents.first.data['\$id'],
-              auth.userId ?? '',
-              'mention',
-              itemId: itemId,
-              itemType: 'post',
-            );
-          }
-        } catch (_) {}
-      }
-    } catch (e, st) {
-      logger.e('Error notifying mentions', error: e, stackTrace: st);
-      if (Get.context != null) {
-        Get.snackbar('Error', 'Failed to notify mentions',
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    }
-  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -165,9 +129,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         tags,
                         mentions,
                       );
-                      await _notifyMentions(
+                      await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        feedController.posts.first.id,
+                        actorId: uid,
+                        itemId: feedController.posts.first.id,
+                        itemType: 'post',
                       );
                     } else if (_image != null) {
                       await feedController.createPostWithImage(
@@ -179,9 +145,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         tags,
                         mentions,
                       );
-                      await _notifyMentions(
+                      await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        feedController.posts.first.id,
+                        actorId: uid,
+                        itemId: feedController.posts.first.id,
+                        itemType: 'post',
                       );
                     } else {
                       final post = FeedPost(
@@ -194,7 +162,12 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         mentions: mentions,
                       );
                       await feedController.createPost(post);
-                      await _notifyMentions(mentions, post.id);
+                      await Get.find<MentionService>().notifyMentions(
+                        mentions,
+                        actorId: uid,
+                        itemId: post.id,
+                        itemType: 'post',
+                      );
                     }
                     Get.back();
                   },
@@ -207,10 +180,4 @@ class _ComposePostPageState extends State<ComposePostPage> {
       ),
     );
   }
-}
-
-@visibleForTesting
-Future<void> notifyMentionsForTest(List<String> mentions, String itemId) async {
-  final state = _ComposePostPageState();
-  await state._notifyMentions(mentions, itemId);
 }

@@ -6,9 +6,7 @@ import '../utils/comment_validation.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../../../controllers/auth_controller.dart';
-import 'package:appwrite/appwrite.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../notifications/services/notification_service.dart';
+import '../../notifications/services/mention_service.dart';
 import '../../../utils/logger.dart';
 
 class CommentThreadPage extends StatefulWidget {
@@ -21,38 +19,6 @@ class CommentThreadPage extends StatefulWidget {
 
 class _CommentThreadPageState extends State<CommentThreadPage> {
   final _controller = TextEditingController();
-
-  Future<void> _notifyMentions(List<String> mentions, String commentId) async {
-    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
-    try {
-      final auth = Get.find<AuthController>();
-      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final profilesId =
-          dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-      for (final name in mentions) {
-        final res = await auth.databases.listDocuments(
-          databaseId: dbId,
-          collectionId: profilesId,
-          queries: [Query.equal('username', name)],
-        );
-        if (res.documents.isNotEmpty) {
-          await Get.find<NotificationService>().createNotification(
-            res.documents.first.data['\$id'],
-            auth.userId ?? '',
-            'mention',
-            itemId: commentId,
-            itemType: 'comment',
-          );
-        }
-      }
-    } catch (e, st) {
-      logger.e('Error notifying mentions', error: e, stackTrace: st);
-      if (Get.context != null) {
-        Get.snackbar('Error', 'Failed to notify mentions',
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -120,7 +86,12 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       content: text,
                     );
                     commentsController.replyToComment(comment);
-                    await _notifyMentions(mentions, comment.id);
+                    await Get.find<MentionService>().notifyMentions(
+                      mentions,
+                      actorId: uid,
+                      itemId: comment.id,
+                      itemType: 'comment',
+                    );
                     _controller.clear();
                   },
                   child: const Text('Send'),

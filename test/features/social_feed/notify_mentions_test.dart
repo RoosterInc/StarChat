@@ -2,8 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
-import 'package:myapp/features/social_feed/screens/compose_post_page.dart';
 import 'package:myapp/features/notifications/services/notification_service.dart';
+import 'package:myapp/features/notifications/services/mention_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
 class FakeDatabases extends Databases {
@@ -30,12 +31,33 @@ class FakeDatabases extends Databases {
 
 class ThrowingNotificationService extends NotificationService {
   ThrowingNotificationService()
-      : super(databases: Databases(Client()), databaseId: 'db', collectionId: 'col');
+      : super(
+          databases: Databases(Client()),
+          databaseId: 'db',
+          collectionId: 'col',
+          connectivity: Connectivity(),
+        );
 
   @override
   Future<void> createNotification(String userId, String actorId, String actionType,
       {String? itemId, String? itemType}) async {
     throw Exception('failure');
+  }
+}
+
+class RecordingNotificationService extends NotificationService {
+  int count = 0;
+  RecordingNotificationService()
+      : super(
+          databases: Databases(Client()),
+          databaseId: 'db',
+          collectionId: 'col',
+          connectivity: Connectivity(),
+        );
+  @override
+  Future<void> createNotification(String userId, String actorId, String actionType,
+      {String? itemId, String? itemType}) async {
+    count++;
   }
 }
 
@@ -57,7 +79,6 @@ void main() {
   setUp(() {
     Get.testMode = true;
     Get.put<AuthController>(FakeAuthController());
-    Get.put<NotificationService>(ThrowingNotificationService());
   });
 
   tearDown(() {
@@ -65,6 +86,36 @@ void main() {
   });
 
   test('notifyMentions handles errors gracefully', () async {
-    await notifyMentionsForTest(['bob'], '1');
+    Get.put<NotificationService>(ThrowingNotificationService());
+    final service = MentionService(
+      databases: Get.find<AuthController>().databases,
+      notificationService: Get.find<NotificationService>(),
+      databaseId: 'db',
+      profilesCollectionId: 'profiles',
+    );
+    await service.notifyMentions(
+      ['bob'],
+      actorId: 'actor',
+      itemId: '1',
+      itemType: 'post',
+    );
+  });
+
+  test('notifyMentions sends notification when user found', () async {
+    final record = RecordingNotificationService();
+    Get.put<NotificationService>(record);
+    final service = MentionService(
+      databases: Get.find<AuthController>().databases,
+      notificationService: Get.find<NotificationService>(),
+      databaseId: 'db',
+      profilesCollectionId: 'profiles',
+    );
+    await service.notifyMentions(
+      ['bob'],
+      actorId: 'actor',
+      itemId: '1',
+      itemType: 'post',
+    );
+    expect(record.count, 1);
   });
 }
