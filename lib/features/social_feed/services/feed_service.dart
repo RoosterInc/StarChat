@@ -298,6 +298,40 @@ class FeedService {
         documentId: ID.unique(),
         data: comment.toJson(),
       );
+
+      if (Get.isRegistered<NotificationService>()) {
+        try {
+          if (comment.parentId == null) {
+            final post = await databases.getDocument(
+              databaseId: databaseId,
+              collectionId: postsCollectionId,
+              documentId: comment.postId,
+            );
+            final ownerId = post.data['user_id'];
+            await Get.find<NotificationService>().createNotification(
+              ownerId,
+              comment.userId,
+              'comment',
+              itemId: comment.postId,
+              itemType: 'post',
+            );
+          } else {
+            final parent = await databases.getDocument(
+              databaseId: databaseId,
+              collectionId: commentsCollectionId,
+              documentId: comment.parentId!,
+            );
+            final ownerId = parent.data['user_id'];
+            await Get.find<NotificationService>().createNotification(
+              ownerId,
+              comment.userId,
+              'reply',
+              itemId: comment.parentId,
+              itemType: 'comment',
+            );
+          }
+        } catch (_) {}
+      }
     } catch (_) {
       await commentsBox.put(
         comment.id,
