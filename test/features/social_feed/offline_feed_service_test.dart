@@ -128,4 +128,22 @@ void main() {
     expect(queue.isNotEmpty, isTrue);
   });
 
+  test('postQueueBox capped at 50 items', () async {
+    final file = File('${dir.path}/img.jpg');
+    await file.writeAsBytes(List.filled(10, 0));
+    for (var i = 0; i < 51; i++) {
+      await service.createPostWithImage('u', 'name', 'hi', 'room', file);
+    }
+    final queue = Hive.box('post_queue');
+    expect(queue.length, 50);
+  });
+
+  test('actionQueue capped at 50 items', () async {
+    for (var i = 0; i < 51; i++) {
+      await service.createPostWithLink('u', 'name', 'hi', 'room', 'https://x.com');
+    }
+    final queue = Hive.box('action_queue');
+    expect(queue.length, 50);
+  });
+
 }
