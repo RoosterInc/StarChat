@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
 import '../../../controllers/auth_controller.dart';
 import '../services/profile_service.dart';
+import 'blocked_users_page.dart';
 import '../../reports/screens/report_user_page.dart';
 import '../../../bindings/report_binding.dart';
+import '../../../bindings/profile_binding.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../../../widgets/enhanced_responsive_layout.dart';
 
@@ -108,6 +110,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
             SizedBox(height: halfSpacing),
             Text('Followers: \$count'),
             SizedBox(height: halfSpacing),
+            if (Get.find<AuthController>().userId == profile.id)
+              _buildBlockedUsersButton(context),
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
               _buildBlockButton(context, profile.id),
@@ -158,6 +162,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 SizedBox(height: halfSpacing),
                 Text('Followers: \$count'),
                 SizedBox(height: halfSpacing),
+                if (Get.find<AuthController>().userId == profile.id)
+                  _buildBlockedUsersButton(context),
                 if (Get.find<AuthController>().userId != null &&
                     Get.find<AuthController>().userId != profile.id)
                   _buildBlockButton(context, profile.id),
@@ -221,6 +227,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
         }
       },
       child: const Text('Block'),
+    );
+  }
+
+  Widget _buildBlockedUsersButton(BuildContext context) {
+    return AnimatedButton(
+      onPressed: () {
+        Get.to(
+          () => const BlockedUsersPage(),
+          binding: ProfileBinding(),
+        );
+      },
+      style: FilledButton.styleFrom(
+        padding: EdgeInsets.symmetric(
+          horizontal: DesignTokens.md(context),
+          vertical: DesignTokens.sm(context),
+        ),
+      ),
+      child: const Text('Blocked Users'),
     );
   }
 
