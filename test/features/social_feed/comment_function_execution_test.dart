@@ -12,6 +12,7 @@ class RecordingFunctions extends Functions {
 
   String? lastFunctionId;
   String? lastBody;
+  final List<Map<String, String?>> calls = [];
 
   @override
   Future<Execution> createExecution({
@@ -22,6 +23,7 @@ class RecordingFunctions extends Functions {
   }) async {
     lastFunctionId = functionId;
     lastBody = body;
+    calls.add({'id': functionId, 'body': body});
     return Execution.fromMap({
       '\$id': '1',
       '\$createdAt': '',
@@ -144,7 +146,10 @@ void main() {
     expect(cached.first['comment_count'], 1);
   });
 
-  test('create reply triggers increment_reply_count', () async {
+  test('create reply triggers both comment and reply functions', () async {
+    Hive.box('posts').put('k', [
+      {'id': 'p1', 'comment_count': 0}
+    ]);
     Hive.box('comments').put('c_post', [
       {'id': 'c1', 'post_id': 'p1', 'reply_count': 0}
     ]);
@@ -157,10 +162,15 @@ void main() {
       content: 'reply',
     );
     await service.createComment(reply);
-    expect(functions.lastFunctionId, 'increment_reply_count');
-    expect(functions.lastBody, '{"comment_id":"c1"}');
-    final cached = Hive.box('comments').get('c_post') as List;
-    expect(cached.first['reply_count'], 1);
+    expect(functions.calls.length, 2);
+    expect(functions.calls.first['id'], 'increment_comment_count');
+    expect(functions.calls.first['body'], '{"post_id":"p1"}');
+    expect(functions.calls.last['id'], 'increment_reply_count');
+    expect(functions.calls.last['body'], '{"comment_id":"c1"}');
+    final cachedComments = Hive.box('comments').get('c_post') as List;
+    expect(cachedComments.first['reply_count'], 1);
+    final cachedPosts = Hive.box('posts').get('k') as List;
+    expect(cachedPosts.first['comment_count'], 1);
   });
 
   test('deleteComment triggers decrement_comment_count', () async {

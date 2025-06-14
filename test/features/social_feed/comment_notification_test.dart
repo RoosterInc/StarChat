@@ -187,7 +187,7 @@ void main() {
       expect(notification.last?['itemType'], 'post');
     });
 
-    test('createComment notifies parent owner on reply', () async {
+    test('createComment notifies post owner on reply', () async {
       final c = PostComment(
         id: '2',
         postId: 'p1',
@@ -200,10 +200,10 @@ void main() {
       await service.createComment(c);
 
       expect(notification.count, 1);
-      expect(notification.last?['userId'], 'comment_owner');
-      expect(notification.last?['actionType'], 'reply');
-      expect(notification.last?['itemId'], 'parent');
-      expect(notification.last?['itemType'], 'comment');
+      expect(notification.last?['userId'], 'post_owner');
+      expect(notification.last?['actionType'], 'comment');
+      expect(notification.last?['itemId'], 'p1');
+      expect(notification.last?['itemType'], 'post');
     });
 
     test('offline createComment queues and skips notification', () async {
