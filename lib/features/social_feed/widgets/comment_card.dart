@@ -87,7 +87,7 @@ class CommentCard extends StatelessWidget {
         ),
       );
       if (confirm == true) {
-        await controller.deleteComment(comment.id);
+        await controller.deleteComment(comment);
       }
     }
 
