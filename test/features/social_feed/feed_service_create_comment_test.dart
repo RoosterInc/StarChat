@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
+import 'package:appwrite/enums.dart' as enums;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:myapp/features/social_feed/models/post_comment.dart';
@@ -16,8 +17,11 @@ class _RecordingFunctions extends Functions {
   Future<Execution> createExecution({
     required String functionId,
     String? body,
-    Map<String, dynamic>? xHeaders,
+    bool? xasync,
     String? path,
+    enums.ExecutionMethod? method,
+    Map? headers,
+    String? scheduledAt,
   }) async {
     lastFunctionId = functionId;
     return Execution.fromMap({
@@ -68,6 +72,7 @@ class _FakeDatabases extends Databases {
     required String databaseId,
     required String collectionId,
     required String documentId,
+    List<String>? queries,
   }) async {
     return Document.fromMap({
       '\$id': documentId,

@@ -105,7 +105,10 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  test('queued comment keeps id after sync', () async {
+  test('queued comment keeps id after sync and updates counts', () async {
+    Hive.box('posts').put('p', [
+      {'id': 'post', 'comment_count': 0}
+    ]);
     final comment = PostComment(
       id: 'offline1',
       postId: 'post',
@@ -118,6 +121,8 @@ void main() {
     final online = _RecordingService();
     await online.syncQueuedActions();
 
+    final cached = Hive.box('posts').get('p') as List;
+    expect(cached.first['comment_count'], 1);
     expect(online.created.contains('offline1'), isTrue);
   });
 }
