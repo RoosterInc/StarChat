@@ -116,4 +116,25 @@ void main() {
     expect(controller.isFollowing.value, isFalse);
     expect(controller.followerCount.value, 1);
   });
+
+  test('blockUser calls service', () async {
+    final service = FakeProfileService();
+    service.profile = UserProfile(id: '2', username: 'other');
+    Get.put<ProfileService>(service);
+    Get.put<AuthController>(FakeAuthController());
+    final controller = ProfileController();
+    await controller.blockUser('2');
+    expect(service.blocked, isTrue);
+  });
+
+  test('unblockUser calls service', () async {
+    final service = FakeProfileService();
+    service.profile = UserProfile(id: '2', username: 'other');
+    service.blocked = true;
+    Get.put<ProfileService>(service);
+    Get.put<AuthController>(FakeAuthController());
+    final controller = ProfileController();
+    await controller.unblockUser('2');
+    expect(service.blocked, isFalse);
+  });
 }

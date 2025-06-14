@@ -194,6 +194,20 @@ void main() {
     expect(controller.posts, isEmpty);
   });
 
+  test('loadPosts filters blocked user ids', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    service.store.addAll([
+      FeedPost(id: '1', roomId: 'room', userId: 'u1', username: 'user1', content: 'hi'),
+      FeedPost(id: '2', roomId: 'room', userId: 'u2', username: 'user2', content: 'yo'),
+    ]);
+
+    await controller.loadPosts('room', blockedIds: ['u2']);
+
+    expect(controller.posts.length, 1);
+    expect(controller.posts.first.id, '1');
+  });
+
   test('createPost adds to list', () async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);
