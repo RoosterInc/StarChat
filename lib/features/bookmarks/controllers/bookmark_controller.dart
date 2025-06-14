@@ -25,18 +25,33 @@ class BookmarkController extends GetxController {
   Future<void> toggleBookmark(String userId, String postId) async {
     if (_bookmarkIds.containsKey(postId)) {
       final id = _bookmarkIds.remove(postId)!;
+      final index = bookmarks.indexWhere((b) => b.post.id == postId);
+      final removed = index != -1 ? bookmarks.removeAt(index) : null;
       try {
         await service.removeBookmark(id);
-      } catch (_) {}
-      bookmarks.removeWhere((b) => b.post.id == postId);
+      } catch (_) {
+        if (removed != null) {
+          bookmarks.insert(index, removed);
+        }
+        _bookmarkIds[postId] = id;
+      }
     } else {
-      await service.bookmarkPost(userId, postId);
-      final bm = await service.getUserBookmark(postId, userId);
-      final post = Get.find<FeedController>().posts.firstWhereOrNull((p) => p.id == postId);
-      if (bm != null && post != null) {
-        _bookmarkIds[postId] = bm.id;
-        bookmarks.insert(0, BookmarkedPost(bookmark: bm, post: post));
-      } else {
+      try {
+        await service.bookmarkPost(userId, postId);
+      } catch (_) {}
+
+      try {
+        final bm = await service.getUserBookmark(postId, userId);
+        final post = Get.find<FeedController>()
+            .posts
+            .firstWhereOrNull((p) => p.id == postId);
+        if (bm != null && post != null) {
+          _bookmarkIds[postId] = bm.id;
+          bookmarks.insert(0, BookmarkedPost(bookmark: bm, post: post));
+        } else {
+          _bookmarkIds[postId] = 'offline';
+        }
+      } catch (_) {
         _bookmarkIds[postId] = 'offline';
       }
     }

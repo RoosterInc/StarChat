@@ -621,7 +621,8 @@ class FeedService {
             await bookmarkPost(data['user_id'], data['post_id']);
             break;
           case 'remove_bookmark':
-            await removeBookmark(item['bookmark_id']);
+            final data = Map<String, dynamic>.from(item['data']);
+            await removeBookmark(data['bookmark_id']);
             break;
           case 'comment':
             await createComment(PostComment.fromJson(
@@ -725,9 +726,10 @@ class FeedService {
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'remove_bookmark',
-        'bookmark_id': bookmarkId,
+        'data': {'bookmark_id': bookmarkId},
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+      rethrow;
     }
   }
 

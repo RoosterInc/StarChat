@@ -56,6 +56,7 @@ class OfflineStorage extends Storage {
 
 class _CountingService extends FeedService {
   final List<String> deletedIds = [];
+  final List<String> removedBookmarks = [];
   _CountingService()
       : super(
           databases: Databases(Client()),
@@ -74,6 +75,11 @@ class _CountingService extends FeedService {
   @override
   Future<void> deleteRepost(String repostId, String postId) async {
     deletedIds.add(repostId);
+  }
+
+  @override
+  Future<void> removeBookmark(String bookmarkId) async {
+    removedBookmarks.add(bookmarkId);
   }
 }
 
@@ -165,6 +171,15 @@ void main() {
     expect(queue.isNotEmpty, isTrue);
   });
 
+  test('removeBookmark queues when offline', () async {
+    await expectLater(service.removeBookmark('b1'), throwsA(anything));
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(queue.length - 1) as Map?;
+    expect(item?['action'], 'remove_bookmark');
+    expect(item?['data']['bookmark_id'], 'b1');
+  });
+
   test('postQueueBox capped at 50 items', () async {
     final file = File('${dir.path}/img.jpg');
     await file.writeAsBytes(List.filled(10, 0));
@@ -206,6 +221,15 @@ void main() {
     final counterService = _CountingService();
     await counterService.syncQueuedActions();
     expect(counterService.deletedIds.contains('r2'), isTrue);
+    final queue = Hive.box('action_queue');
+    expect(queue.isEmpty, isTrue);
+  });
+
+  test('syncQueuedActions processes remove_bookmark items', () async {
+    await expectLater(service.removeBookmark('b2'), throwsA(anything));
+    final counterService = _CountingService();
+    await counterService.syncQueuedActions();
+    expect(counterService.removedBookmarks.contains('b2'), isTrue);
     final queue = Hive.box('action_queue');
     expect(queue.isEmpty, isTrue);
   });
