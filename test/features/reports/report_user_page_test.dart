@@ -5,6 +5,7 @@ import 'package:appwrite/appwrite.dart';
 
 import 'package:myapp/features/reports/screens/report_user_page.dart';
 import 'package:myapp/features/reports/services/report_service.dart';
+import 'package:myapp/features/reports/models/report_type.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
 class FakeReportService extends ReportService {
@@ -20,7 +21,7 @@ class FakeReportService extends ReportService {
   Future<void> reportUser(
     String reporterId,
     String reportedUserId,
-    String reportType,
+    ReportType reportType,
     String description,
   ) async {
     called = true;
