@@ -1273,11 +1273,15 @@ class SwipeableWatchlistCard extends StatelessWidget {
                 onPressed: () => Get.back(result: false),
                 child: const Text('Cancel'),
               ),
-              ElevatedButton(
+              AnimatedButton(
                 onPressed: () => Get.back(result: true),
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: context.colorScheme.error,
                   foregroundColor: context.colorScheme.onError,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
                 ),
                 child: const Text('Remove'),
               ),
@@ -1464,10 +1468,22 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton.icon(
+                    AnimatedButton(
                       onPressed: () => _showAddItemDialog(context, controller),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Your First Item'),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.md(context),
+                          vertical: DesignTokens.sm(context),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add),
+                          SizedBox(width: DesignTokens.sm(context)),
+                          const Text('Add Your First Item'),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -1603,7 +1619,7 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             actions: [
               TextButton(
                   onPressed: () => Get.back(), child: const Text('Cancel')),
-              ElevatedButton(
+              AnimatedButton(
                 onPressed: (selectedRashi != null && selectedNakshatra != null)
                     ? () {
                         controller.addThreeWatchlistItems(
@@ -1611,6 +1627,12 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                         Get.back();
                       }
                     : null,
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
                 child: const Text('Add Items'),
               ),
             ],
@@ -1669,11 +1691,17 @@ class EnhancedWatchlistWidget extends StatelessWidget {
                 onPressed: () => Get.back(),
                 child: const Text('Cancel'),
               ),
-              ElevatedButton(
+              AnimatedButton(
                 onPressed: () {
                   controller.updateItem(item.id, color: selectedColor);
                   Get.back();
                 },
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
                 child: const Text('Update'),
               ),
             ],
@@ -1709,14 +1737,18 @@ class EnhancedWatchlistWidget extends StatelessWidget {
             onPressed: () => Get.back(),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          AnimatedButton(
             onPressed: () {
               controller.clearAllItems();
               Get.back();
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: context.colorScheme.error,
               foregroundColor: context.colorScheme.onError,
+              padding: EdgeInsets.symmetric(
+                horizontal: DesignTokens.md(context),
+                vertical: DesignTokens.sm(context),
+              ),
             ),
             child: const Text('Clear All'),
           ),

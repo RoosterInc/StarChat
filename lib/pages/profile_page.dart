@@ -8,6 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/safe_network_image.dart';
 import '../controllers/user_type_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class ProfilePage extends GetView<AuthController> {
   const ProfilePage({super.key});
@@ -57,13 +58,25 @@ class ProfilePage extends GetView<AuthController> {
                 style: const TextStyle(fontSize: 20),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              AnimatedButton(
                 onPressed: () => Get.toNamed('/set_username'),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
                 child: Text('change_username'.tr),
               ),
               const SizedBox(height: 8),
-              ElevatedButton(
+              AnimatedButton(
                 onPressed: _changePicture,
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
                 child: Text('change_picture'.tr),
               ),
               const SizedBox(height: 16),

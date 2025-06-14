@@ -43,8 +43,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: Text(profile.bio!),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            AnimatedButton(
               onPressed: () => controller.followUser(profile.id),
+              style: FilledButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: DesignTokens.md(context),
+                  vertical: DesignTokens.sm(context),
+                ),
+              ),
               child: const Text('Follow'),
             ),
             Padding(
