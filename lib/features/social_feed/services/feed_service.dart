@@ -476,6 +476,45 @@ class FeedService {
           body: jsonEncode({'post_id': like['item_id']}),
         );
       }
+      if (Get.isRegistered<NotificationService>()) {
+        try {
+          String ownerId;
+          switch (like['item_type']) {
+            case 'comment':
+              final res = await databases.getDocument(
+                databaseId: databaseId,
+                collectionId: commentsCollectionId,
+                documentId: like['item_id'],
+              );
+              ownerId = res.data['user_id'];
+              break;
+            case 'repost':
+              final res = await databases.getDocument(
+                databaseId: databaseId,
+                collectionId: repostsCollectionId,
+                documentId: like['item_id'],
+              );
+              ownerId = res.data['user_id'];
+              break;
+            default:
+              final res = await databases.getDocument(
+                databaseId: databaseId,
+                collectionId: postsCollectionId,
+                documentId: like['item_id'],
+              );
+              ownerId = res.data['user_id'];
+          }
+          if (ownerId != like['user_id']) {
+            await Get.find<NotificationService>().createNotification(
+              ownerId,
+              like['user_id'],
+              'like',
+              itemId: like['item_id'],
+              itemType: like['item_type'],
+            );
+          }
+        } catch (_) {}
+      }
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'like',
