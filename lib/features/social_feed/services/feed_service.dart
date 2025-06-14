@@ -12,6 +12,7 @@ import '../models/post_repost.dart';
 import '../../bookmarks/models/bookmark.dart';
 import '../../notifications/services/notification_service.dart';
 import '../controllers/comments_controller.dart';
+import 'mention_service.dart';
 
 class FeedService {
   final Databases databases;
@@ -824,6 +825,11 @@ class FeedService {
             final c =
                 PostComment.fromJson(Map<String, dynamic>.from(item['data']));
             final newId = await createComment(c);
+            final mentionNames = _limitMentions(RegExp(r'@([A-Za-z0-9_]+)')
+                .allMatches(c.content)
+                .map((m) => m.group(1)!)
+                .toSet()
+                .toList());
             await commentsBox.delete(c.id);
             final listKey = 'comments_${c.postId}';
             final list = (commentsBox.get(listKey, defaultValue: []) as List)
@@ -859,6 +865,13 @@ class FeedService {
               }
             }
             await commentsBox.put(listKey, list);
+            if (Get.isRegistered<MentionService>()) {
+              await Get.find<MentionService>().notifyMentions(
+                mentionNames,
+                newId ?? c.id,
+                'comment',
+              );
+            }
             break;
           case 'unlike':
             await deleteLike(
@@ -871,19 +884,43 @@ class FeedService {
             await deleteRepost(item['id'], item['post_id']);
             break;
           case 'post':
-            await createPost(
-                FeedPost.fromJson(Map<String, dynamic>.from(item['data'])));
+            final post =
+                FeedPost.fromJson(Map<String, dynamic>.from(item['data']));
+            await createPost(post);
+            if (Get.isRegistered<MentionService>()) {
+              await Get.find<MentionService>().notifyMentions(
+                post.mentions,
+                post.id,
+                'post',
+              );
+            }
             break;
           case 'post_with_link':
-            await createPostWithLink(
-              item['user_id'],
-              item['username'],
-              item['content'],
-              item['room_id'],
-              item['link_url'],
-              hashtags: (item['hashtags'] as List?)?.cast<String>() ?? const [],
-              mentions: (item['mentions'] as List?)?.cast<String>() ?? const [],
+            final linkMentions =
+                (item['mentions'] as List?)?.cast<String>() ?? const [];
+            final metadata = await fetchLinkMetadata(item['link_url']);
+            final now = DateTime.now();
+            final post = FeedPost(
+              id: now.toIso8601String(),
+              roomId: item['room_id'] ?? '',
+              userId: item['user_id'],
+              username: item['username'],
+              content: item['content'],
+              linkUrl: item['link_url'],
+              linkMetadata: metadata,
+              hashtags:
+                  (item['hashtags'] as List?)?.cast<String>() ?? const [],
+              mentions: linkMentions,
+              createdAt: now,
             );
+            await createPost(post);
+            if (Get.isRegistered<MentionService>()) {
+              await Get.find<MentionService>().notifyMentions(
+                linkMentions,
+                post.id,
+                'post',
+              );
+            }
             break;
           case 'hashtag':
             final tag = (item['data'] as String).toLowerCase();
@@ -916,15 +953,29 @@ class FeedService {
       try {
         if (item['action'] == 'post_with_image') {
           final file = File(item['image_path']);
-          await createPostWithImage(
-            item['user_id'],
-            item['username'],
-            item['content'],
-            item['room_id'],
-            file,
+          final imageUrl = await uploadImage(file);
+          final mentions =
+              (item['mentions'] as List?)?.cast<String>() ?? const [];
+          final now = DateTime.now();
+          final post = FeedPost(
+            id: now.toIso8601String(),
+            roomId: item['room_id'] ?? '',
+            userId: item['user_id'],
+            username: item['username'],
+            content: item['content'],
+            mediaUrls: [imageUrl],
             hashtags: (item['hashtags'] as List?)?.cast<String>() ?? const [],
-            mentions: (item['mentions'] as List?)?.cast<String>() ?? const [],
+            mentions: mentions,
+            createdAt: now,
           );
+          await createPost(post);
+          if (Get.isRegistered<MentionService>()) {
+            await Get.find<MentionService>().notifyMentions(
+              mentions,
+              post.id,
+              'post',
+            );
+          }
         }
         await postQueueBox.delete(key);
       } catch (_) {}
