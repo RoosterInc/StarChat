@@ -42,7 +42,7 @@ class _TrackingService extends FeedService {
   Future<PostRepost?> getUserRepost(String postId, String userId) async => null;
 
   @override
-  Future<void> deleteRepost(String repostId) async {}
+  Future<void> deleteRepost(String repostId, String postId) async {}
 }
 
 void main() {

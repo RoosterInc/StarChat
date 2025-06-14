@@ -381,19 +381,25 @@ class FeedService {
     }
   }
 
-  Future<void> deleteRepost(String repostId) async {
+  Future<void> deleteRepost(String repostId, String postId) async {
     try {
       await databases.deleteDocument(
         databaseId: databaseId,
         collectionId: repostsCollectionId,
         documentId: repostId,
       );
+      await functions.createExecution(
+        functionId: 'decrement_repost_count',
+        body: jsonEncode({'post_id': postId}),
+      );
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
-        'action': 'undo_repost',
-        'repost_id': repostId,
+        'action': 'delete_repost',
+        'id': repostId,
+        'post_id': postId,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+      rethrow;
     }
   }
 
@@ -625,8 +631,8 @@ class FeedService {
               itemType: item['item_type'],
             );
             break;
-          case 'undo_repost':
-            await deleteRepost(item['repost_id']);
+          case 'delete_repost':
+            await deleteRepost(item['id'], item['post_id']);
             break;
           case 'post':
             await createPost(FeedPost.fromJson(
