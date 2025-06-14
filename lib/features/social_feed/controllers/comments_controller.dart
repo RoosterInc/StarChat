@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:get/get.dart';
+import 'package:appwrite/appwrite.dart';
 import '../../../controllers/auth_controller.dart';
 import '../models/post_comment.dart';
 import "../../profile/services/activity_service.dart";
@@ -7,10 +8,17 @@ import '../services/feed_service.dart';
 
 class CommentsController extends GetxController {
   final FeedService service;
+  final Realtime? realtime;
 
-  CommentsController({required this.service});
+  CommentsController({required this.service, this.realtime}) {
+    _realtime = realtime;
+  }
 
   static const int maxDepth = 5;
+
+  Realtime? _realtime;
+  RealtimeSubscription? _subscription;
+  String? _postId;
 
   final _comments = <PostComment>[].obs;
   List<PostComment> get comments => _comments;
@@ -35,6 +43,7 @@ class CommentsController extends GetxController {
           if (like != null) _likedIds[c.id] = like.id;
         }
       }
+      _listenToRealtime(postId);
     } finally {
       _isLoading.value = false;
     }
@@ -90,5 +99,39 @@ class CommentsController extends GetxController {
 
   List<PostComment> getReplies(String commentId) {
     return _comments.where((c) => c.parentId == commentId).toList();
+  }
+
+  void _listenToRealtime(String postId) {
+    if (_postId == postId && _subscription != null) return;
+    final auth = Get.find<AuthController>();
+    _postId = postId;
+    _realtime ??= Realtime(auth.client);
+    _subscription?.close();
+    _subscription = _realtime!.subscribe([
+      'databases.${service.databaseId}.collections.${service.commentsCollectionId}.documents'
+    ]);
+    _subscription!.stream.listen((event) {
+      final payload = event.payload;
+      if (payload['post_id'] != postId) return;
+      final id = payload['\$id'] ?? payload['id'];
+      if (event.events.any((e) => e.contains('.create'))) {
+        final comment = PostComment.fromJson(payload);
+        if (!_comments.any((c) => c.id == id) && !comment.isDeleted) {
+          _comments.add(comment);
+          _likeCounts[id] = comment.likeCount;
+        }
+      } else if (event.events.any((e) => e.contains('.update')) &&
+          payload['is_deleted'] == true) {
+        _comments.removeWhere((c) => c.id == id);
+        _likedIds.remove(id);
+        _likeCounts.remove(id);
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    _subscription?.close();
+    super.onClose();
   }
 }
