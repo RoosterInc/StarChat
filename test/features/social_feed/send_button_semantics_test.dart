@@ -24,7 +24,11 @@ class _FakeService extends FeedService {
         );
 
   @override
-  Future<List<PostComment>> getComments(String postId) async => [];
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async => [];
 
   @override
   Future<String?> createComment(PostComment comment) async {

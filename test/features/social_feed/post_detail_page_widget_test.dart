@@ -37,7 +37,11 @@ class TestFeedService extends FeedService {
   final List<FeedPost> postStore = [];
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return commentStore.where((c) => c.postId == postId).toList();
   }
 
@@ -62,7 +66,11 @@ class DelayedFeedService extends TestFeedService {
 
 class DelayedCommentService extends TestFeedService {
   @override
-  Future<List<PostComment>> getComments(String postId) {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) {
     return Future.delayed(const Duration(milliseconds: 100), () => []);
   }
 }
@@ -71,7 +79,11 @@ class CountingService extends TestFeedService {
   int calls = 0;
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     calls++;
     return [];
   }

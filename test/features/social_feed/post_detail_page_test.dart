@@ -30,7 +30,12 @@ class _DelayedService extends FeedService {
         );
 
   @override
-  Future<List<PostComment>> getComments(String postId) => completer.future;
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) =>
+      completer.future;
 }
 
 void main() {

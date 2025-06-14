@@ -40,7 +40,11 @@ class _FakeService extends FeedService {
   }
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return comments.where((c) => c.postId == postId).toList();
   }
 

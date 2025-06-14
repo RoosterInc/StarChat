@@ -31,7 +31,11 @@ class FakeFeedService extends FeedService {
   final Map<String, String> likes = {};
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return store.where((c) => c.postId == postId).toList();
   }
 
@@ -110,7 +114,11 @@ class ServiceWithPosts extends FeedService {
   }
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return comments.where((c) => c.postId == postId).toList();
   }
 

@@ -49,7 +49,11 @@ class _FakeService extends FeedService {
   final Map<String, String> likes = {};
 
   @override
-  Future<List<PostComment>> getComments(String postId) async {
+  Future<List<PostComment>> getComments(
+    String postId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
     return store.where((e) => e.postId == postId).toList();
   }
 
