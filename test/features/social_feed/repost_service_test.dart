@@ -145,11 +145,21 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  test('createRepost triggers function and notification', () async {
+  test('createRepost triggers function and notification with comment', () async {
     final id = await service.createRepost({
       'post_id': 'p1',
       'user_id': 'u2',
       'comment': 'hi'
+    });
+    expect(id, isNotNull);
+    expect(functions.count, 1);
+    expect(notification.count, 1);
+  });
+
+  test('createRepost triggers notification without comment', () async {
+    final id = await service.createRepost({
+      'post_id': 'p1',
+      'user_id': 'u2'
     });
     expect(id, isNotNull);
     expect(functions.count, 1);

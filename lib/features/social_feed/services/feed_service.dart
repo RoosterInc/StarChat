@@ -536,10 +536,7 @@ class FeedService {
         functionId: 'increment_repost_count',
         body: jsonEncode({'post_id': repost['post_id']}),
       );
-      final comment = repost['comment'];
-      if (comment != null &&
-          comment.toString().isNotEmpty &&
-          Get.isRegistered<NotificationService>()) {
+      if (Get.isRegistered<NotificationService>()) {
         try {
           final res = await databases.getDocument(
             databaseId: databaseId,
