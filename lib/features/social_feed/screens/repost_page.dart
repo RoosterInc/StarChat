@@ -4,8 +4,19 @@ import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
 
+/// A page that lets a user repost an existing [FeedPost] with an optional
+/// comment.
+///
+/// The original post that will be shared is provided via [post].
+///
+/// Example usage:
+/// ```dart
+/// Get.to(() => RepostPage(post: myPost));
+/// ```
 class RepostPage extends StatefulWidget {
+  /// The post that should be reposted.
   final FeedPost post;
+
   const RepostPage({super.key, required this.post});
 
   @override
