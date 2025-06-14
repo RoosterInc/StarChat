@@ -49,6 +49,14 @@ class FeedService {
     });
   }
 
+  Future<void> _addToBoxWithLimit(Box box, Map<String, dynamic> data) async {
+    if (box.length >= 50) {
+      final firstKey = box.keys.first;
+      await box.delete(firstKey);
+    }
+    await box.add(data);
+  }
+
   Future<List<FeedPost>> getPosts(String roomId,
       {List<String> blockedIds = const []}) async {
     try {
@@ -111,7 +119,7 @@ class FeedService {
         data: post.toJson(),
       );
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'post',
         'data': post.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
@@ -156,7 +164,7 @@ class FeedService {
       );
       await createPost(post);
     } catch (_) {
-      await postQueueBox.add({
+      await _addToBoxWithLimit(postQueueBox, {
         'action': 'post_with_image',
         'user_id': userId,
         'username': username,
@@ -203,7 +211,7 @@ class FeedService {
       );
       await createPost(post);
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'post_with_link',
         'user_id': userId,
         'username': username,
@@ -264,7 +272,7 @@ class FeedService {
         comment.id,
         {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()},
       );
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'comment',
         'data': comment.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
@@ -281,7 +289,7 @@ class FeedService {
         data: like,
       );
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'like',
         'data': like,
         '_cachedAt': DateTime.now().toIso8601String(),
@@ -299,7 +307,7 @@ class FeedService {
       );
       return doc.$id;
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'repost',
         'data': repost,
         '_cachedAt': DateTime.now().toIso8601String(),
@@ -349,7 +357,7 @@ class FeedService {
           );
         }
       } catch (_) {
-        await queueBox.add({
+        await _addToBoxWithLimit(queueBox, {
           'action': 'hashtag',
           'data': tag,
           '_cachedAt': DateTime.now().toIso8601String(),
@@ -559,7 +567,7 @@ class FeedService {
         },
       );
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'bookmark',
         'data': {'user_id': userId, 'post_id': postId},
         '_cachedAt': DateTime.now().toIso8601String(),
@@ -691,7 +699,7 @@ class FeedService {
         data: follow,
       );
     } catch (_) {
-      await queueBox.add({
+      await _addToBoxWithLimit(queueBox, {
         'action': 'follow',
         'data': follow,
         '_cachedAt': DateTime.now().toIso8601String(),
