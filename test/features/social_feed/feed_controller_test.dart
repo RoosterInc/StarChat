@@ -277,4 +277,10 @@ void main() {
     expect(service.store.first.hashtags.length, 10);
     expect(controller.posts.first.hashtags.length, 10);
   });
+
+  test('updateSortType stores value', () async {
+    final controller = FeedController(service: FakeFeedService());
+    controller.updateSortType('time-based');
+    expect(controller.sortType, 'time-based');
+  });
 }

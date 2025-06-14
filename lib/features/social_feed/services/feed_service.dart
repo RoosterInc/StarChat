@@ -30,6 +30,8 @@ class FeedService {
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
+  static const Duration _timeWindow = Duration(hours: 24);
+
   FeedService({
     required this.databases,
     required this.storage,
@@ -56,6 +58,36 @@ class FeedService {
       await box.delete(firstKey);
     }
     await box.add(data);
+  }
+
+  Future<void> _incrementCommentCount(String postId) async {
+    try {
+      await functions.createExecution(
+        functionId: 'increment_comment_count',
+        body: jsonEncode({'post_id': postId}),
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'increment_comment_count',
+        'data': {'post_id': postId},
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> _incrementLikeCount(Map<String, dynamic> data) async {
+    try {
+      await functions.createExecution(
+        functionId: 'increment_like_count',
+        body: jsonEncode(data),
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'increment_like_count',
+        'data': data,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   List<String> _limitHashtags(List<String> tags) =>
@@ -297,6 +329,7 @@ class FeedService {
         documentId: ID.unique(),
         data: comment.toJson(),
       );
+      await _incrementCommentCount(comment.postId);
     } catch (_) {
       await commentsBox.put(
         comment.id,
@@ -318,6 +351,10 @@ class FeedService {
         documentId: ID.unique(),
         data: like,
       );
+      await _incrementLikeCount({
+        'item_id': like['item_id'],
+        'item_type': like['item_type'],
+      });
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'like',
@@ -531,6 +568,10 @@ class FeedService {
           case 'like':
             await createLike(Map<String, dynamic>.from(item['data']));
             break;
+          case 'increment_like_count':
+            await _incrementLikeCount(
+                Map<String, dynamic>.from(item['data']));
+            break;
           case 'repost':
             await createRepost(Map<String, dynamic>.from(item['data']));
             break;
@@ -541,6 +582,9 @@ class FeedService {
           case 'comment':
             await createComment(PostComment.fromJson(
                 Map<String, dynamic>.from(item['data'])));
+            break;
+          case 'increment_comment_count':
+            await _incrementCommentCount(item['data']['post_id'] as String);
             break;
           case 'post':
             await createPost(FeedPost.fromJson(
@@ -758,6 +802,12 @@ class FeedService {
       queries.add(Query.equal('room_id', roomId));
     }
     switch (sortType) {
+      case 'time-based':
+        final cutoff = DateTime.now().subtract(_timeWindow);
+        queries
+          ..add(Query.greaterThan('\$createdAt', cutoff.toIso8601String()))
+          ..add(Query.orderDesc('\$createdAt'));
+        break;
       case 'chronological':
       case 'most-recent':
         queries.add(Query.orderDesc('\$createdAt'));
@@ -776,10 +826,24 @@ class FeedService {
         collectionId: postsCollectionId,
         queries: queries,
       );
-      final posts = result.documents
-          .map((e) => FeedPost.fromJson(e.data))
-          .where((p) => !p.isDeleted)
-          .toList();
+      var posts =
+          result.documents.map((e) => FeedPost.fromJson(e.data)).toList();
+
+      if (posts.isEmpty && sortType == 'time-based') {
+        final fallbackQueries = <String>[Query.limit(20)];
+        if (roomId != null) {
+          fallbackQueries.add(Query.equal('room_id', roomId));
+        }
+        fallbackQueries.add(Query.orderDesc('\$createdAt'));
+        final fallbackRes = await databases.listDocuments(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          queries: fallbackQueries,
+        );
+        posts.addAll(
+            fallbackRes.documents.map((e) => FeedPost.fromJson(e.data)).toList());
+      }
+      posts = posts.where((p) => !p.isDeleted).toList();
       final cache = posts
           .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();

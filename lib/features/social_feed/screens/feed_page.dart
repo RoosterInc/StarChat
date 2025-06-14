@@ -46,6 +46,10 @@ class _FeedPageState extends State<FeedPage> {
             child: Text('Most Recent'),
           ),
           DropdownMenuItem(
+            value: 'time-based',
+            child: Text('Last 24h'),
+          ),
+          DropdownMenuItem(
             value: 'most-commented',
             child: Text('Most Commented'),
           ),
