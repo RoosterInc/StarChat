@@ -62,6 +62,10 @@ class _ReportUserPageState extends State<ReportUserPage> {
                       Get.snackbar('Error', 'Login required');
                       return;
                     }
+                    if (uid == widget.userId) {
+                      Get.snackbar('Error', 'You cannot report yourself');
+                      return;
+                    }
                     try {
                       await Get.find<ReportService>().reportUser(
                         uid,
