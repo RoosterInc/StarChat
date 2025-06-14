@@ -11,6 +11,7 @@ import '../models/post_like.dart';
 import '../models/post_repost.dart';
 import '../../bookmarks/models/bookmark.dart';
 import '../../notifications/services/notification_service.dart';
+import '../controllers/comments_controller.dart';
 
 class FeedService {
   final Databases databases;
@@ -44,7 +45,8 @@ class FeedService {
     required this.connectivity,
     required this.linkMetadataFunctionId,
   }) {
-    connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    connectivity.onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
       if (results.any((r) => r != ConnectivityResult.none)) {
         syncQueuedActions();
       }
@@ -82,7 +84,8 @@ class FeedService {
           .where((p) => !p.isDeleted && !blockedIds.contains(p.userId))
           .toList();
       final cache = posts
-          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .map((e) =>
+              {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
       await postsBox.put('posts_$roomId', cache);
       return posts;
@@ -282,7 +285,8 @@ class FeedService {
       final existing =
           (commentsBox.get(cacheKey, defaultValue: []) as List).cast<dynamic>();
       final cache = comments
-          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .map((e) =>
+              {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
       await commentsBox.put(
         cacheKey,
@@ -324,6 +328,7 @@ class FeedService {
   }
 
   Future<String?> createComment(PostComment comment) async {
+    String? id;
     try {
       final doc = await databases.createDocument(
         databaseId: databaseId,
@@ -331,6 +336,7 @@ class FeedService {
         documentId: ID.unique(),
         data: comment.toJson(),
       );
+      id = doc.data['\$id'] ?? doc.data['id'];
       await functions.createExecution(
         functionId: 'increment_comment_count',
         body: jsonEncode({'post_id': comment.postId}),
@@ -361,7 +367,6 @@ class FeedService {
           }
         } catch (_) {}
       }
-      return doc.data['\$id'] ?? doc.data['id'];
     } catch (_) {
       await commentsBox.put(
         comment.id,
@@ -370,14 +375,14 @@ class FeedService {
       final listKey = 'comments_${comment.postId}';
       final current =
           (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
-      current.add({...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()});
+      current.add(
+          {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()});
       await commentsBox.put(listKey, current);
       await _addToBoxWithLimit(queueBox, {
         'action': 'comment',
         'data': comment.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
-      return null;
     }
 
     for (final key in postsBox.keys) {
@@ -419,6 +424,8 @@ class FeedService {
         );
       }
     }
+
+    return id;
   }
 
   Future<void> createLike(Map<String, dynamic> like) async {
@@ -462,7 +469,8 @@ class FeedService {
         body: jsonEncode({'post_id': repost['post_id']}),
       );
       final comment = repost['comment'];
-      if (comment != null && comment.toString().isNotEmpty &&
+      if (comment != null &&
+          comment.toString().isNotEmpty &&
           Get.isRegistered<NotificationService>()) {
         try {
           final res = await databases.getDocument(
@@ -669,9 +677,8 @@ class FeedService {
         documentId: postId,
       );
       final createdAtStr = doc.data['\$createdAt'] ?? doc.data['createdAt'];
-      final createdAt = createdAtStr != null
-          ? DateTime.parse(createdAtStr)
-          : DateTime.now();
+      final createdAt =
+          createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now();
       if (DateTime.now().difference(createdAt).inMinutes > 30) {
         throw Exception('Edit window expired');
       }
@@ -690,7 +697,8 @@ class FeedService {
 
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
-        final index = cached.indexWhere((p) => p['id'] == postId || p['\$id'] == postId);
+        final index =
+            cached.indexWhere((p) => p['id'] == postId || p['\$id'] == postId);
         if (index != -1) {
           cached[index] = {
             ...cached[index],
@@ -740,10 +748,10 @@ class FeedService {
             final newId = await createComment(c);
             await commentsBox.delete(c.id);
             final listKey = 'comments_${c.postId}';
-            final list =
-                (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
-            final index = list.indexWhere(
-                (e) => e['id'] == c.id || e['\$id'] == c.id);
+            final list = (commentsBox.get(listKey, defaultValue: []) as List)
+                .cast<dynamic>();
+            final index =
+                list.indexWhere((e) => e['id'] == c.id || e['\$id'] == c.id);
             if (index != -1) {
               list.removeAt(index);
             }
@@ -753,7 +761,8 @@ class FeedService {
               list.add(map);
               if (Get.isRegistered<CommentsController>()) {
                 final controller = Get.find<CommentsController>();
-                final i = controller.comments.indexWhere((com) => com.id == c.id);
+                final i =
+                    controller.comments.indexWhere((com) => com.id == c.id);
                 if (i != -1) {
                   controller.comments[i] = PostComment(
                     id: newId,
@@ -784,8 +793,8 @@ class FeedService {
             await deleteRepost(item['id'], item['post_id']);
             break;
           case 'post':
-            await createPost(FeedPost.fromJson(
-                Map<String, dynamic>.from(item['data'])));
+            await createPost(
+                FeedPost.fromJson(Map<String, dynamic>.from(item['data'])));
             break;
           case 'post_with_link':
             await createPostWithLink(
@@ -1039,7 +1048,8 @@ class FeedService {
     }
   }
 
-  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
+  Future<List<FeedPost>> fetchSortedPosts(String sortType,
+      {String? roomId}) async {
     final queries = <String>[Query.limit(20)];
     if (roomId != null) {
       queries.add(Query.equal('room_id', roomId));
@@ -1068,7 +1078,8 @@ class FeedService {
           .where((p) => !p.isDeleted)
           .toList();
       final cache = posts
-          .map((e) => {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
+          .map((e) =>
+              {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
       await postsBox.put(key, cache);
       return posts;
