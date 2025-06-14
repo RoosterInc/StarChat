@@ -536,23 +536,23 @@ class FeedService {
         functionId: 'increment_repost_count',
         body: jsonEncode({'post_id': repost['post_id']}),
       );
-      if (Get.isRegistered<NotificationService>()) {
-        try {
-          final res = await databases.getDocument(
-            databaseId: databaseId,
-            collectionId: postsCollectionId,
-            documentId: repost['post_id'],
-          );
-          final userId = res.data['user_id'];
+      try {
+        final res = await databases.getDocument(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          documentId: repost['post_id'],
+        );
+        final ownerId = res.data['user_id'];
+        if (Get.isRegistered<NotificationService>()) {
           await Get.find<NotificationService>().createNotification(
-            userId,
+            ownerId,
             repost['user_id'],
             'repost',
             itemId: repost['post_id'],
             itemType: 'post',
           );
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
       return doc.$id;
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
