@@ -59,6 +59,13 @@ class DelayedFeedService extends TestFeedService {
   }
 }
 
+class DelayedCommentService extends TestFeedService {
+  @override
+  Future<List<PostComment>> getComments(String postId) {
+    return Future.delayed(const Duration(milliseconds: 100), () => []);
+  }
+}
+
 class MockNotificationService extends NotificationService {
   MockNotificationService()
       : super(
@@ -187,6 +194,27 @@ void main() {
           brightness: Brightness.light,
         ),
         home: FeedPage(roomId: 'r1'),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.byType(SkeletonLoader), findsWidgets);
+
+    await tester.pump(const Duration(milliseconds: 150));
+  });
+
+  testWidgets('shows comment skeletons while loading', (tester) async {
+    final service = DelayedCommentService();
+    final controller = CommentsController(service: service);
+    Get.put<CommentsController>(controller);
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: PostDetailPage(post: post),
       ),
     );
 
