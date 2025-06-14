@@ -124,7 +124,7 @@ class CommentCard extends StatelessWidget {
               target: ReactionTarget.comment,
               isLiked: controller.isCommentLiked(comment.id),
               likeCount: controller.commentLikeCount(comment.id),
-              commentCount: comment.replyCount,
+              commentCount: controller.commentReplyCount(comment.id),
               repostCount: 0,
             ),
           ],
