@@ -39,6 +39,14 @@ class _FeedPageState extends State<FeedPage> {
             child: Text('Chronological'),
           ),
           DropdownMenuItem(
+            value: 'most-recent',
+            child: Text('Most Recent'),
+          ),
+          DropdownMenuItem(
+            value: 'time-based',
+            child: Text('Time Based'),
+          ),
+          DropdownMenuItem(
             value: 'most-commented',
             child: Text('Most Commented'),
           ),
