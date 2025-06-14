@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../models/feed_post.dart';
 import '../controllers/feed_controller.dart';
+import '../services/mention_service.dart';
 
 class EditPostPage extends StatefulWidget {
   final FeedPost post;
@@ -63,6 +64,11 @@ class _EditPostPageState extends State<EditPostPage> {
                         _controller.text,
                         tags,
                         mentions,
+                      );
+                      await Get.find<MentionService>().notifyMentions(
+                        mentions,
+                        widget.post.id,
+                        'post',
                       );
                       Get.back();
                     } catch (e) {
