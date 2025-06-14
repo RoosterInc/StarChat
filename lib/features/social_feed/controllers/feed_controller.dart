@@ -193,8 +193,16 @@ class FeedController extends GetxController {
         'item_type': 'post',
         'user_id': uid,
       });
-      final like = await service.getUserLike(postId, uid);
-      if (like != null) _likedIds[postId] = like.id;
+      try {
+        final like = await service.getUserLike(postId, uid);
+        if (like != null) {
+          _likedIds[postId] = like.id;
+        } else {
+          _likedIds[postId] = 'offline';
+        }
+      } catch (_) {
+        _likedIds[postId] = 'offline';
+      }
       _likeCounts[postId] = (_likeCounts[postId] ?? 0) + 1;
     }
   }

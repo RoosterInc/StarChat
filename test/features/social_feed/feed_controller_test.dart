@@ -155,6 +155,31 @@ void main() {
     expect(controller.isPostLiked('1'), isFalse);
   });
 
+  test('toggleLikePost offline still updates locally', () async {
+    class OfflineLikeService extends FakeFeedService {
+      @override
+      Future<PostLike?> getUserLike(String itemId, String userId) {
+        return Future.error('offline');
+      }
+    }
+
+    final service = OfflineLikeService();
+    final controller = FeedController(service: service);
+    service.store.add(
+      FeedPost(
+        id: '1',
+        roomId: 'room',
+        userId: 'u1',
+        username: 'user',
+        content: 'text',
+      ),
+    );
+    await controller.loadPosts('room');
+    await controller.toggleLikePost('1');
+    expect(controller.isPostLiked('1'), isTrue);
+    expect(controller.postLikeCount('1'), 1);
+  });
+
   test('repostPost stores id and increases count', () async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);
