@@ -57,6 +57,7 @@ void main() {
     await Hive.openBox('action_queue');
     await Hive.openBox('post_queue');
     await Hive.openBox('bookmarks');
+    await Hive.openBox('hashtags');
     await Hive.openBox('preferences');
     service = FeedService(
       databases: OfflineDatabases(),
@@ -116,10 +117,14 @@ void main() {
     expect(queue.isNotEmpty, isTrue);
   });
 
-  test('saveHashtags queues when offline', () async {
+  test('saveHashtags caches and queues when offline', () async {
     await service.saveHashtags(['tag']);
     final queue = Hive.box('action_queue');
+    final box = Hive.box('hashtags');
     expect(queue.isNotEmpty, isTrue);
+    final cached = box.get('tag') as Map?;
+    expect(cached?['hashtag'], 'tag');
+    expect(cached?['last_used_at'], isNotNull);
   });
 
   test('bookmarkPost queues when offline', () async {

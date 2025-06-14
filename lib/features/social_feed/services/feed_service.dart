@@ -26,6 +26,7 @@ class FeedService {
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
   final Box bookmarksBox = Hive.box('bookmarks');
+  final Box hashtagsBox = Hive.box('hashtags');
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
@@ -317,7 +318,8 @@ class FeedService {
   }
 
   Future<void> saveHashtags(List<String> tags) async {
-    for (final tag in tags) {
+    for (final raw in tags) {
+      final tag = raw.toLowerCase();
       try {
         final existing = await databases.listDocuments(
           databaseId: databaseId,
@@ -348,7 +350,15 @@ class FeedService {
             },
           );
         }
+        await hashtagsBox.put(tag, {
+          'hashtag': tag,
+          'last_used_at': DateTime.now().toIso8601String(),
+        });
       } catch (_) {
+        await hashtagsBox.put(tag, {
+          'hashtag': tag,
+          'last_used_at': DateTime.now().toIso8601String(),
+        });
         await queueBox.add({
           'action': 'hashtag',
           'data': tag,
@@ -510,7 +520,12 @@ class FeedService {
             );
             break;
           case 'hashtag':
-            await saveHashtags([item['data'] as String]);
+            final tag = (item['data'] as String).toLowerCase();
+            await saveHashtags([tag]);
+            await hashtagsBox.put(tag, {
+              'hashtag': tag,
+              'last_used_at': DateTime.now().toIso8601String(),
+            });
             break;
           case 'follow':
             await createFollow(Map<String, dynamic>.from(item['data']));
