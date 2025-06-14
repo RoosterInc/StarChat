@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/notification_controller.dart';
+import '../models/notification_model.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -52,13 +53,11 @@ class _NotificationPageState extends State<NotificationPage> {
             return Padding(
               padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
               child: Semantics(
-                label:
-                    '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}',
+                label: _labelFor(n),
                 button: true,
                 child: ListTile(
                   leading: Icon(_iconForAction(n.actionType)),
-                  title: Text(
-                      '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
+                  title: Text(_labelFor(n)),
                   subtitle: Text(n.createdAt.toString()),
                     trailing: n.isRead
                         ? null
@@ -89,10 +88,19 @@ class _NotificationPageState extends State<NotificationPage> {
         return Icons.repeat;
       case 'mention':
         return Icons.alternate_email;
+      case 'bookmark':
+        return Icons.bookmark;
       case 'message':
         return Icons.message;
       default:
         return Icons.notifications;
     }
+  }
+
+  String _labelFor(NotificationModel n) {
+    final action = n.actionType == 'bookmark'
+        ? 'bookmarked'
+        : '${n.actionType}d';
+    return '${n.actorId} $action your ${n.itemType ?? 'content'}';
   }
 }
