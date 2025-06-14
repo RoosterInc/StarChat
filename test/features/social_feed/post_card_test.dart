@@ -72,6 +72,39 @@ void main() {
     await tester.pump();
     expect(find.text('Reposted by you'), findsOneWidget);
   });
+
+  testWidgets('repost button label updates when toggled', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Repost'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.repeat));
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Undo Repost'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.repeat));
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Repost'), findsOneWidget);
+  });
 }
 
 class FakeFeedService extends FeedService {

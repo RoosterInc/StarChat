@@ -91,7 +91,7 @@ class PostCard extends StatelessWidget {
     if (controller.isPostReposted(post.id)) {
       controller.undoRepost(post.id);
     } else {
-      Get.to(() => RepostPage(post: post));
+      controller.repostPost(post.id);
     }
   }
 
@@ -258,6 +258,7 @@ class PostCard extends StatelessWidget {
               commentCount: post.commentCount,
               repostCount: controller.postRepostCount(post.id),
               shareCount: post.shareCount,
+              isReposted: controller.isPostReposted(post.id),
             ),
           ],
         ),
