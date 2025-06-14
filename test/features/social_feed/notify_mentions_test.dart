@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
-import 'package:myapp/features/social_feed/screens/compose_post_page.dart';
+import 'package:myapp/features/social_feed/utils/mention_notifier.dart';
 import 'package:myapp/features/notifications/services/notification_service.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
@@ -65,6 +65,6 @@ void main() {
   });
 
   test('notifyMentions handles errors gracefully', () async {
-    await notifyMentionsForTest(['bob'], '1');
+    await notifyMentions(['bob'], '1', itemType: 'post');
   });
 }

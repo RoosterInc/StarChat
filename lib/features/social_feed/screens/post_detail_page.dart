@@ -8,11 +8,10 @@ import '../../../controllers/auth_controller.dart';
 import '../widgets/comment_card.dart';
 import '../utils/comment_validation.dart';
 import '../widgets/post_card.dart';
-import 'package:appwrite/appwrite.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/mention_notifier.dart';
 
 class PostDetailPage extends StatefulWidget {
   final FeedPost post;
@@ -25,38 +24,6 @@ class PostDetailPage extends StatefulWidget {
 class _PostDetailPageState extends State<PostDetailPage> {
   final _textController = TextEditingController();
   late final CommentsController _commentsController;
-
-  Future<void> _notifyMentions(List<String> mentions, String commentId) async {
-    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
-    try {
-      final auth = Get.find<AuthController>();
-      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final profilesId =
-          dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-      for (final name in mentions) {
-        final res = await auth.databases.listDocuments(
-          databaseId: dbId,
-          collectionId: profilesId,
-          queries: [Query.equal('username', name)],
-        );
-        if (res.documents.isNotEmpty) {
-          await Get.find<NotificationService>().createNotification(
-            res.documents.first.data['\$id'],
-            auth.userId ?? '',
-            'mention',
-            itemId: commentId,
-            itemType: 'comment',
-          );
-        }
-      }
-    } catch (e, st) {
-      logger.e('Error notifying mentions', error: e, stackTrace: st);
-      if (Get.context != null) {
-        Get.snackbar('Error', 'Failed to notify mentions',
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    }
-  }
 
   Future<void> _notifyPostAuthor(String authorId, String postId) async {
     if (!Get.isRegistered<NotificationService>()) return;
@@ -171,7 +138,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       content: text,
                     );
                     _commentsController.addComment(comment);
-                    await _notifyMentions(mentions, comment.id);
+                    await notifyMentions(
+                      mentions,
+                      comment.id,
+                      itemType: 'comment',
+                    );
                     await _notifyPostAuthor(widget.post.userId, widget.post.id);
                     _textController.clear();
                   },
