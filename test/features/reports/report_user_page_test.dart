@@ -9,7 +9,8 @@ import 'package:myapp/features/reports/models/report_type.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
 class FakeReportService extends ReportService {
-  bool called = false;
+  Map<String, dynamic>? lastCall;
+  bool shouldThrow = false;
   FakeReportService()
       : super(
           databases: Databases(Client()),
@@ -24,12 +25,18 @@ class FakeReportService extends ReportService {
     ReportType reportType,
     String description,
   ) async {
-    called = true;
+    if (shouldThrow) throw Exception('fail');
+    lastCall = {
+      'reporterId': reporterId,
+      'reportedUserId': reportedUserId,
+      'type': reportType,
+      'description': description,
+    };
   }
 }
 
 class TestAuthController extends AuthController {
-  TestAuthController(String id) {
+  TestAuthController(String? id) {
     userId = id;
   }
 
@@ -58,7 +65,63 @@ void main() {
     await tester.tap(find.text('Submit'));
     await tester.pump();
 
-    expect(service.called, isFalse);
+    expect(service.lastCall, isNull);
     expect(find.text('You cannot report yourself'), findsOneWidget);
+  });
+
+  testWidgets('submit calls reportUser when logged in', (tester) async {
+    final service = FakeReportService();
+    Get.put<ReportService>(service);
+    Get.put<AuthController>(TestAuthController('u1'));
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: const ReportUserPage(userId: 'u2'),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'desc');
+    await tester.tap(find.text('Submit'));
+    await tester.pump();
+
+    expect(service.lastCall?['reporterId'], 'u1');
+    expect(service.lastCall?['reportedUserId'], 'u2');
+    expect(service.lastCall?['type'], ReportType.spam);
+    expect(service.lastCall?['description'], 'desc');
+  });
+
+  testWidgets('unauthenticated submission shows error', (tester) async {
+    final service = FakeReportService();
+    Get.put<ReportService>(service);
+    Get.put<AuthController>(TestAuthController(null));
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: const ReportUserPage(userId: 'u2'),
+      ),
+    );
+
+    await tester.tap(find.text('Submit'));
+    await tester.pump();
+
+    expect(service.lastCall, isNull);
+    expect(find.text('Login required'), findsOneWidget);
+  });
+
+  testWidgets('error snackbar shown on failure', (tester) async {
+    final service = FakeReportService()..shouldThrow = true;
+    Get.put<ReportService>(service);
+    Get.put<AuthController>(TestAuthController('u1'));
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: const ReportUserPage(userId: 'u2'),
+      ),
+    );
+
+    await tester.tap(find.text('Submit'));
+    await tester.pump();
+
+    expect(find.text('Failed to submit report'), findsOneWidget);
   });
 }
