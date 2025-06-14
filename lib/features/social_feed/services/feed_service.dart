@@ -277,14 +277,29 @@ class FeedService {
       await commentsBox.put('comments_$postId', cache);
       return comments;
     } catch (_) {
-      final cached = commentsBox.get('comments_$postId', defaultValue: []) as List;
+      final listKey = 'comments_$postId';
+      final cachedList = (commentsBox.get(listKey, defaultValue: []) as List)
+          .map((e) => Map<String, dynamic>.from(e));
+      final merged = <String, Map<String, dynamic>>{};
+      for (final item in cachedList) {
+        final id = item['id'] ?? item['\$id'];
+        if (id != null) merged[id] = item;
+      }
+      for (final key in commentsBox.keys) {
+        if (key.toString().startsWith('comments_')) continue;
+        final data = commentsBox.get(key);
+        if (data is Map && data['post_id'] == postId) {
+          final id = data['id'] ?? data['\$id'];
+          if (id != null) merged[id] = Map<String, dynamic>.from(data);
+        }
+      }
       final expiry = DateTime.now().subtract(const Duration(days: 30));
-      return cached
+      return merged.values
           .where((e) {
             final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
             return ts == null || ts.isAfter(expiry);
           })
-          .map((e) => PostComment.fromJson(Map<String, dynamic>.from(e)))
+          .map(PostComment.fromJson)
           .where((c) => !c.isDeleted)
           .toList();
     }
@@ -333,6 +348,11 @@ class FeedService {
         comment.id,
         {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()},
       );
+      final listKey = 'comments_${comment.postId}';
+      final current =
+          (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
+      current.add({...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()});
+      await commentsBox.put(listKey, current);
       await _addToBoxWithLimit(queueBox, {
         'action': 'comment',
         'data': comment.toJson(),
@@ -695,8 +715,15 @@ class FeedService {
             await removeBookmark(data['bookmark_id']);
             break;
           case 'comment':
-            await createComment(PostComment.fromJson(
-                Map<String, dynamic>.from(item['data'])));
+            final c =
+                PostComment.fromJson(Map<String, dynamic>.from(item['data']));
+            await createComment(c);
+            await commentsBox.delete(c.id);
+            final listKey = 'comments_${c.postId}';
+            final list =
+                (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
+            list.removeWhere((e) => e['id'] == c.id || e['\$id'] == c.id);
+            await commentsBox.put(listKey, list);
             break;
           case 'unlike':
             await deleteLike(

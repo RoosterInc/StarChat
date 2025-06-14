@@ -337,4 +337,76 @@ void main() {
     expect(Hive.box('action_queue').isEmpty, isTrue);
   });
 
+  test('offline comment persists across restart', () async {
+    final comment = PostComment(
+      id: 'c_restart',
+      postId: 'p_restart',
+      userId: 'u',
+      username: 'name',
+      content: 'hi',
+    );
+    await service.createComment(comment);
+    expect((Hive.box('comments').get('comments_p_restart') as List).isNotEmpty, isTrue);
+
+    await Hive.close();
+    Hive.init(dir.path);
+    await Hive.openBox('posts');
+    await Hive.openBox('comments');
+    await Hive.openBox('action_queue');
+    await Hive.openBox('post_queue');
+    await Hive.openBox('bookmarks');
+    await Hive.openBox('hashtags');
+    await Hive.openBox('preferences');
+
+    final newService = FeedService(
+      databases: OfflineDatabases(),
+      storage: OfflineStorage(),
+      functions: Functions(Client()),
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
+    );
+
+    final comments = await newService.getComments('p_restart');
+    expect(comments.length, 1);
+    expect(comments.first.id, 'c_restart');
+  });
+
+  test('syncQueuedActions removes offline placeholder comments', () async {
+    final comment = PostComment(
+      id: 'c_sync',
+      postId: 'p_sync',
+      userId: 'u',
+      username: 'name',
+      content: 'hi',
+    );
+    await service.createComment(comment);
+    expect((Hive.box('comments').get('comments_p_sync') as List).isNotEmpty, isTrue);
+
+    final onlineService = FeedService(
+      databases: _FakeDatabases(),
+      storage: Storage(Client()),
+      functions: Functions(Client()),
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
+    );
+    await onlineService.syncQueuedActions();
+
+    final list = Hive.box('comments').get('comments_p_sync') as List?;
+    expect(list == null || list.isEmpty, isTrue);
+    expect(Hive.box('comments').containsKey('c_sync'), isFalse);
+    expect(Hive.box('action_queue').isEmpty, isTrue);
+  });
+
 }
