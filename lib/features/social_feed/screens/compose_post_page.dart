@@ -31,20 +31,22 @@ class _ComposePostPageState extends State<ComposePostPage> {
     final profilesId =
         dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
     for (final name in mentions) {
-      final res = await auth.databases.listDocuments(
-        databaseId: dbId,
-        collectionId: profilesId,
-        queries: [Query.equal('username', name)],
-      );
-      if (res.documents.isNotEmpty) {
-        await Get.find<NotificationService>().createNotification(
-          res.documents.first.data['\$id'],
-          auth.userId ?? '',
-          'mention',
-          itemId: itemId,
-          itemType: 'post',
+      try {
+        final res = await auth.databases.listDocuments(
+          databaseId: dbId,
+          collectionId: profilesId,
+          queries: [Query.equal('username', name)],
         );
-      }
+        if (res.documents.isNotEmpty) {
+          await Get.find<NotificationService>().createNotification(
+            res.documents.first.data['\$id'],
+            auth.userId ?? '',
+            'mention',
+            itemId: itemId,
+            itemType: 'post',
+          );
+        }
+      } catch (_) {}
     }
   }
 

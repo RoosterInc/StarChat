@@ -49,6 +49,7 @@ Future<void> main() async {
   await Hive.openBox('post_queue');
   await Hive.openBox('profiles');
   await Hive.openBox('notifications');
+  await Hive.openBox('notification_queue');
   await Hive.openBox('follows');
   await Hive.openBox('bookmarks');
   await Hive.openBox('blocks');
