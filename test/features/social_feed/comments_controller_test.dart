@@ -298,4 +298,112 @@ void main() {
     expect(feed.postCommentCount('p1'), 0);
     Get.delete<FeedController>();
   });
+
+  test('replyToComment triggers reply count function', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    for (final box in [
+      'posts',
+      'comments',
+      'action_queue',
+      'post_queue',
+      'bookmarks',
+      'hashtags',
+      'preferences'
+    ]) {
+      await Hive.openBox(box);
+    }
+
+    final functions = _RecordingFunctions();
+    final service = FeedService(
+      databases: _FakeDatabases(),
+      storage: Storage(Client()),
+      functions: functions,
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
+    );
+
+    Get.testMode = true;
+    Get.put<ActivityService>(RecordingActivityService());
+    final controller = CommentsController(service: service);
+
+    final reply = PostComment(
+      id: 'c2',
+      postId: 'p1',
+      parentId: 'c1',
+      userId: 'u',
+      username: 'name',
+      content: 'reply',
+    );
+
+    await controller.replyToComment(reply);
+    expect(functions.calls.any((c) => c['id'] == 'increment_reply_count'), isTrue);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.reset();
+  });
+}
+
+class _FakeDatabases extends Databases {
+  _FakeDatabases() : super(Client());
+
+  @override
+  Future<Document> createDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    required Map<dynamic, dynamic> data,
+    List<String>? permissions,
+  }) async {
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...data,
+    });
+  }
+}
+
+class _RecordingFunctions extends Functions {
+  _RecordingFunctions() : super(Client());
+
+  final List<Map<String, String?>> calls = [];
+
+  @override
+  Future<Execution> createExecution({
+    required String functionId,
+    String? body,
+    Map<String, dynamic>? xHeaders,
+    String? path,
+  }) async {
+    calls.add({'id': functionId, 'body': body});
+    return Execution.fromMap({
+      '\$id': '1',
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      'functionId': functionId,
+      'trigger': 'http',
+      'status': 'completed',
+      'requestMethod': 'GET',
+      'requestPath': '/',
+      'requestHeaders': [],
+      'responseStatusCode': 200,
+      'responseBody': '',
+      'responseHeaders': [],
+      'logs': '',
+      'errors': '',
+      'duration': 0.0,
+    });
+  }
 }
