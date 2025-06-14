@@ -89,8 +89,11 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                   ),
                 ),
                 SizedBox(width: DesignTokens.sm(context)),
-                AnimatedButton(
-                  onPressed: () async {
+                AccessibilityWrapper(
+                  semanticLabel: 'Send reply',
+                  isButton: true,
+                  child: AnimatedButton(
+                    onPressed: () async {
                     final text = _controller.text.trim();
                     if (!isValidComment(text)) {
                       Get.snackbar(
@@ -123,7 +126,8 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     await _notifyMentions(mentions, comment.id);
                     _controller.clear();
                   },
-                  child: const Text('Send'),
+                    child: const Text('Send'),
+                  ),
                 ),
               ],
             ),

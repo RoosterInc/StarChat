@@ -106,39 +106,43 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   ),
                 ),
                 SizedBox(width: DesignTokens.sm(context)),
-                AnimatedButton(
-                  onPressed: () async {
-                    final text = _textController.text.trim();
-                    if (!isValidComment(text)) {
-                      Get.snackbar(
-                        'error'.tr,
-                        'Comment must be between 1 and 2000 characters.',
-                        snackPosition: SnackPosition.BOTTOM,
-                      );
-                      return;
-                    }
+                AccessibilityWrapper(
+                  semanticLabel: 'Send comment',
+                  isButton: true,
+                  child: AnimatedButton(
+                    onPressed: () async {
+                      final text = _textController.text.trim();
+                      if (!isValidComment(text)) {
+                        Get.snackbar(
+                          'error'.tr,
+                          'Comment must be between 1 and 2000 characters.',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                        return;
+                      }
 
-                    final uid = auth.userId ?? '';
-                    final uname = auth.username.value.isNotEmpty
-                        ? auth.username.value
-                        : 'You';
-                    final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(text)
-                        .map((m) => m.group(1)!)
-                        .toSet()
-                        .toList();
-                    final comment = PostComment(
-                      id: DateTime.now().toIso8601String(),
-                      postId: widget.post.id,
-                      userId: uid,
-                      username: uname,
-                      content: text,
-                    );
-                    _commentsController.addComment(comment);
-                    await _notifyMentions(mentions, comment.id);
-                    _textController.clear();
-                  },
-                  child: const Text('Send'),
+                      final uid = auth.userId ?? '';
+                      final uname = auth.username.value.isNotEmpty
+                          ? auth.username.value
+                          : 'You';
+                      final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
+                          .allMatches(text)
+                          .map((m) => m.group(1)!)
+                          .toSet()
+                          .toList();
+                      final comment = PostComment(
+                        id: DateTime.now().toIso8601String(),
+                        postId: widget.post.id,
+                        userId: uid,
+                        username: uname,
+                        content: text,
+                      );
+                      _commentsController.addComment(comment);
+                      await _notifyMentions(mentions, comment.id);
+                      _textController.clear();
+                    },
+                    child: const Text('Send'),
+                  ),
                 ),
               ],
             ),
