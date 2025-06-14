@@ -10,6 +10,7 @@ import '../services/feed_service.dart';
 class FeedController extends GetxController {
   final FeedService service;
 
+  // Persist user preferences like sorting mode
   final Box _prefs = Hive.box('preferences');
 
   FeedController({required this.service});
@@ -28,6 +29,7 @@ class FeedController extends GetxController {
     super.onInit();
   }
 
+  /// Update the current sort type and store the preference in Hive.
   void updateSortType(String value) {
     _sortType.value = value;
     _prefs.put('feed_sort_type', value);
