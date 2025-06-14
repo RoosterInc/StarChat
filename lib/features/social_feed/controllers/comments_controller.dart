@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:collection/collection.dart';
 import '../../../controllers/auth_controller.dart';
+import '../controllers/feed_controller.dart';
 import '../models/post_comment.dart';
 import "../../profile/services/activity_service.dart";
 import '../services/feed_service.dart';
@@ -56,6 +58,9 @@ class CommentsController extends GetxController {
     await Get.find<ActivityService>()
         .logActivity(comment.userId, action, itemId: comment.id, itemType: 'comment');
     _likeCounts[comment.id] = comment.likeCount;
+    if (Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().incrementCommentCount(comment.postId);
+    }
   }
 
   Future<void> replyToComment(PostComment comment) async {
@@ -89,11 +94,17 @@ class CommentsController extends GetxController {
     }
   }
 
-  Future<void> deleteComment(PostComment comment) async {
-    await service.deleteComment(comment);
-    _comments.removeWhere((c) => c.id == comment.id);
-    _likedIds.remove(comment.id);
-    _likeCounts.remove(comment.id);
+  Future<void> deleteComment(String commentId) async {
+    final comment = _comments.firstWhereOrNull((c) => c.id == commentId);
+    if (comment != null) {
+      await service.deleteComment(comment);
+    }
+    _comments.removeWhere((c) => c.id == commentId);
+    _likedIds.remove(commentId);
+    _likeCounts.remove(commentId);
+    if (comment != null && Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().decrementCommentCount(comment.postId);
+    }
   }
 
   bool isCommentLiked(String id) => _likedIds.containsKey(id);

@@ -40,6 +40,7 @@ class FeedController extends GetxController {
   final _repostedIds = <String, String>{}.obs; // postId -> repostId
   final _likeCounts = <String, int>{}.obs; // postId -> like count
   final _repostCounts = <String, int>{}.obs; // postId -> repost count
+  final _commentCounts = <String, int>{}.obs; // postId -> comment count
 
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
@@ -64,6 +65,7 @@ class FeedController extends GetxController {
       _posts.assignAll(filtered);
       _likeCounts.assignAll({for (final p in filtered) p.id: p.likeCount});
       _repostCounts.assignAll({for (final p in filtered) p.id: p.repostCount});
+      _commentCounts.assignAll({for (final p in filtered) p.id: p.commentCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null) {
@@ -106,6 +108,7 @@ class FeedController extends GetxController {
           );
     await service.createPost(toSave);
     _posts.insert(0, toSave);
+    _commentCounts[toSave.id] = toSave.commentCount;
   }
 
   Future<void> createPostWithImage(
@@ -140,6 +143,7 @@ class FeedController extends GetxController {
         mentions: mentions,
       ),
     );
+    _commentCounts[_posts.first.id] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
   }
 
@@ -177,6 +181,7 @@ class FeedController extends GetxController {
         mentions: mentions,
       ),
     );
+    _commentCounts[_posts.first.id] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
   }
 
@@ -293,10 +298,20 @@ class FeedController extends GetxController {
     _repostedIds.remove(postId);
     _likeCounts.remove(postId);
     _repostCounts.remove(postId);
+    _commentCounts.remove(postId);
   }
 
   bool isPostLiked(String postId) => _likedIds.containsKey(postId);
   bool isPostReposted(String postId) => _repostedIds.containsKey(postId);
   int postLikeCount(String postId) => _likeCounts[postId] ?? 0;
   int postRepostCount(String postId) => _repostCounts[postId] ?? 0;
+  int postCommentCount(String postId) => _commentCounts[postId] ?? 0;
+
+  void incrementCommentCount(String postId) {
+    _commentCounts[postId] = (_commentCounts[postId] ?? 0) + 1;
+  }
+
+  void decrementCommentCount(String postId) {
+    _commentCounts[postId] = math.max(0, (_commentCounts[postId] ?? 1) - 1);
+  }
 }

@@ -8,9 +8,10 @@ import '../controllers/comments_controller.dart';
 import '../../../controllers/auth_controller.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../notifications/services/notification_service.dart';
+import '../../notifications/services/mention_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:html_unescape/html_unescape.dart';
 
 class CommentThreadPage extends StatefulWidget {
   final PostComment rootComment;
@@ -22,38 +23,6 @@ class CommentThreadPage extends StatefulWidget {
 
 class _CommentThreadPageState extends State<CommentThreadPage> {
   final _controller = TextEditingController();
-
-  Future<void> _notifyMentions(List<String> mentions, String commentId) async {
-    if (mentions.isEmpty || !Get.isRegistered<NotificationService>()) return;
-    try {
-      final auth = Get.find<AuthController>();
-      final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-      final profilesId =
-          dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-      for (final name in mentions) {
-        final res = await auth.databases.listDocuments(
-          databaseId: dbId,
-          collectionId: profilesId,
-          queries: [Query.equal('username', name)],
-        );
-        if (res.documents.isNotEmpty) {
-          await Get.find<NotificationService>().createNotification(
-            res.documents.first.data['\$id'],
-            auth.userId ?? '',
-            'mention',
-            itemId: commentId,
-            itemType: 'comment',
-          );
-        }
-      }
-    } catch (e, st) {
-      logger.e('Error notifying mentions', error: e, stackTrace: st);
-      if (Get.context != null) {
-        Get.snackbar('Error', 'Failed to notify mentions',
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    }
-  }
 
   Future<void> _notifyParentAuthor(String authorId, String commentId) async {
     if (!Get.isRegistered<NotificationService>()) return;
@@ -107,8 +76,11 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                   ),
                 ),
                 SizedBox(width: DesignTokens.sm(context)),
-                AnimatedButton(
-                  onPressed: () async {
+                AccessibilityWrapper(
+                  semanticLabel: 'Send reply',
+                  isButton: true,
+                  child: AnimatedButton(
+                    onPressed: () async {
                     final text = _controller.text.trim();
                     if (!isValidComment(text)) {
                       Get.snackbar(
@@ -124,8 +96,10 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+                    final sanitized = HtmlUnescape().convert(text);
+
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -135,14 +109,20 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       userId: uid,
                       username: uname,
                       parentId: root.id,
-                      content: text,
+                      content: sanitized,
                     );
                     commentsController.replyToComment(comment);
-                    await _notifyMentions(mentions, comment.id);
+                    await Get.find<MentionService>().notifyMentions(
+                      mentions,
+                      actorId: uid,
+                      itemId: comment.id,
+                      itemType: 'comment',
+                    );
                     await _notifyParentAuthor(root.userId, root.id);
                     _controller.clear();
                   },
                   child: const Text('Send'),
+                ),
                 ),
               ],
             ),
@@ -160,4 +140,9 @@ Future<void> notifyParentAuthorForTest(
 ) async {
   final state = _CommentThreadPageState();
   await state._notifyParentAuthor(authorId, commentId);
+}
+
+@visibleForTesting
+String sanitizeCommentThreadForTest(String text) {
+  return HtmlUnescape().convert(text.trim());
 }

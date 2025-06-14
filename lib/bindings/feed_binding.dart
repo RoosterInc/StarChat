@@ -8,6 +8,8 @@ import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
 import '../features/bookmarks/controllers/bookmark_controller.dart';
 import 'package:appwrite/appwrite.dart' as appwrite;
+import '../features/notifications/services/mention_service.dart';
+import '../features/notifications/services/notification_service.dart';
 
 class FeedBinding extends Bindings {
   @override
@@ -36,6 +38,18 @@ class FeedBinding extends Bindings {
       );
       Get.put<FeedController>(FeedController(service: service));
       Get.put<BookmarkController>(BookmarkController(service: service));
+    }
+
+    if (Get.isRegistered<NotificationService>() &&
+        !Get.isRegistered<MentionService>()) {
+      final notification = Get.find<NotificationService>();
+      Get.lazyPut<MentionService>(() => MentionService(
+            databases: auth.databases,
+            notificationService: notification,
+            databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+            profilesCollectionId:
+                dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles',
+          ));
     }
 
     if (!Get.isRegistered<CommentsController>()) {
