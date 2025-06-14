@@ -64,6 +64,9 @@ class FeedService {
   List<String> _limitHashtags(List<String> tags) =>
       tags.length > 10 ? tags.sublist(0, 10) : tags;
 
+  List<String> _limitMentions(List<String> names) =>
+      names.length > 10 ? names.sublist(0, 10) : names;
+
   Future<List<FeedPost>> getPosts(String roomId,
       {List<String> blockedIds = const []}) async {
     try {
@@ -119,31 +122,34 @@ class FeedService {
   }
 
   Future<void> createPost(FeedPost post) async {
-    final limited = _limitHashtags(post.hashtags);
-    final toSave = limited.length == post.hashtags.length
-        ? post
-        : FeedPost(
-            id: post.id,
-            roomId: post.roomId,
-            userId: post.userId,
-            username: post.username,
-            userAvatar: post.userAvatar,
-            content: post.content,
-            mediaUrls: post.mediaUrls,
-            pollId: post.pollId,
-            linkUrl: post.linkUrl,
-            linkMetadata: post.linkMetadata,
-            likeCount: post.likeCount,
-            commentCount: post.commentCount,
-            repostCount: post.repostCount,
-            shareCount: post.shareCount,
-            hashtags: limited,
-            mentions: post.mentions,
-            isEdited: post.isEdited,
-            isDeleted: post.isDeleted,
-            editedAt: post.editedAt,
-            createdAt: post.createdAt,
-          );
+    final limitedTags = _limitHashtags(post.hashtags);
+    final limitedMentions = _limitMentions(post.mentions);
+    final toSave =
+        limitedTags.length == post.hashtags.length &&
+                limitedMentions.length == post.mentions.length
+            ? post
+            : FeedPost(
+                id: post.id,
+                roomId: post.roomId,
+                userId: post.userId,
+                username: post.username,
+                userAvatar: post.userAvatar,
+                content: post.content,
+                mediaUrls: post.mediaUrls,
+                pollId: post.pollId,
+                linkUrl: post.linkUrl,
+                linkMetadata: post.linkMetadata,
+                likeCount: post.likeCount,
+                commentCount: post.commentCount,
+                repostCount: post.repostCount,
+                shareCount: post.shareCount,
+                hashtags: limitedTags,
+                mentions: limitedMentions,
+                isEdited: post.isEdited,
+                isDeleted: post.isDeleted,
+                editedAt: post.editedAt,
+                createdAt: post.createdAt,
+              );
     try {
       await databases.createDocument(
         databaseId: databaseId,
@@ -184,6 +190,7 @@ class FeedService {
     List<String> mentions = const [],
   }) async {
     final limited = _limitHashtags(hashtags);
+    final limitedMentions = _limitMentions(mentions);
     try {
       final imageUrl = await uploadImage(image);
       final now = DateTime.now();
@@ -195,7 +202,7 @@ class FeedService {
         content: content,
         mediaUrls: [imageUrl],
         hashtags: limited,
-        mentions: mentions,
+        mentions: limitedMentions,
         createdAt: now,
       );
       await createPost(post);
@@ -208,7 +215,7 @@ class FeedService {
         'room_id': roomId,
         'image_path': image.path,
         'hashtags': limited,
-        'mentions': mentions,
+        'mentions': limitedMentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Image post queued for syncing');
@@ -245,7 +252,7 @@ class FeedService {
         linkUrl: linkUrl,
         linkMetadata: metadata,
         hashtags: limited,
-        mentions: mentions,
+        mentions: limitedMentions,
         createdAt: now2,
       );
       await createPost(post);
@@ -258,7 +265,7 @@ class FeedService {
         'room_id': roomId,
         'link_url': linkUrl,
         'hashtags': limited,
-        'mentions': mentions,
+        'mentions': limitedMentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Link post queued for syncing');
@@ -740,6 +747,7 @@ class FeedService {
     List<String> mentions,
   ) async {
     final limited = _limitHashtags(hashtags);
+    final limitedMentions = _limitMentions(mentions);
     try {
       final doc = await databases.getDocument(
         databaseId: databaseId,
@@ -759,7 +767,7 @@ class FeedService {
         data: {
           'content': content,
           'hashtags': limited,
-          'mentions': mentions,
+          'mentions': limitedMentions,
           'is_edited': true,
           'edited_at': DateTime.now().toIso8601String(),
         },
@@ -774,7 +782,7 @@ class FeedService {
             ...cached[index],
             'content': content,
             'hashtags': limited,
-            'mentions': mentions,
+            'mentions': limitedMentions,
             'is_edited': true,
             'edited_at': DateTime.now().toIso8601String(),
           };

@@ -110,11 +110,18 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       );
                       tags = tags.take(10).toList();
                     }
-                    final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
+                    var mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
                         .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
+                    if (mentions.length > 10) {
+                      Get.snackbar(
+                        'Mention limit',
+                        'Only the first 10 mentions will be used',
+                      );
+                      mentions = mentions.take(10).toList();
+                    }
                     if (tags.isNotEmpty) {
                       await feedController.service.saveHashtags(tags);
                     }
