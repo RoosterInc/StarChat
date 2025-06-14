@@ -5,6 +5,7 @@ import '../widgets/comment_thread.dart';
 import '../utils/comment_validation.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
+import '../widgets/comment_card.dart';
 import '../../../controllers/auth_controller.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -70,11 +71,29 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
         child: Column(
           children: [
             Expanded(
-              child: Obx(
-                () => SingleChildScrollView(
+              child: Obx(() {
+                if (commentsController.isLoading) {
+                  return Column(
+                    children: [
+                      CommentCard(comment: widget.rootComment),
+                      SizedBox(height: DesignTokens.sm(context)),
+                      ...List.generate(
+                        3,
+                        (_) => Padding(
+                          padding:
+                              EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                          child: SkeletonLoader(
+                            height: DesignTokens.xl(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return SingleChildScrollView(
                   child: CommentThread(comment: widget.rootComment),
-                ),
-              ),
+                );
+              }),
             ),
             SizedBox(height: DesignTokens.sm(context)),
             Row(
