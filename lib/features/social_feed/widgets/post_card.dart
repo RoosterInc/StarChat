@@ -88,9 +88,14 @@ class PostCard extends StatelessWidget {
   }
 
   void _handleRepost(FeedController controller) {
+    final auth = Get.find<AuthController>();
     if (controller.isPostReposted(post.id)) {
       controller.undoRepost(post.id);
     } else {
+      if (auth.userId == null) {
+        Get.snackbar('Error', 'Login required');
+        return;
+      }
       Get.to(() => RepostPage(post: post));
     }
   }
