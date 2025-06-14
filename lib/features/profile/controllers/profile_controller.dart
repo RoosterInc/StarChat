@@ -7,11 +7,19 @@ import '../services/activity_service.dart';
 class ProfileController extends GetxController {
   var profile = Rxn<UserProfile>();
   var isLoading = false.obs;
+  var isFollowing = false.obs;
+  var followerCount = 0.obs;
 
   Future<void> loadProfile(String userId) async {
     isLoading.value = true;
     try {
-      profile.value = await Get.find<ProfileService>().fetchProfile(userId);
+      final service = Get.find<ProfileService>();
+      profile.value = await service.fetchProfile(userId);
+      followerCount.value = await service.getFollowerCount(userId);
+      final uid = Get.find<AuthController>().userId;
+      if (uid != null) {
+        isFollowing.value = await service.isFollowing(uid, userId);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -22,6 +30,10 @@ class ProfileController extends GetxController {
     if (uid == null) return;
     await Get.find<ProfileService>().followUser(uid, followedId);
     await Get.find<ActivityService>().logActivity(uid, 'follow', itemId: followedId, itemType: 'user');
+    if (profile.value?.id == followedId) {
+      isFollowing.value = true;
+      followerCount.value++;
+    }
   }
 
   Future<void> unfollowUser(String followedId) async {
@@ -34,6 +46,10 @@ class ProfileController extends GetxController {
       itemId: followedId,
       itemType: 'user',
     );
+    if (profile.value?.id == followedId) {
+      isFollowing.value = false;
+      if (followerCount.value > 0) followerCount.value--;
+    }
   }
 
   Future<void> blockUser(String blockedId) async {

@@ -82,6 +82,47 @@ class ProfileService {
     }
   }
 
+  Future<bool> isFollowing(String followerId, String followedId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: followsCollection,
+        queries: [
+          Query.equal('follower_id', followerId),
+          Query.equal('followed_id', followedId),
+          Query.limit(1),
+        ],
+      );
+      final exists = res.documents.isNotEmpty;
+      if (exists) {
+        followsBox.put('${followerId}_$followedId', {'followed_id': followedId});
+      } else {
+        followsBox.delete('${followerId}_$followedId');
+      }
+      return exists;
+    } catch (_) {
+      return followsBox.containsKey('${followerId}_$followedId');
+    }
+  }
+
+  Future<int> getFollowerCount(String userId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: followsCollection,
+        queries: [
+          Query.equal('followed_id', userId),
+          Query.limit(100),
+        ],
+      );
+      final count = res.total ?? res.documents.length;
+      profileBox.put('followers_\$userId', count);
+      return count;
+    } catch (_) {
+      return profileBox.get('followers_\$userId', defaultValue: 0) as int;
+    }
+  }
+
   Future<void> blockUser(String blockerId, String blockedId) async {
     try {
       await databases.createDocument(

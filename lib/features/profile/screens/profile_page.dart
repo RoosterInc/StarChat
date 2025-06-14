@@ -36,23 +36,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
         if (profile == null) {
           return const Center(child: Text('Profile not found'));
         }
-        final authId = Get.find<AuthController>().userId;
-        final service = Get.find<ProfileService>();
-        final isFollowing = authId != null &&
-            service.followsBox.containsKey('${authId}_${profile.id}');
+        final isFollowing = controller.isFollowing.value;
+        final count = controller.followerCount.value;
         return EnhancedResponsiveLayout(
           mobile: (context) =>
-              _buildPortraitLayout(context, profile, isFollowing),
+              _buildPortraitLayout(context, profile, isFollowing, count),
           mobileLandscape: (context) =>
-              _buildLandscapeLayout(context, profile, isFollowing),
+              _buildLandscapeLayout(context, profile, isFollowing, count),
           tablet: (context) =>
-              _buildLandscapeLayout(context, profile, isFollowing),
+              _buildLandscapeLayout(context, profile, isFollowing, count),
           tabletLandscape: (context) =>
-              _buildLandscapeLayout(context, profile, isFollowing),
+              _buildLandscapeLayout(context, profile, isFollowing, count),
           desktop: (context) =>
-              _buildLandscapeLayout(context, profile, isFollowing),
+              _buildLandscapeLayout(context, profile, isFollowing, count),
           desktopLandscape: (context) =>
-              _buildLandscapeLayout(context, profile, isFollowing),
+              _buildLandscapeLayout(context, profile, isFollowing, count),
         );
       }),
     );
@@ -78,7 +76,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildPortraitLayout(
-      BuildContext context, UserProfile profile, bool isFollowing) {
+      BuildContext context, UserProfile profile, bool isFollowing, int count) {
     final spacing = _spacing(context);
     return SingleChildScrollView(
       padding: _pagePadding(context),
@@ -98,6 +96,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
             SizedBox(height: spacing),
             _buildFollowButton(context, profile.id, isFollowing),
             SizedBox(height: spacing * 0.5),
+            Text('Followers: \$count'),
+            SizedBox(height: spacing * 0.5),
             _buildBlockButton(context, profile.id),
             if (Get.find<AuthController>().userId != null &&
                 Get.find<AuthController>().userId != profile.id)
@@ -112,7 +112,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildLandscapeLayout(
-      BuildContext context, UserProfile profile, bool isFollowing) {
+      BuildContext context, UserProfile profile, bool isFollowing, int count) {
     final spacing = _spacing(context);
     return SingleChildScrollView(
       padding: _pagePadding(context),
@@ -143,6 +143,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 _buildFollowButton(context, profile.id, isFollowing),
                 SizedBox(height: spacing * 0.5),
+                Text('Followers: \$count'),
+                SizedBox(height: spacing * 0.5),
                 _buildBlockButton(context, profile.id),
                 if (Get.find<AuthController>().userId != null &&
                     Get.find<AuthController>().userId != profile.id)
@@ -168,7 +170,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
         } else {
           await controller.followUser(uid);
         }
-        setState(() {});
       },
       style: FilledButton.styleFrom(
         padding: EdgeInsets.symmetric(
