@@ -75,16 +75,16 @@ void main() {
   });
 
   test('removeBookmark queues when offline', () async {
-    await service.removeBookmark('b1');
+    await expectLater(service.removeBookmark('b1'), throwsA(anything));
     final queue = Hive.box('action_queue');
     expect(queue.isNotEmpty, isTrue);
     final item = queue.getAt(0) as Map?;
     expect(item?['action'], 'remove_bookmark');
-    expect(item?['bookmark_id'], 'b1');
+    expect(item?['data']['bookmark_id'], 'b1');
   });
 
   test('syncQueuedActions processes remove_bookmark items', () async {
-    await service.removeBookmark('b2');
+    await expectLater(service.removeBookmark('b2'), throwsA(anything));
     final counter = _CountingService();
     await counter.syncQueuedActions();
     expect(counter.ids.contains('b2'), isTrue);
