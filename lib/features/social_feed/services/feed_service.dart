@@ -346,6 +346,10 @@ class FeedService {
         documentId: ID.unique(),
         data: repost,
       );
+      await functions.createExecution(
+        functionId: 'increment_repost_count',
+        body: jsonEncode({'post_id': repost['post_id']}),
+      );
       return doc.$id;
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
@@ -357,11 +361,15 @@ class FeedService {
     }
   }
 
-  Future<void> deleteRepost(String repostId) async {
+  Future<void> deleteRepost(String repostId, String postId) async {
     await databases.deleteDocument(
       databaseId: databaseId,
       collectionId: repostsCollectionId,
       documentId: repostId,
+    );
+    await functions.createExecution(
+      functionId: 'decrement_repost_count',
+      body: jsonEncode({'post_id': postId}),
     );
   }
 
@@ -576,7 +584,12 @@ class FeedService {
             await createLike(Map<String, dynamic>.from(item['data']));
             break;
           case 'repost':
-            await createRepost(Map<String, dynamic>.from(item['data']));
+            final data = Map<String, dynamic>.from(item['data']);
+            await createRepost(data);
+            await functions.createExecution(
+              functionId: 'increment_repost_count',
+              body: jsonEncode({'post_id': data['post_id']}),
+            );
             break;
           case 'bookmark':
             final data = Map<String, dynamic>.from(item['data']);

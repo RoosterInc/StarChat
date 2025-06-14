@@ -69,7 +69,7 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> deleteRepost(String repostId) async {
+  Future<void> deleteRepost(String repostId, String postId) async {
     reposts.removeWhere((key, value) => value == repostId);
   }
 

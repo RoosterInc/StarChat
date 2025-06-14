@@ -238,7 +238,7 @@ class FeedController extends GetxController {
     final uid = auth.userId;
     if (uid == null || !_repostedIds.containsKey(postId)) return;
     final repostId = _repostedIds.remove(postId)!;
-    await service.deleteRepost(repostId);
+    await service.deleteRepost(repostId, postId);
     _repostCounts[postId] = (_repostCounts[postId] ?? 1) - 1;
   }
 

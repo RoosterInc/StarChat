@@ -126,7 +126,7 @@ class FakeFeedService extends FeedService {
   Future<String?> createRepost(Map<String, dynamic> repost) async => 'r1';
 
   @override
-  Future<void> deleteRepost(String repostId) async {}
+  Future<void> deleteRepost(String repostId, String postId) async {}
 
   @override
   Future<PostRepost?> getUserRepost(String postId, String userId) async => null;
