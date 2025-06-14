@@ -114,7 +114,11 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> deleteLike(String likeId) async {
+  Future<void> deleteLike(
+    String likeId, {
+    required String itemId,
+    required String itemType,
+  }) async {
     likes.removeWhere((key, value) => value == likeId);
   }
 
