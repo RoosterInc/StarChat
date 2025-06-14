@@ -6,7 +6,6 @@ import '../features/profile/controllers/profile_controller.dart';
 
 import '../features/profile/services/activity_service.dart';
 import '../features/profile/controllers/activity_controller.dart';
-import '../features/profile/controllers/blocked_users_controller.dart';
 class ProfileBinding extends Bindings {
   @override
   void dependencies() {
@@ -30,6 +29,5 @@ class ProfileBinding extends Bindings {
               dotenv.env['BLOCKS_COLLECTION_ID'] ?? 'blocked_users',
         ));
     Get.lazyPut<ProfileController>(() => ProfileController());
-    Get.lazyPut<BlockedUsersController>(() => BlockedUsersController());
   }
 }
