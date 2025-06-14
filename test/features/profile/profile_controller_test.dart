@@ -19,6 +19,8 @@ class FakeProfileService extends ProfileService {
   bool followed = false;
   bool unfollowed = false;
   bool blocked = false;
+  bool following = false;
+  int followerCountVal = 0;
 
   @override
   Future<UserProfile> fetchProfile(String userId) async {
@@ -26,13 +28,27 @@ class FakeProfileService extends ProfileService {
   }
 
   @override
+  Future<bool> isFollowing(String followerId, String followedId) async {
+    return following;
+  }
+
+  @override
+  Future<int> getFollowerCount(String userId) async {
+    return followerCountVal;
+  }
+
+  @override
   Future<void> followUser(String followerId, String followedId) async {
     followed = true;
+    following = true;
+    followerCountVal++;
   }
 
   @override
   Future<void> unfollowUser(String followerId, String followedId) async {
     unfollowed = true;
+    following = false;
+    if (followerCountVal > 0) followerCountVal--;
   }
 
   @override
@@ -62,6 +78,19 @@ void main() {
     expect(controller.profile.value?.username, 'user');
   });
 
+  test('loadProfile loads follow state and count', () async {
+    final service = FakeProfileService();
+    service.profile = UserProfile(id: '1', username: 'user');
+    service.following = true;
+    service.followerCountVal = 3;
+    Get.put<ProfileService>(service);
+    Get.put<AuthController>(FakeAuthController());
+    final controller = ProfileController();
+    await controller.loadProfile('1');
+    expect(controller.isFollowing.value, isTrue);
+    expect(controller.followerCount.value, 3);
+  });
+
   test('followUser calls service', () async {
     final service = FakeProfileService();
     service.profile = UserProfile(id: '1', username: 'user');
@@ -70,15 +99,21 @@ void main() {
     final controller = ProfileController();
     await controller.followUser('1');
     expect(service.followed, isTrue);
+    expect(controller.isFollowing.value, isTrue);
+    expect(controller.followerCount.value, 1);
   });
 
   test('unfollowUser calls service', () async {
     final service = FakeProfileService();
     service.profile = UserProfile(id: '1', username: 'user');
+    service.following = true;
+    service.followerCountVal = 2;
     Get.put<ProfileService>(service);
     Get.put<AuthController>(FakeAuthController());
     final controller = ProfileController();
     await controller.unfollowUser('1');
     expect(service.unfollowed, isTrue);
+    expect(controller.isFollowing.value, isFalse);
+    expect(controller.followerCount.value, 1);
   });
 }
