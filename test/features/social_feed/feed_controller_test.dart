@@ -25,6 +25,7 @@ class FakeFeedService extends FeedService {
   final List<FeedPost> store = [];
   final Map<String, String> likes = {}; // likeId by postId
   final Map<String, String> reposts = {}; // repostId by postId
+  final Map<String, int> hashtagCounts = {};
 
   @override
   Future<List<FeedPost>> getPosts(String roomId,
@@ -66,6 +67,13 @@ class FakeFeedService extends FeedService {
   @override
   Future<void> deleteRepost(String repostId) async {
     reposts.removeWhere((key, value) => value == repostId);
+  }
+
+  @override
+  Future<void> saveHashtags(List<String> tags) async {
+    for (final t in tags) {
+      hashtagCounts[t] = (hashtagCounts[t] ?? 0) + 1;
+    }
   }
 
   @override
@@ -199,5 +207,28 @@ void main() {
     await controller.editPost('1', 'updated', [], []);
     expect(controller.posts.first.content, 'updated');
     expect(controller.posts.first.isEdited, isTrue);
+  });
+
+  test('editPost saves new hashtags without duplicates', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'room',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello #old',
+      hashtags: ['old'],
+    );
+    service.store.add(post);
+    await controller.loadPosts('room');
+    await controller.editPost(
+      '1',
+      'updated #old #new #new',
+      ['old', 'new', 'new'],
+      [],
+    );
+    expect(service.hashtagCounts['new'], 1);
+    expect(service.hashtagCounts.containsKey('old'), isFalse);
   });
 }

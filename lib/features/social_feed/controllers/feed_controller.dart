@@ -205,6 +205,11 @@ class FeedController extends GetxController {
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final post = _posts[index];
+      final newTags =
+          hashtags.where((t) => !post.hashtags.contains(t)).toSet().toList();
+      if (newTags.isNotEmpty) {
+        await service.saveHashtags(newTags);
+      }
       _posts[index] = FeedPost(
         id: post.id,
         roomId: post.roomId,
