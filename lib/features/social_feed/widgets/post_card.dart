@@ -222,8 +222,8 @@ class PostCard extends StatelessWidget {
                           padding: EdgeInsets.only(right: DesignTokens.sm(context)),
                           child: SafeNetworkImage(
                             imageUrl: post.linkMetadata!['image'] as String?,
-                            width: 60,
-                            height: 60,
+                            width: DesignTokens.spacing(context, 60),
+                            height: DesignTokens.spacing(context, 60),
                             fit: BoxFit.cover,
                           ),
                         ),
