@@ -54,6 +54,29 @@ class OfflineStorage extends Storage {
   }
 }
 
+class _CountingService extends FeedService {
+  final List<String> deletedIds = [];
+  _CountingService()
+      : super(
+          databases: Databases(Client()),
+          storage: Storage(Client()),
+          functions: Functions(Client()),
+          databaseId: 'db',
+          postsCollectionId: 'posts',
+          commentsCollectionId: 'comments',
+          likesCollectionId: 'likes',
+          repostsCollectionId: 'reposts',
+          bookmarksCollectionId: 'bookmarks',
+          connectivity: Connectivity(),
+          linkMetadataFunctionId: 'fetch_link_metadata',
+        );
+
+  @override
+  Future<void> deleteRepost(String repostId) async {
+    deletedIds.add(repostId);
+  }
+}
+
 void main() {
   late Directory dir;
   late FeedService service;
@@ -167,6 +190,24 @@ void main() {
     final item = queue.getAt(0) as Map?;
     expect(item?['action'], 'unlike');
     expect(item?['like_id'], 'like1');
+  });
+
+  test('deleteRepost queues when offline', () async {
+    await expectLater(service.deleteRepost('r1'), throwsA(anything));
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(queue.length - 1) as Map?;
+    expect(item?['action'], 'delete_repost');
+    expect(item?['id'], 'r1');
+  });
+
+  test('syncQueuedActions processes delete_repost items', () async {
+    await expectLater(service.deleteRepost('r2'), throwsA(anything));
+    final counterService = _CountingService();
+    await counterService.syncQueuedActions();
+    expect(counterService.deletedIds.contains('r2'), isTrue);
+    final queue = Hive.box('action_queue');
+    expect(queue.isEmpty, isTrue);
   });
 
 }
