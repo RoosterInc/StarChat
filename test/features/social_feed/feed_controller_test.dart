@@ -98,6 +98,9 @@ class FakeFeedService extends FeedService {
     final index = store.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final p = store[index];
+      if (DateTime.now().difference(p.createdAt).inMinutes > 30) {
+        throw Exception('Edit window expired');
+      }
       store[index] = FeedPost(
         id: p.id,
         roomId: p.roomId,
@@ -115,6 +118,21 @@ class FakeFeedService extends FeedService {
         hashtags: hashtags,
         isEdited: true,
       );
+    }
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    store.removeWhere((p) => p.id == postId);
+    for (final key in postsBox.keys) {
+      final cached = postsBox.get(key, defaultValue: []) as List;
+      final idx = cached.indexWhere(
+        (p) => p['id'] == postId || p['\$id'] == postId,
+      );
+      if (idx != -1) {
+        cached[idx] = {...cached[idx], 'is_deleted': true};
+        await postsBox.put(key, cached);
+      }
     }
   }
 }
@@ -449,5 +467,63 @@ void main() {
     );
     expect(service.store.first.hashtags.length, 10);
     expect(controller.posts.first.hashtags.length, 10);
+  });
+
+  test('deletePost removes from controller and cache', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    for (final boxName in [
+      'posts',
+      'comments',
+      'action_queue',
+      'post_queue',
+      'bookmarks',
+      'hashtags',
+      'preferences'
+    ]) {
+      await Hive.openBox(boxName);
+    }
+
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final post = FeedPost(
+      id: 'p1',
+      roomId: 'room',
+      userId: 'u1',
+      username: 'user',
+      content: 'hi',
+      createdAt: DateTime.now(),
+    );
+    service.store.add(post);
+    Hive.box('posts').put('posts_room', [post.toJson()]);
+
+    await controller.loadPosts('room');
+    await controller.deletePost('p1');
+
+    expect(controller.posts.isEmpty, isTrue);
+    final cached = Hive.box('posts').get('posts_room') as List;
+    expect(cached.first['is_deleted'], isTrue);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+  });
+
+  test('editPost throws when window expired', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final post = FeedPost(
+      id: 'old1',
+      roomId: 'room',
+      userId: 'u1',
+      username: 'user',
+      content: 'old',
+      createdAt: DateTime.now().subtract(const Duration(minutes: 31)),
+    );
+    service.store.add(post);
+    await controller.loadPosts('room');
+    await expectLater(
+      controller.editPost('old1', 'new', [], []),
+      throwsA(isA<Exception>()),
+    );
   });
 }
