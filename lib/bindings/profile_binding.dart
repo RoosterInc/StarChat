@@ -14,7 +14,8 @@ class ProfileBinding extends Bindings {
       Get.lazyPut<ActivityService>(() => ActivityService(
             databases: auth.databases,
             databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
-            collectionId: 'activity_logs',
+            collectionId:
+                dotenv.env['ACTIVITY_LOGS_COLLECTION_ID'] ?? 'activity_logs',
           ));
     }
     Get.lazyPut<ActivityController>(() => ActivityController(service: Get.find<ActivityService>()));
@@ -22,8 +23,10 @@ class ProfileBinding extends Bindings {
           databases: auth.databases,
           databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
           profilesCollection: dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles',
-          followsCollection: 'follows',
-          blocksCollection: 'blocked_users',
+          followsCollection:
+              dotenv.env['FOLLOWS_COLLECTION_ID'] ?? 'follows',
+          blocksCollection:
+              dotenv.env['BLOCKS_COLLECTION_ID'] ?? 'blocked_users',
         ));
     Get.lazyPut<ProfileController>(() => ProfileController());
   }

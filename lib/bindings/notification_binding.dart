@@ -11,7 +11,8 @@ class NotificationBinding extends Bindings {
     Get.lazyPut<NotificationService>(() => NotificationService(
           databases: auth.databases,
           databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
-          collectionId: 'notifications',
+          collectionId:
+              dotenv.env['NOTIFICATIONS_COLLECTION_ID'] ?? 'notifications',
         ));
     Get.lazyPut<NotificationController>(() => NotificationController());
   }
