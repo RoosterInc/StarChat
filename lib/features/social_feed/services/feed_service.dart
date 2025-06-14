@@ -29,6 +29,9 @@ class FeedService {
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
+  List<String> _limitHashtags(List<String> tags) =>
+      tags.length > 10 ? tags.sublist(0, 10) : tags;
+
   FeedService({
     required this.databases,
     required this.storage,
@@ -103,17 +106,41 @@ class FeedService {
   }
 
   Future<void> createPost(FeedPost post) async {
+    final limited = _limitHashtags(post.hashtags);
+    final toSave = limited.length == post.hashtags.length
+        ? post
+        : FeedPost(
+            id: post.id,
+            roomId: post.roomId,
+            userId: post.userId,
+            username: post.username,
+            userAvatar: post.userAvatar,
+            content: post.content,
+            mediaUrls: post.mediaUrls,
+            pollId: post.pollId,
+            linkUrl: post.linkUrl,
+            linkMetadata: post.linkMetadata,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            shareCount: post.shareCount,
+            hashtags: limited,
+            mentions: post.mentions,
+            isEdited: post.isEdited,
+            isDeleted: post.isDeleted,
+            editedAt: post.editedAt,
+          );
     try {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: postsCollectionId,
         documentId: ID.unique(),
-        data: post.toJson(),
+        data: toSave.toJson(),
       );
     } catch (_) {
       await queueBox.add({
         'action': 'post',
-        'data': post.toJson(),
+        'data': toSave.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
     }
@@ -151,7 +178,7 @@ class FeedService {
         username: username,
         content: content,
         mediaUrls: [imageUrl],
-        hashtags: hashtags,
+        hashtags: _limitHashtags(hashtags),
         mentions: mentions,
       );
       await createPost(post);
@@ -163,7 +190,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'image_path': image.path,
-        'hashtags': hashtags,
+        'hashtags': _limitHashtags(hashtags),
         'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
@@ -198,7 +225,7 @@ class FeedService {
         content: content,
         linkUrl: linkUrl,
         linkMetadata: metadata,
-        hashtags: hashtags,
+        hashtags: _limitHashtags(hashtags),
         mentions: mentions,
       );
       await createPost(post);
@@ -210,7 +237,7 @@ class FeedService {
         'content': content,
         'room_id': roomId,
         'link_url': linkUrl,
-        'hashtags': hashtags,
+        'hashtags': _limitHashtags(hashtags),
         'mentions': mentions,
         '_cachedAt': DateTime.now().toIso8601String(),
       });
@@ -422,6 +449,7 @@ class FeedService {
     List<String> hashtags,
     List<String> mentions,
   ) async {
+    final limited = _limitHashtags(hashtags);
     try {
       final doc = await databases.getDocument(
         databaseId: databaseId,
@@ -441,7 +469,7 @@ class FeedService {
         documentId: postId,
         data: {
           'content': content,
-          'hashtags': hashtags,
+          'hashtags': limited,
           'mentions': mentions,
           'is_edited': true,
           'edited_at': DateTime.now().toIso8601String(),
@@ -455,7 +483,7 @@ class FeedService {
           cached[index] = {
             ...cached[index],
             'content': content,
-            'hashtags': hashtags,
+            'hashtags': limited,
             'mentions': mentions,
             'is_edited': true,
             'edited_at': DateTime.now().toIso8601String(),

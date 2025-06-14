@@ -107,11 +107,18 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
-                    final tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
+                    var tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
                         .allMatches(_controller.text)
                         .map((m) => m.group(1)!.toLowerCase())
                         .toSet()
                         .toList();
+                    if (tags.length > 10) {
+                      Get.snackbar(
+                        'Hashtag limit',
+                        'Only the first 10 hashtags will be used',
+                      );
+                      tags = tags.take(10).toList();
+                    }
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
                         .allMatches(_controller.text)
                         .map((m) => m.group(1)!)

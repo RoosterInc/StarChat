@@ -41,6 +41,9 @@ class FeedController extends GetxController {
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
+  List<String> _limitHashtags(List<String> tags) =>
+      tags.length > 10 ? tags.sublist(0, 10) : tags;
+
   Future<void> loadPosts(String roomId, {List<String>? blockedIds}) async {
     _isLoading.value = true;
     try {
@@ -74,8 +77,32 @@ class FeedController extends GetxController {
   }
 
   Future<void> createPost(FeedPost post) async {
-    await service.createPost(post);
-    _posts.insert(0, post);
+    final limited = _limitHashtags(post.hashtags);
+    final toSave = limited.length == post.hashtags.length
+        ? post
+        : FeedPost(
+            id: post.id,
+            roomId: post.roomId,
+            userId: post.userId,
+            username: post.username,
+            userAvatar: post.userAvatar,
+            content: post.content,
+            mediaUrls: post.mediaUrls,
+            pollId: post.pollId,
+            linkUrl: post.linkUrl,
+            linkMetadata: post.linkMetadata,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            shareCount: post.shareCount,
+            hashtags: limited,
+            mentions: post.mentions,
+            isEdited: post.isEdited,
+            isDeleted: post.isDeleted,
+            editedAt: post.editedAt,
+          );
+    await service.createPost(toSave);
+    _posts.insert(0, toSave);
   }
 
   Future<void> createPostWithImage(
@@ -87,13 +114,14 @@ class FeedController extends GetxController {
     List<String> hashtags,
     List<String> mentions,
   ) async {
+    final limited = _limitHashtags(hashtags);
     await service.createPostWithImage(
       userId,
       username,
       content,
       roomId,
       image,
-      hashtags: hashtags,
+      hashtags: limited,
       mentions: mentions,
     );
     _posts.insert(
@@ -105,7 +133,7 @@ class FeedController extends GetxController {
         username: username,
         content: content,
         mediaUrls: [image.path],
-        hashtags: hashtags,
+        hashtags: limited,
         mentions: mentions,
       ),
     );
@@ -122,13 +150,14 @@ class FeedController extends GetxController {
     List<String> mentions,
   ) async {
     final metadata = await service.fetchLinkMetadata(linkUrl);
+    final limited = _limitHashtags(hashtags);
     await service.createPostWithLink(
       userId,
       username,
       content,
       roomId,
       linkUrl,
-      hashtags: hashtags,
+      hashtags: limited,
       mentions: mentions,
     );
     _posts.insert(
@@ -141,7 +170,7 @@ class FeedController extends GetxController {
         content: content,
         linkUrl: linkUrl,
         linkMetadata: metadata,
-        hashtags: hashtags,
+        hashtags: limited,
         mentions: mentions,
       ),
     );
@@ -201,7 +230,8 @@ class FeedController extends GetxController {
     List<String> hashtags,
     List<String> mentions,
   ) async {
-    await service.editPost(postId, content, hashtags, mentions);
+    final limited = _limitHashtags(hashtags);
+    await service.editPost(postId, content, limited, mentions);
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final post = _posts[index];
@@ -220,7 +250,7 @@ class FeedController extends GetxController {
         commentCount: post.commentCount,
         repostCount: post.repostCount,
         shareCount: post.shareCount,
-        hashtags: hashtags,
+        hashtags: limited,
         mentions: mentions,
         isEdited: true,
         editedAt: DateTime.now(),

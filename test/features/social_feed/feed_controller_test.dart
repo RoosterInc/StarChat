@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:io';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
@@ -37,6 +38,54 @@ class FakeFeedService extends FeedService {
   @override
   Future<void> createPost(FeedPost post) async {
     store.add(post);
+  }
+
+  @override
+  Future<void> createPostWithImage(
+    String userId,
+    String username,
+    String content,
+    String? roomId,
+    File image, {
+    List<String> hashtags = const [],
+    List<String> mentions = const [],
+  }) async {
+    store.add(
+      FeedPost(
+        id: 'img',
+        roomId: roomId ?? '',
+        userId: userId,
+        username: username,
+        content: content,
+        mediaUrls: [image.path],
+        hashtags: hashtags,
+        mentions: mentions,
+      ),
+    );
+  }
+
+  @override
+  Future<void> createPostWithLink(
+    String userId,
+    String username,
+    String content,
+    String? roomId,
+    String linkUrl, {
+    List<String> hashtags = const [],
+    List<String> mentions = const [],
+  }) async {
+    store.add(
+      FeedPost(
+        id: 'link',
+        roomId: roomId ?? '',
+        userId: userId,
+        username: username,
+        content: content,
+        linkUrl: linkUrl,
+        hashtags: hashtags,
+        mentions: mentions,
+      ),
+    );
   }
 
   @override
@@ -199,5 +248,52 @@ void main() {
     await controller.editPost('1', 'updated', [], []);
     expect(controller.posts.first.content, 'updated');
     expect(controller.posts.first.isEdited, isTrue);
+  });
+
+  test('createPost trims hashtags to 10', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(15, (i) => 'tag$i');
+    final post = FeedPost(
+      id: '2',
+      roomId: 'room',
+      userId: 'u2',
+      username: 'name',
+      content: 'post',
+      hashtags: tags,
+    );
+    await controller.createPost(post);
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
+  });
+
+  test('createPostWithImage trims hashtags', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    final file = File('${dir.path}/img.jpg');
+    await file.writeAsBytes(List.filled(10, 0));
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(12, (i) => 't$i');
+    await controller.createPostWithImage('u', 'user', 'c', 'room', file, tags, []);
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
+    await dir.delete(recursive: true);
+  });
+
+  test('createPostWithLink trims hashtags', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(11, (i) => 'x$i');
+    await controller.createPostWithLink(
+      'u',
+      'user',
+      'c',
+      'room',
+      'https://x.com',
+      tags,
+      [],
+    );
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
   });
 }
