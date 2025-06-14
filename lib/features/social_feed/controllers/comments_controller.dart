@@ -5,6 +5,7 @@ import '../../../controllers/auth_controller.dart';
 import '../models/post_comment.dart';
 import "../../profile/services/activity_service.dart";
 import '../services/feed_service.dart';
+import 'feed_controller.dart';
 
 class CommentsController extends GetxController {
   final FeedService service;
@@ -52,6 +53,9 @@ class CommentsController extends GetxController {
   Future<void> addComment(PostComment comment) async {
     await service.createComment(comment);
     _comments.add(comment);
+    if (comment.parentId == null && Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().incrementCommentCount(comment.postId);
+    }
     final action = comment.parentId == null ? 'comment' : 'reply';
     await Get.find<ActivityService>()
         .logActivity(comment.userId, action, itemId: comment.id, itemType: 'comment');
@@ -92,6 +96,9 @@ class CommentsController extends GetxController {
   Future<void> deleteComment(PostComment comment) async {
     await service.deleteComment(comment);
     _comments.removeWhere((c) => c.id == comment.id);
+    if (comment.parentId == null && Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().decrementCommentCount(comment.postId);
+    }
     _likedIds.remove(comment.id);
     _likeCounts.remove(comment.id);
   }
