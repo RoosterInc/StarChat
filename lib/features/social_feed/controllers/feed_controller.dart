@@ -105,6 +105,7 @@ class FeedController extends GetxController {
             isEdited: post.isEdited,
             isDeleted: post.isDeleted,
             editedAt: post.editedAt,
+            createdAt: post.createdAt,
           );
     await service.createPost(toSave);
     _posts.insert(0, toSave);
@@ -130,10 +131,11 @@ class FeedController extends GetxController {
       hashtags: limited,
       mentions: mentions,
     );
+    final now = DateTime.now();
     _posts.insert(
       0,
       FeedPost(
-        id: DateTime.now().toIso8601String(),
+        id: now.toIso8601String(),
         roomId: roomId,
         userId: userId,
         username: username,
@@ -141,6 +143,7 @@ class FeedController extends GetxController {
         mediaUrls: [image.path],
         hashtags: limited,
         mentions: mentions,
+        createdAt: now,
       ),
     );
     _commentCounts[_posts.first.id] = 0;
@@ -167,10 +170,11 @@ class FeedController extends GetxController {
       hashtags: limited,
       mentions: mentions,
     );
+    final now2 = DateTime.now();
     _posts.insert(
       0,
       FeedPost(
-        id: DateTime.now().toIso8601String(),
+        id: now2.toIso8601String(),
         roomId: roomId,
         userId: userId,
         username: username,
@@ -179,6 +183,7 @@ class FeedController extends GetxController {
         linkMetadata: metadata,
         hashtags: limited,
         mentions: mentions,
+        createdAt: now2,
       ),
     );
     _commentCounts[_posts.first.id] = 0;
@@ -287,6 +292,7 @@ class FeedController extends GetxController {
         mentions: mentions,
         isEdited: true,
         editedAt: DateTime.now(),
+        createdAt: post.createdAt,
       );
     }
   }

@@ -20,6 +20,7 @@ class FeedPost {
   final bool isEdited;
   final bool isDeleted;
   final DateTime? editedAt;
+  final DateTime createdAt;
 
   FeedPost({
     required this.id,
@@ -41,6 +42,7 @@ class FeedPost {
     this.isEdited = false,
     this.isDeleted = false,
     this.editedAt,
+    required this.createdAt,
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
@@ -66,6 +68,10 @@ class FeedPost {
       editedAt: json['edited_at'] != null
           ? DateTime.tryParse(json['edited_at'])
           : null,
+      createdAt: DateTime.tryParse(
+              json['\$createdAt'] ?? json['created_at'] ?? json['createdAt'] ??
+                  '') ??
+          DateTime.now(),
     );
   }
 
