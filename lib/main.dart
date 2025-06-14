@@ -19,6 +19,7 @@ import 'features/social_feed/screens/compose_post_page.dart';
 import 'features/search/screens/search_page.dart';
 import 'features/notifications/screens/notification_page.dart';
 import 'features/bookmarks/screens/bookmark_list_page.dart';
+import 'features/profile/screens/blocked_users_page.dart';
 import 'features/profile/screens/profile_page.dart';
 import 'features/reports/screens/report_post_page.dart';
 import 'features/reports/screens/report_user_page.dart';
@@ -201,6 +202,11 @@ class MyApp extends StatelessWidget {
               name: '/bookmarks',
               page: () => const BookmarkListPage(),
               bindings: [AuthBinding(), FeedBinding()],
+            ),
+            GetPage(
+              name: '/blocked-users',
+              page: () => const BlockedUsersPage(),
+              binding: ProfileBinding(),
             ),
             GetPage(
               name: '/user-profile/:userId',

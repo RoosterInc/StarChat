@@ -4,6 +4,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart';
 import '../design_system/modern_ui_system.dart';
+import '../bindings/profile_binding.dart';
+import '../features/profile/screens/blocked_users_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -45,6 +47,10 @@ class _SettingsPageState extends State<SettingsPage> {
             title: Text('push_notifications'.tr),
             value: notifications,
             onChanged: (v) => setState(() => notifications = v),
+          ),
+          ListTile(
+            title: const Text('Blocked Users'),
+            onTap: () => Get.to(() => const BlockedUsersPage(), binding: ProfileBinding()),
           ),
           ListTile(
             title: Text('version'.tr),
