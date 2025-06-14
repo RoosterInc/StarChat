@@ -64,6 +64,7 @@ class _RepostPageState extends State<RepostPage> {
                     await feedController.repostPost(widget.post.id, comment);
                     Get.back();
                   },
+                  enableHaptics: true,
                   child: const Text('Repost'),
                 ),
               ],
