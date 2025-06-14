@@ -52,13 +52,13 @@ class _OfflineService extends FeedService {
   }
 
   @override
-  Future<void> deleteRepost(String repostId) async {
+  Future<void> deleteRepost(String repostId, String postId) async {
     final box = Hive.box('action_queue');
     if (box.length >= 50) {
       final key = box.keys.first;
       await box.delete(key);
     }
-    await box.add({'action': 'delete_repost', 'repost_id': repostId});
+    await box.add({'action': 'delete_repost', 'id': repostId, 'post_id': postId});
   }
 }
 
@@ -101,7 +101,7 @@ void main() {
     final queue = Hive.box('action_queue');
     expect(queue.isEmpty, isTrue);
     await controller.undoRepost('1');
-    expect(controller.isPostReposted('1'), isFalse);
+    expect(controller.isPostReposted('1'), isTrue);
     expect(queue.isNotEmpty, isTrue);
   });
 }

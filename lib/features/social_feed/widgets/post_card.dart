@@ -96,7 +96,7 @@ class PostCard extends StatelessWidget {
         Get.snackbar('Error', 'Login required');
         return;
       }
-      Get.to(() => RepostPage(post: post));
+      controller.repostPost(post.id);
     }
   }
 

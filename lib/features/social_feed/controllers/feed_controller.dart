@@ -237,9 +237,14 @@ class FeedController extends GetxController {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
     if (uid == null || !_repostedIds.containsKey(postId)) return;
-    final repostId = _repostedIds.remove(postId)!;
-    await service.deleteRepost(repostId);
-    _repostCounts[postId] = (_repostCounts[postId] ?? 1) - 1;
+    final repostId = _repostedIds[postId]!;
+    try {
+      await service.deleteRepost(repostId, postId);
+      _repostedIds.remove(postId);
+      _repostCounts[postId] = (_repostCounts[postId] ?? 1) - 1;
+    } catch (_) {
+      // keep id until synced
+    }
   }
 
   Future<void> editPost(

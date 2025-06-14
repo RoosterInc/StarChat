@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:get/get.dart';
+import 'package:myapp/controllers/auth_controller.dart';
+import 'dart:io';
+import 'package:hive/hive.dart';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
@@ -69,7 +73,7 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<void> deleteRepost(String repostId) async {
+  Future<void> deleteRepost(String repostId, String postId) async {
     reposts.removeWhere((key, value) => value == repostId);
   }
 
@@ -112,6 +116,53 @@ class FakeFeedService extends FeedService {
         isEdited: true,
       );
     }
+  }
+}
+
+class TestAuthController extends AuthController {
+  final String uid;
+  TestAuthController(this.uid);
+
+  @override
+  void onInit() {
+    super.onInit();
+    userId = uid;
+  }
+
+  @override
+  Future<void> checkExistingSession({bool navigateOnMissing = true}) async {}
+}
+
+class OfflineDatabases extends Databases {
+  OfflineDatabases() : super(Client());
+
+  @override
+  Future<DocumentList> listDocuments({
+    required String databaseId,
+    required String collectionId,
+    List<String>? queries,
+  }) {
+    return Future.error('offline');
+  }
+
+  @override
+  Future<Document> createDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    required Map<dynamic, dynamic> data,
+    List<String>? permissions,
+  }) {
+    return Future.error('offline');
+  }
+
+  @override
+  Future<void> deleteDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+  }) {
+    return Future.error('offline');
   }
 }
 
@@ -266,6 +317,52 @@ void main() {
     await controller.undoRepost('1');
     expect(controller.isPostReposted('1'), isFalse);
     expect(controller.postRepostCount('1'), 0);
+  });
+
+  test('undoRepost offline queues action and retains id', () async {
+    class OfflineService extends FeedService {
+      OfflineService()
+          : super(
+              databases: OfflineDatabases(),
+              storage: Storage(Client()),
+              functions: Functions(Client()),
+              databaseId: 'db',
+              postsCollectionId: 'posts',
+              commentsCollectionId: 'comments',
+              likesCollectionId: 'likes',
+              repostsCollectionId: 'reposts',
+              bookmarksCollectionId: 'bookmarks',
+              connectivity: Connectivity(),
+              linkMetadataFunctionId: 'fetch_link_metadata',
+            );
+
+      @override
+      Future<String?> createRepost(Map<String, dynamic> repost) async => 'r1';
+    }
+
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('action_queue');
+
+    Get.testMode = true;
+    Get.put<AuthController>(TestAuthController('u1'));
+    final service = OfflineService();
+    final controller = FeedController(service: service);
+    await controller.repostPost('1');
+
+    await controller.undoRepost('1');
+
+    expect(controller.isPostReposted('1'), isTrue);
+    expect(controller.postRepostCount('1'), 1);
+
+    final queue = Hive.box('action_queue');
+    expect(queue.isNotEmpty, isTrue);
+    final item = queue.getAt(0) as Map?;
+    expect(item?['action'], 'delete_repost');
+    expect(item?['id'], 'r1');
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.delete<AuthController>();
   });
 
   test('editPost updates content', () async {

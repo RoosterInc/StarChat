@@ -73,7 +73,7 @@ void main() {
     expect(find.text('Reposted by you'), findsOneWidget);
   });
 
-  testWidgets('repost button label switches to undo', (tester) async {
+  testWidgets('repost button label updates when toggled', (tester) async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);
     Get.put(controller);
@@ -91,10 +91,17 @@ void main() {
         home: PostCard(post: post),
       ),
     );
-    expect(find.text('Repost'), findsOneWidget);
-    await controller.repostPost('1');
+    expect(find.bySemanticsLabel('Repost'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.repeat));
     await tester.pump();
-    expect(find.text('Undo Repost'), findsOneWidget);
+
+    expect(find.bySemanticsLabel('Undo Repost'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.repeat));
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Repost'), findsOneWidget);
   });
 }
 
@@ -150,7 +157,7 @@ class FakeFeedService extends FeedService {
   Future<String?> createRepost(Map<String, dynamic> repost) async => 'r1';
 
   @override
-  Future<void> deleteRepost(String repostId) async {}
+  Future<void> deleteRepost(String repostId, String postId) async {}
 
   @override
   Future<PostRepost?> getUserRepost(String postId, String userId) async => null;
