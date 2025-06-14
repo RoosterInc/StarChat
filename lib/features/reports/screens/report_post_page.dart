@@ -62,13 +62,18 @@ class _ReportPostPageState extends State<ReportPostPage> {
                       Get.snackbar('Error', 'Login required');
                       return;
                     }
-                    await Get.find<ReportService>().reportPost(
-                      uid,
-                      widget.postId,
-                      _type,
-                      _descController.text,
-                    );
-                    Get.back();
+                    try {
+                      await Get.find<ReportService>().reportPost(
+                        uid,
+                        widget.postId,
+                        _type,
+                        _descController.text,
+                      );
+                      Get.snackbar('Reported', 'Post reported for review');
+                      Get.back();
+                    } catch (_) {
+                      Get.snackbar('Error', 'Failed to submit report');
+                    }
                   },
                   child: const Text('Submit'),
                 ),

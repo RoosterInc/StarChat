@@ -31,7 +31,6 @@ class ReportService {
           'status': 'pending',
         },
       );
-      Get.snackbar('Reported', 'Post reported for review');
     } catch (e) {
       throw Exception('Failed to report post: $e');
     }
@@ -56,7 +55,6 @@ class ReportService {
           'status': 'pending',
         },
       );
-      Get.snackbar('Reported', 'User reported for review');
     } catch (e) {
       throw Exception('Failed to report user: $e');
     }
