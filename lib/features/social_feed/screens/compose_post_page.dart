@@ -9,6 +9,7 @@ import '../../notifications/services/notification_service.dart';
 import '../../../design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
+import '../constants.dart';
 import '../../../controllers/auth_controller.dart';
 
 class ComposePostPage extends StatefulWidget {
@@ -107,11 +108,18 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
-                    final tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
+                    var tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
                         .allMatches(_controller.text)
                         .map((m) => m.group(1)!.toLowerCase())
                         .toSet()
                         .toList();
+                    if (tags.length > maxHashtags) {
+                      Get.snackbar(
+                        'Hashtag limit',
+                        'Only the first \$maxHashtags hashtags will be used',
+                      );
+                      tags = limitHashtags(tags);
+                    }
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
                         .allMatches(_controller.text)
                         .map((m) => m.group(1)!)
