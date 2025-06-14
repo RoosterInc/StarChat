@@ -53,6 +53,7 @@ class ReactionBar extends StatelessWidget {
         isButton: true,
         child: AnimatedButton(
           onPressed: onTap,
+          enableHaptics: true,
           child: Row(
             children: [
               icon,
