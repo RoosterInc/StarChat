@@ -1,11 +1,25 @@
-Flutter Development Guidelines for AI Agents
+Cross Platform Mobile App Development Guidelines for AI Agents (Flutter , Dart , Appwrite , GetX) 
 Overview
 You are developing for a modern Flutter app with an established design system. Follow these guidelines to ensure consistency, performance, and high-quality user experience.
+
 Mandatory Requirements Checklist
 Before implementing any feature, ensure you adhere to the following requirements:
 
+All backend functionalities, including authentication, data storage, file management, and serverless functions, must be implemented using Appwrite.
+Use the official Appwrite Flutter SDK (version 17.0.0 as of 2025) for all interactions with Appwrite services.
+Regularly monitor the Appwrite Changelog for new features, deprecations, and updates to maintain app reliability.
+Leverage Appwrite’s real-time capabilities to enhance UI responsiveness for dynamic content.
+HEIC/AVIF Support New image formats for storage (introduced May 2025),Use for efficient image storage; generate previews directly in these formats
+Optimize Database Queries: Use indexing and pagination to minimize data transfer and improve load times for large datasets.
+Leverage Real-time Features: Implement Appwrite’s real-time subscriptions for features requiring live updates, such as chat or collaborative tools.
+Minimize Network Calls: Cache data locally where appropriate to reduce API requests.
+Monitor Usage Metrics: Use Appwrite’s improved usage metrics (updated in 2025) to track requests, identify bottlenecks, and optimize performance.
+Write unit and widget tests for components interacting with Appwrite, covering edge cases like network failures and invalid inputs.
+Use mocking libraries (e.g., mockito) to simulate Appwrite responses during unit testing.
+Aim for >90% code coverage for Appwrite-integrated features.
+
 Design System Compliance:
-Always use the modern ui system design system (modern_ui_system.dart).
+Always use the modern ui system design system (do your research about modern design).
 Never hardcode dimensions, colors, or spacing values.
 Always use DesignTokens for spacing, colors, and sizing.
 Always use responsive utilities for layouts.
@@ -23,15 +37,6 @@ Always use const constructors where possible.
 Never use Opacity widget in animations - use AnimatedOpacity.
 Always use OptimizedListView for lists with many items.
 Always implement skeleton loading states instead of spinners.
-
-
-Accessibility Requirements:
-Always provide semantic labels for interactive elements.
-Always ensure minimum touch target size of 44x44 pixels.
-Always support screen readers with proper semantics.
-Always maintain WCAG 2.1 AA contrast ratios.
-
-
 
 Design System Usage
 Spacing & Sizing
@@ -187,32 +192,6 @@ AnimatedBuilder(
   },
 )
 
-Accessibility Requirements
-Semantic Labels
-// Required - Always provide semantics
-AccessibilityWrapper(
-  semanticLabel: 'Add item to favorites',
-  hint: 'Double tap to add this item to your favorites list',
-  isButton: true,
-  child: IconButton(
-    icon: Icon(Icons.favorite),
-    onPressed: () {},
-  ),
-)
-
-// Forbidden - Missing accessibility
-IconButton(
-  icon: Icon(Icons.favorite),
-  onPressed: () {},
-)
-
-Touch Targets
-// Correct - Ensure minimum 44x44 touch targets
-Container(
-  width: math.max(44, actualWidth),
-  height: math.max(44, actualHeight),
-  child: YourButton(),
-)
 
 Navigation Patterns
 Always Use AdaptiveNavigation
@@ -357,8 +336,6 @@ Container(color: Colors.blue)
 // Never use Opacity in animations
 Opacity(opacity: _animation.value, child: child)
 
-// Never ignore accessibility
-GestureDetector(onTap: () {}, child: Icon(Icons.star))
 
 // Never use basic loading indicators
 CircularProgressIndicator()
@@ -378,7 +355,6 @@ Before Starting Implementation
 Read and understand the feature requirements.
 Identify which existing components can be reused.
 Plan responsive behavior for mobile, tablet, and desktop.
-Consider accessibility requirements.
 Plan error states and loading states.
 Identify performance optimization opportunities.
 
@@ -387,7 +363,6 @@ During Implementation
 Use design system components consistently.
 Add proper error handling and logging.
 Implement responsive layouts.
-Add accessibility features.
 Use const constructors everywhere possible.
 Add micro-interactions where appropriate.
 
@@ -411,7 +386,6 @@ All buttons use AnimatedButton.
 All cards use GlassmorphicCard.
 All lists use StaggeredListView or OptimizedListView.
 All loading states use SkeletonLoader.
-All widgets have accessibility labels.
 All async operations have error handling.
 All widgets use const constructors where possible.
 All features include comprehensive tests.
@@ -422,7 +396,6 @@ Your implementation is successful when:
 
 App renders perfectly on mobile, tablet, and desktop.
 All animations are smooth (60fps).
-App passes accessibility audits.
 No performance warnings in profile mode.
 All tests pass with >90% code coverage.
 Design system is used consistently throughout.
@@ -680,4 +653,3 @@ Responsive design implemented.
 Error handling in place.
 Accessibility labels added.
 No dead code or unused imports.
-
