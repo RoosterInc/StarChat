@@ -4,10 +4,13 @@ import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:myapp/features/profile/services/activity_service.dart';
+import 'package:myapp/features/social_feed/models/feed_post.dart';
+import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class FakeFeedService extends FeedService {
   FakeFeedService()
@@ -74,6 +77,50 @@ class OfflineUnlikeService extends FakeFeedService {
   @override
   Future<void> unlikeComment(String likeId, String commentId) {
     return Future.error('offline');
+  }
+}
+
+class ServiceWithPosts extends FeedService {
+  ServiceWithPosts()
+      : super(
+          databases: Databases(Client()),
+          storage: Storage(Client()),
+          functions: Functions(Client()),
+          databaseId: 'db',
+          postsCollectionId: 'posts',
+          commentsCollectionId: 'comments',
+          likesCollectionId: 'likes',
+          repostsCollectionId: 'reposts',
+          connectivity: Connectivity(),
+          linkMetadataFunctionId: 'fetch_link_metadata',
+        );
+
+  final List<FeedPost> posts = [];
+  final List<PostComment> comments = [];
+
+  @override
+  Future<List<FeedPost>> getPosts(String roomId, {List<String> blockedIds = const []}) async {
+    return posts.where((p) => p.roomId == roomId).toList();
+  }
+
+  @override
+  Future<void> createPost(FeedPost post) async {
+    posts.add(post);
+  }
+
+  @override
+  Future<List<PostComment>> getComments(String postId) async {
+    return comments.where((c) => c.postId == postId).toList();
+  }
+
+  @override
+  Future<void> createComment(PostComment comment) async {
+    comments.add(comment);
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    comments.removeWhere((c) => c.id == commentId);
   }
 }
 
@@ -220,5 +267,35 @@ void main() {
     await Hive.deleteFromDisk();
     await dir.delete(recursive: true);
     Get.reset();
+  });
+
+  test('comment count updated in feed controller', () async {
+    final service = ServiceWithPosts();
+    final feed = FeedController(service: service);
+    Get.testMode = true;
+    Get.put(feed);
+    final post = FeedPost(
+      id: 'p1',
+      roomId: 'room',
+      userId: 'u',
+      username: 'poster',
+      content: 'hello',
+    );
+    service.posts.add(post);
+    await feed.loadPosts('room');
+
+    final comments = CommentsController(service: service);
+    final comment = PostComment(
+      id: 'c1',
+      postId: 'p1',
+      userId: 'c',
+      username: 'commenter',
+      content: 'hi',
+    );
+    await comments.addComment(comment);
+    expect(feed.postCommentCount('p1'), 1);
+    await comments.deleteComment('c1');
+    expect(feed.postCommentCount('p1'), 0);
+    Get.delete<FeedController>();
   });
 }
