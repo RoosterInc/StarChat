@@ -27,7 +27,9 @@ class _FakeService extends FeedService {
   Future<List<PostComment>> getComments(String postId) async => [];
 
   @override
-  Future<void> createComment(PostComment comment) async {}
+  Future<String?> createComment(PostComment comment) async {
+    return null;
+  }
 }
 
 class _TestAuthController extends AuthController {

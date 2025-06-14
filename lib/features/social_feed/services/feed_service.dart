@@ -305,9 +305,9 @@ class FeedService {
     }
   }
 
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     try {
-      await databases.createDocument(
+      final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: commentsCollectionId,
         documentId: ID.unique(),
@@ -343,6 +343,7 @@ class FeedService {
           }
         } catch (_) {}
       }
+      return doc.data['\$id'] ?? doc.data['id'];
     } catch (_) {
       await commentsBox.put(
         comment.id,
@@ -358,6 +359,7 @@ class FeedService {
         'data': comment.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+      return null;
     }
 
     for (final key in postsBox.keys) {
@@ -717,12 +719,40 @@ class FeedService {
           case 'comment':
             final c =
                 PostComment.fromJson(Map<String, dynamic>.from(item['data']));
-            await createComment(c);
+            final newId = await createComment(c);
             await commentsBox.delete(c.id);
             final listKey = 'comments_${c.postId}';
             final list =
                 (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
-            list.removeWhere((e) => e['id'] == c.id || e['\$id'] == c.id);
+            final index = list.indexWhere(
+                (e) => e['id'] == c.id || e['\$id'] == c.id);
+            if (index != -1) {
+              list.removeAt(index);
+            }
+            if (newId != null) {
+              final map = {...c.toJson(), 'id': newId};
+              await commentsBox.put(newId, map);
+              list.add(map);
+              if (Get.isRegistered<CommentsController>()) {
+                final controller = Get.find<CommentsController>();
+                final i = controller.comments.indexWhere((com) => com.id == c.id);
+                if (i != -1) {
+                  controller.comments[i] = PostComment(
+                    id: newId,
+                    postId: controller.comments[i].postId,
+                    userId: controller.comments[i].userId,
+                    username: controller.comments[i].username,
+                    userAvatar: controller.comments[i].userAvatar,
+                    parentId: controller.comments[i].parentId,
+                    content: controller.comments[i].content,
+                    mediaUrls: controller.comments[i].mediaUrls,
+                    likeCount: controller.comments[i].likeCount,
+                    replyCount: controller.comments[i].replyCount,
+                    isDeleted: controller.comments[i].isDeleted,
+                  );
+                }
+              }
+            }
             await commentsBox.put(listKey, list);
             break;
           case 'unlike':

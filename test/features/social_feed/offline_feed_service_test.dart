@@ -5,6 +5,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
+import 'package:myapp/features/social_feed/controllers/comments_controller.dart';
+import 'package:get/get.dart';
+import 'package:myapp/features/profile/services/activity_service.dart';
 
 class OfflineDatabases extends Databases {
   OfflineDatabases() : super(Client());
@@ -138,6 +141,26 @@ class _FakeDatabases extends Databases {
       ...data,
     });
   }
+}
+
+class DummyActivityService extends ActivityService {
+  DummyActivityService()
+      : super(
+          databases: Databases(Client()),
+          databaseId: 'db',
+          collectionId: 'activities',
+        );
+
+  @override
+  Future<void> logActivity(
+    String userId,
+    String actionType, {
+    String? itemId,
+    String? itemType,
+  }) async {}
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchActivities(String userId) async => [];
 }
 
 void main() {
@@ -407,6 +430,48 @@ void main() {
     expect(list == null || list.isEmpty, isTrue);
     expect(Hive.box('comments').containsKey('c_sync'), isFalse);
     expect(Hive.box('action_queue').isEmpty, isTrue);
+  });
+
+  test('syncQueuedActions replaces queued comment ids', () async {
+    Get.testMode = true;
+    Get.put<ActivityService>(DummyActivityService());
+    final controller = CommentsController(service: service);
+    Get.put(controller);
+
+    final comment = PostComment(
+      id: 'tmp1',
+      postId: 'p_replace',
+      userId: 'u',
+      username: 'name',
+      content: 'hi',
+    );
+
+    await controller.addComment(comment);
+    expect(controller.comments.first.id, 'tmp1');
+
+    final onlineService = FeedService(
+      databases: _FakeDatabases(),
+      storage: Storage(Client()),
+      functions: Functions(Client()),
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'fetch_link_metadata',
+    );
+    await onlineService.syncQueuedActions();
+
+    final list = Hive.box('comments').get('comments_p_replace') as List?;
+    expect(list?.length, 1);
+    final newId = list!.first['id'] ?? list.first['\$id'];
+    expect(newId, isNot('tmp1'));
+    expect(controller.comments.length, 1);
+    expect(controller.comments.first.id, newId);
+    expect(Hive.box('comments').containsKey('tmp1'), isFalse);
+    Get.reset();
   });
 
 }
