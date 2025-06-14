@@ -299,43 +299,31 @@ class FeedService {
         data: comment.toJson(),
       );
       await functions.createExecution(
-        functionId: comment.parentId == null
-            ? 'increment_comment_count'
-            : 'increment_reply_count',
-        body: jsonEncode(comment.parentId == null
-            ? {'post_id': comment.postId}
-            : {'comment_id': comment.parentId}),
+        functionId: 'increment_comment_count',
+        body: jsonEncode({'post_id': comment.postId}),
       );
+      if (comment.parentId != null) {
+        await functions.createExecution(
+          functionId: 'increment_reply_count',
+          body: jsonEncode({'comment_id': comment.parentId}),
+        );
+      }
 
       if (Get.isRegistered<NotificationService>()) {
         try {
-          if (comment.parentId == null) {
-            final post = await databases.getDocument(
-              databaseId: databaseId,
-              collectionId: postsCollectionId,
-              documentId: comment.postId,
-            );
-            final ownerId = post.data['user_id'];
+          final post = await databases.getDocument(
+            databaseId: databaseId,
+            collectionId: postsCollectionId,
+            documentId: comment.postId,
+          );
+          final ownerId = post.data['user_id'];
+          if (ownerId != comment.userId) {
             await Get.find<NotificationService>().createNotification(
               ownerId,
               comment.userId,
               'comment',
               itemId: comment.postId,
               itemType: 'post',
-            );
-          } else {
-            final parent = await databases.getDocument(
-              databaseId: databaseId,
-              collectionId: commentsCollectionId,
-              documentId: comment.parentId!,
-            );
-            final ownerId = parent.data['user_id'];
-            await Get.find<NotificationService>().createNotification(
-              ownerId,
-              comment.userId,
-              'reply',
-              itemId: comment.parentId,
-              itemType: 'comment',
             );
           }
         } catch (_) {}
@@ -352,22 +340,22 @@ class FeedService {
       });
     }
 
-    if (comment.parentId == null) {
-      for (final key in postsBox.keys) {
-        final cached = postsBox.get(key, defaultValue: []) as List;
-        final index = cached.indexWhere(
-          (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
-        );
-        if (index != -1) {
-          final count = (cached[index]['comment_count'] ?? 0) as int;
-          cached[index] = {
-            ...cached[index],
-            'comment_count': count + 1,
-          };
-          await postsBox.put(key, cached);
-        }
+    for (final key in postsBox.keys) {
+      final cached = postsBox.get(key, defaultValue: []) as List;
+      final index = cached.indexWhere(
+        (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
+      );
+      if (index != -1) {
+        final count = (cached[index]['comment_count'] ?? 0) as int;
+        cached[index] = {
+          ...cached[index],
+          'comment_count': count + 1,
+        };
+        await postsBox.put(key, cached);
       }
-    } else {
+    }
+
+    if (comment.parentId != null) {
       for (final key in commentsBox.keys) {
         final cached = commentsBox.get(key, defaultValue: []) as List;
         final index = cached.indexWhere(
