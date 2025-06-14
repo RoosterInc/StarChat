@@ -42,6 +42,7 @@ class RecordingFunctions extends Functions {
 
 class RecordingNotificationService extends NotificationService {
   int count = 0;
+  Map<String, dynamic>? last;
   RecordingNotificationService()
       : super(
           databases: Databases(Client()),
@@ -53,6 +54,13 @@ class RecordingNotificationService extends NotificationService {
   Future<void> createNotification(String userId, String actorId, String actionType,
       {String? itemId, String? itemType}) async {
     count++;
+    last = {
+      'userId': userId,
+      'actorId': actorId,
+      'actionType': actionType,
+      'itemId': itemId,
+      'itemType': itemType,
+    };
   }
 }
 
@@ -154,6 +162,13 @@ void main() {
     expect(id, isNotNull);
     expect(functions.count, 1);
     expect(notification.count, 1);
+    expect(notification.last, {
+      'userId': 'orig',
+      'actorId': 'u2',
+      'actionType': 'repost',
+      'itemId': 'p1',
+      'itemType': 'post'
+    });
   });
 
   test('createRepost triggers notification without comment', () async {
@@ -164,6 +179,13 @@ void main() {
     expect(id, isNotNull);
     expect(functions.count, 1);
     expect(notification.count, 1);
+    expect(notification.last, {
+      'userId': 'orig',
+      'actorId': 'u2',
+      'actionType': 'repost',
+      'itemId': 'p1',
+      'itemType': 'post'
+    });
   });
 
   test('syncQueuedActions processes queued reposts and triggers function', () async {
