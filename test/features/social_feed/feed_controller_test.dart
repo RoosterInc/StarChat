@@ -155,6 +155,26 @@ void main() {
     expect(controller.isPostLiked('1'), isFalse);
   });
 
+  test('post like count never below zero', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    service.store.add(
+      FeedPost(
+        id: '2',
+        roomId: 'room',
+        userId: 'u1',
+        username: 'user',
+        content: 'text',
+      ),
+    );
+    service.likes['2'] = 'l1';
+    await controller.loadPosts('room');
+    await controller.toggleLikePost('2');
+    expect(controller.postLikeCount('2'), 0);
+    await controller.toggleLikePost('2');
+    expect(controller.postLikeCount('2'), 1);
+  });
+
   test('repostPost stores id and increases count', () async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);

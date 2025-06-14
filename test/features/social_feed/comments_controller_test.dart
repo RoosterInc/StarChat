@@ -85,4 +85,23 @@ void main() {
     expect(controller.isCommentLiked('1'), isTrue);
     expect(controller.commentLikeCount('1'), 1);
   });
+
+  test('like counts never drop below zero', () async {
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service);
+    final c = PostComment(
+      id: '1',
+      postId: 'p1',
+      userId: 'u',
+      username: 'user',
+      content: 'hi',
+    );
+    service.store.add(c);
+    service.likes['1'] = 'l1';
+    await controller.loadComments('p1');
+    await controller.toggleLikeComment('1');
+    expect(controller.commentLikeCount('1'), 0);
+    await controller.toggleLikeComment('1');
+    expect(controller.commentLikeCount('1'), 1);
+  });
 }
