@@ -231,4 +231,10 @@ void main() {
     expect(service.hashtagCounts['new'], 1);
     expect(service.hashtagCounts.containsKey('old'), isFalse);
   });
+
+  test('updateSortType stores value', () async {
+    final controller = FeedController(service: FakeFeedService());
+    controller.updateSortType('time-based');
+    expect(controller.sortType, 'time-based');
+  });
 }
