@@ -10,6 +10,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../utils/logger.dart';
+import 'package:flutter/foundation.dart';
 
 class CommentThreadPage extends StatefulWidget {
   final PostComment rootComment;
@@ -51,6 +52,23 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
         Get.snackbar('Error', 'Failed to notify mentions',
             snackPosition: SnackPosition.BOTTOM);
       }
+    }
+  }
+
+  Future<void> _notifyParentAuthor(String authorId, String commentId) async {
+    if (!Get.isRegistered<NotificationService>()) return;
+    try {
+      final auth = Get.find<AuthController>();
+      if (authorId == auth.userId) return;
+      await Get.find<NotificationService>().createNotification(
+        authorId,
+        auth.userId ?? '',
+        'reply',
+        itemId: commentId,
+        itemType: 'comment',
+      );
+    } catch (e, st) {
+      logger.e('Error notifying parent author', error: e, stackTrace: st);
     }
   }
 
@@ -121,6 +139,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     );
                     commentsController.replyToComment(comment);
                     await _notifyMentions(mentions, comment.id);
+                    await _notifyParentAuthor(root.userId, root.id);
                     _controller.clear();
                   },
                   child: const Text('Send'),
@@ -132,4 +151,13 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
       ),
     );
   }
+}
+
+@visibleForTesting
+Future<void> notifyParentAuthorForTest(
+  String authorId,
+  String commentId,
+) async {
+  final state = _CommentThreadPageState();
+  await state._notifyParentAuthor(authorId, commentId);
 }

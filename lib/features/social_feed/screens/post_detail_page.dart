@@ -12,6 +12,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../../utils/logger.dart';
+import 'package:flutter/foundation.dart';
 
 class PostDetailPage extends StatefulWidget {
   final FeedPost post;
@@ -54,6 +55,23 @@ class _PostDetailPageState extends State<PostDetailPage> {
         Get.snackbar('Error', 'Failed to notify mentions',
             snackPosition: SnackPosition.BOTTOM);
       }
+    }
+  }
+
+  Future<void> _notifyPostAuthor(String authorId, String postId) async {
+    if (!Get.isRegistered<NotificationService>()) return;
+    try {
+      final auth = Get.find<AuthController>();
+      if (authorId == auth.userId) return;
+      await Get.find<NotificationService>().createNotification(
+        authorId,
+        auth.userId ?? '',
+        'comment',
+        itemId: postId,
+        itemType: 'post',
+      );
+    } catch (e, st) {
+      logger.e('Error notifying post author', error: e, stackTrace: st);
     }
   }
 
@@ -136,6 +154,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     );
                     _commentsController.addComment(comment);
                     await _notifyMentions(mentions, comment.id);
+                    await _notifyPostAuthor(widget.post.userId, widget.post.id);
                     _textController.clear();
                   },
                   child: const Text('Send'),
@@ -147,4 +166,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
       ),
     );
   }
+}
+
+@visibleForTesting
+Future<void> notifyPostAuthorForTest(String authorId, String postId) async {
+  final state = _PostDetailPageState();
+  await state._notifyPostAuthor(authorId, postId);
 }
