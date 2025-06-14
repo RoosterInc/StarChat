@@ -92,8 +92,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             _buildFollowButton(context, profile.id),
             SizedBox(height: spacing * 0.5),
             _buildBlockButton(context, profile.id),
-            if (Get.find<AuthController>().userId != null &&
-                Get.find<AuthController>().userId != profile.id)
+            if (_shouldShowReport())
               Padding(
                 padding: EdgeInsets.only(top: spacing * 0.5),
                 child: _buildReportButton(context, profile.id),
@@ -136,8 +135,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 _buildFollowButton(context, profile.id),
                 SizedBox(height: spacing * 0.5),
                 _buildBlockButton(context, profile.id),
-                if (Get.find<AuthController>().userId != null &&
-                    Get.find<AuthController>().userId != profile.id)
+                if (_shouldShowReport())
                   Padding(
                     padding: EdgeInsets.only(top: spacing * 0.5),
                     child: _buildReportButton(context, profile.id),
@@ -210,5 +208,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
         child: const Text('Report'),
       ),
     );
+  }
+
+  bool _shouldShowReport() {
+    final auth = Get.find<AuthController>();
+    final current = auth.userId;
+    return current != null && current != widget.userId;
   }
 }
