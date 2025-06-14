@@ -37,7 +37,9 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                 3,
                 (_) => Padding(
                   padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                  child: const SkeletonLoader(height: 80),
+                  child: SkeletonLoader(
+                    height: DesignTokens.xl(context),
+                  ),
                 ),
               ),
             ),
