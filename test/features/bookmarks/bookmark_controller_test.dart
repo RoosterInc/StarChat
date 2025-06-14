@@ -65,6 +65,13 @@ class FakeFeedService extends FeedService {
   }
 }
 
+class OfflineRemoveService extends FakeFeedService {
+  @override
+  Future<void> removeBookmark(String bookmarkId) {
+    return Future.error('offline');
+  }
+}
+
 void main() {
   test('toggleBookmark updates map', () async {
     final service = FakeFeedService();
@@ -78,6 +85,32 @@ void main() {
     final controller = BookmarkController(service: service);
     await controller.toggleBookmark('u', '1');
     expect(controller.isBookmarked('1'), isTrue);
+    await controller.toggleBookmark('u', '1');
+    expect(controller.isBookmarked('1'), isFalse);
+  });
+
+  test('toggleBookmark offline remove updates map', () async {
+    final service = OfflineRemoveService();
+    service.posts.add(FeedPost(
+      id: '1',
+      roomId: 'r',
+      userId: 'u',
+      username: 'n',
+      content: 'c',
+    ));
+    service.bms['1'] = 'b1';
+    final controller = BookmarkController(service: service);
+    controller.bookmarks.add(
+      BookmarkedPost(
+        bookmark: Bookmark(
+          id: 'b1',
+          postId: '1',
+          userId: 'u',
+          createdAt: DateTime.now(),
+        ),
+        post: service.posts.first,
+      ),
+    );
     await controller.toggleBookmark('u', '1');
     expect(controller.isBookmarked('1'), isFalse);
   });

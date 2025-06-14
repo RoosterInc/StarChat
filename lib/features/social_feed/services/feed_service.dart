@@ -620,6 +620,9 @@ class FeedService {
             final data = Map<String, dynamic>.from(item['data']);
             await bookmarkPost(data['user_id'], data['post_id']);
             break;
+          case 'remove_bookmark':
+            await removeBookmark(item['bookmark_id']);
+            break;
           case 'comment':
             await createComment(PostComment.fromJson(
                 Map<String, dynamic>.from(item['data'])));
@@ -713,11 +716,19 @@ class FeedService {
   }
 
   Future<void> removeBookmark(String bookmarkId) async {
-    await databases.deleteDocument(
-      databaseId: databaseId,
-      collectionId: bookmarksCollectionId,
-      documentId: bookmarkId,
-    );
+    try {
+      await databases.deleteDocument(
+        databaseId: databaseId,
+        collectionId: bookmarksCollectionId,
+        documentId: bookmarkId,
+      );
+    } catch (_) {
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'remove_bookmark',
+        'bookmark_id': bookmarkId,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   Future<void> deletePost(String postId) async {
