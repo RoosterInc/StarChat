@@ -1,5 +1,8 @@
 import 'package:appwrite/appwrite.dart';
-import 'notification_service.dart';
+import 'package:get/get.dart';
+
+import '../../notifications/services/notification_service.dart';
+import '../../../controllers/auth_controller.dart';
 import '../../../utils/logger.dart';
 
 class MentionService {
@@ -16,12 +19,13 @@ class MentionService {
   });
 
   Future<void> notifyMentions(
-    List<String> mentions, {
-    required String actorId,
-    required String itemId,
-    required String itemType,
-  }) async {
+    List<String> mentions,
+    String itemId,
+    String itemType,
+  ) async {
     if (mentions.isEmpty) return;
+    final actorId = Get.find<AuthController>().userId;
+    if (actorId == null) return;
     for (final name in mentions) {
       try {
         final res = await databases.listDocuments(

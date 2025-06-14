@@ -9,7 +9,7 @@ import '../widgets/comment_card.dart';
 import '../../../controllers/auth_controller.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../notifications/services/mention_service.dart';
+import '../services/mention_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html_unescape/html_unescape.dart';
@@ -144,9 +144,8 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     commentsController.replyToComment(comment);
                     await Get.find<MentionService>().notifyMentions(
                       mentions,
-                      actorId: uid,
-                      itemId: comment.id,
-                      itemType: 'comment',
+                      comment.id,
+                      'comment',
                     );
                     await _notifyParentAuthor(root.userId, root.id);
                     _controller.clear();

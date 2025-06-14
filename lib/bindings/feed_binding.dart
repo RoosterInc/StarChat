@@ -8,7 +8,7 @@ import '../features/social_feed/controllers/feed_controller.dart';
 import '../features/social_feed/controllers/comments_controller.dart';
 import '../features/bookmarks/controllers/bookmark_controller.dart';
 import 'package:appwrite/appwrite.dart' as appwrite;
-import '../features/notifications/services/mention_service.dart';
+import '../features/social_feed/services/mention_service.dart';
 import '../features/notifications/services/notification_service.dart';
 
 class FeedBinding extends Bindings {

@@ -9,7 +9,7 @@ import '../widgets/comment_card.dart';
 import '../utils/comment_validation.dart';
 import '../widgets/post_card.dart';
 import '../../../utils/logger.dart';
-import '../../notifications/services/mention_service.dart';
+import '../services/mention_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html_unescape/html_unescape.dart';
 
@@ -147,9 +147,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     commentsController.addComment(comment);
                     await Get.find<MentionService>().notifyMentions(
                       mentions,
-                      actorId: uid,
-                      itemId: comment.id,
-                      itemType: 'comment',
+                      comment.id,
+                      'comment',
                     );
                     await _notifyPostAuthor(widget.post.userId, widget.post.id);
                     _textController.clear();
