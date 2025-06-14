@@ -133,6 +133,13 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
+                    if (mentions.length > 10) {
+                      Get.snackbar(
+                        'Mention limit',
+                        'Only the first 10 mentions will be used',
+                      );
+                      mentions = mentions.take(10).toList();
+                    }
                     final comment = PostComment(
                       id: DateTime.now().toIso8601String(),
                       postId: root.postId,
