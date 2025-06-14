@@ -231,4 +231,50 @@ void main() {
     expect(service.hashtagCounts['new'], 1);
     expect(service.hashtagCounts.containsKey('old'), isFalse);
   });
+  test('createPost trims hashtags to 10', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(15, (i) => 'tag\$i');
+    final post = FeedPost(
+      id: '2',
+      roomId: 'room',
+      userId: 'u2',
+      username: 'name',
+      content: 'post',
+      hashtags: tags,
+    );
+    await controller.createPost(post);
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
+  });
+
+  test('createPostWithImage trims hashtags', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    final file = File('${dir.path}/img.jpg');
+    await file.writeAsBytes(List.filled(10, 0));
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(12, (i) => 't\$i');
+    await controller.createPostWithImage('u', 'user', 'c', 'room', file, tags, []);
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
+    await dir.delete(recursive: true);
+  });
+
+  test('createPostWithLink trims hashtags', () async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    final tags = List.generate(11, (i) => 'x\$i');
+    await controller.createPostWithLink(
+      'u',
+      'user',
+      'c',
+      'room',
+      'https://x.com',
+      tags,
+      [],
+    );
+    expect(service.store.first.hashtags.length, 10);
+    expect(controller.posts.first.hashtags.length, 10);
+  });
 }

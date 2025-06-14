@@ -35,20 +35,22 @@ class _ComposePostPageState extends State<ComposePostPage> {
       final profilesId =
           dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
       for (final name in mentions) {
-        final res = await auth.databases.listDocuments(
-          databaseId: dbId,
-          collectionId: profilesId,
-          queries: [Query.equal('username', name)],
-        );
-        if (res.documents.isNotEmpty) {
-          await Get.find<NotificationService>().createNotification(
-            res.documents.first.data['\$id'],
-            auth.userId ?? '',
-            'mention',
-            itemId: itemId,
-            itemType: 'post',
+        try {
+          final res = await auth.databases.listDocuments(
+            databaseId: dbId,
+            collectionId: profilesId,
+            queries: [Query.equal('username', name)],
           );
-        }
+          if (res.documents.isNotEmpty) {
+            await Get.find<NotificationService>().createNotification(
+              res.documents.first.data['\$id'],
+              auth.userId ?? '',
+              'mention',
+              itemId: itemId,
+              itemType: 'post',
+            );
+          }
+        } catch (_) {}
       }
     } catch (e, st) {
       logger.e('Error notifying mentions', error: e, stackTrace: st);
@@ -131,11 +133,18 @@ class _ComposePostPageState extends State<ComposePostPage> {
 
                     final sanitized = HtmlUnescape().convert(text);
 
-                    final tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
+                    var tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
                         .allMatches(sanitized)
                         .map((m) => m.group(1)!.toLowerCase())
                         .toSet()
                         .toList();
+                    if (tags.length > 10) {
+                      Get.snackbar(
+                        'Hashtag limit',
+                        'Only the first 10 hashtags will be used',
+                      );
+                      tags = tags.take(10).toList();
+                    }
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
                         .allMatches(sanitized)
                         .map((m) => m.group(1)!)
