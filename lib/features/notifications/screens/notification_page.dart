@@ -60,10 +60,13 @@ class _NotificationPageState extends State<NotificationPage> {
                   title: Text(
                       '${n.actorId} ${n.actionType}d your ${n.itemType ?? 'content'}'),
                   subtitle: Text(n.createdAt.toString()),
-                  trailing: n.isRead
-                      ? null
-                      : const Icon(Icons.circle,
-                          color: Colors.blue, size: 10),
+                    trailing: n.isRead
+                        ? null
+                        : Icon(
+                            Icons.circle,
+                            color: context.colorScheme.primary,
+                            size: 10,
+                          ),
                   onTap: () => controller.markAsRead(n.id),
                 ),
               ),
