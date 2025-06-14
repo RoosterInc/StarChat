@@ -23,7 +23,7 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   final _textController = TextEditingController();
-  late final CommentsController _commentsController;
+  late final CommentsController commentsController;
 
   Future<void> _notifyPostAuthor(String authorId, String postId) async {
     if (!Get.isRegistered<NotificationService>()) return;
@@ -45,8 +45,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   void initState() {
     super.initState();
-    _commentsController = Get.find<CommentsController>();
-    _commentsController.loadComments(widget.post.id);
+    commentsController = Get.find<CommentsController>();
+    commentsController.loadComments(widget.post.id);
   }
 
   @override
@@ -66,37 +66,39 @@ class _PostDetailPageState extends State<PostDetailPage> {
         child: Column(
           children: [
             Expanded(
-              child: Obx(() {
-                if (_commentsController.isLoading) {
-                  return Column(
-                    children: [
-                      PostCard(post: widget.post),
-                      SizedBox(height: DesignTokens.sm(context)),
-                      ...List.generate(
-                        3,
-                        (_) => Padding(
-                          padding:
-                              EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                          child: SkeletonLoader(
-                            height: DesignTokens.xl(context),
+              child: GetX<CommentsController>(
+                builder: (controller) {
+                  if (controller.isLoading) {
+                    return Column(
+                      children: [
+                        PostCard(post: widget.post),
+                        SizedBox(height: DesignTokens.sm(context)),
+                        ...List.generate(
+                          3,
+                          (_) => Padding(
+                            padding:
+                                EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                            child: SkeletonLoader(
+                              height: DesignTokens.xl(context),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  );
-                }
-                return OptimizedListView(
-                  itemCount: _commentsController.comments.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) return PostCard(post: widget.post);
-                    final comment = _commentsController.comments[index - 1];
-                    return Padding(
-                      padding: EdgeInsets.only(top: DesignTokens.sm(context)),
-                      child: CommentCard(comment: comment),
+                      ],
                     );
-                  },
-                );
-              }),
+                  }
+                  return OptimizedListView(
+                    itemCount: controller.comments.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return PostCard(post: widget.post);
+                      final comment = controller.comments[index - 1];
+                      return Padding(
+                        padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                        child: CommentCard(comment: comment),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
             SizedBox(height: DesignTokens.sm(context)),
             Row(
@@ -142,7 +144,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       username: uname,
                       content: sanitized,
                     );
-                    _commentsController.addComment(comment);
+                    commentsController.addComment(comment);
                     await Get.find<MentionService>().notifyMentions(
                       mentions,
                       actorId: uid,

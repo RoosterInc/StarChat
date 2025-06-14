@@ -133,8 +133,9 @@ class CommentsController extends GetxController {
           _comments.add(comment);
           _likeCounts[id] = comment.likeCount;
         }
-      } else if (event.events.any((e) => e.contains('.update')) &&
-          payload['is_deleted'] == true) {
+      } else if ((event.events.any((e) => e.contains('.update')) &&
+              payload['is_deleted'] == true) ||
+          event.events.any((e) => e.contains('.delete'))) {
         _comments.removeWhere((c) => c.id == id);
         _likedIds.remove(id);
         _likeCounts.remove(id);
@@ -142,9 +143,14 @@ class CommentsController extends GetxController {
     });
   }
 
+  void disposeSubscription() {
+    _subscription?.close();
+    _subscription = null;
+  }
+
   @override
   void onClose() {
-    _subscription?.close();
+    disposeSubscription();
     super.onClose();
   }
 }

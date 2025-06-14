@@ -78,6 +78,18 @@ void main() {
     realtime.emit(
       RealtimeMessage(
         events: ['create'],
+        payload: {...comment.toJson(), '\$id': 'c1', 'post_id': 'other'},
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.comments.isEmpty, isTrue);
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['create'],
         payload: {...comment.toJson(), '\$id': 'c1'},
         channels: const [],
         timestamp: DateTime.now().toIso8601String(),
@@ -89,8 +101,8 @@ void main() {
 
     realtime.emit(
       RealtimeMessage(
-        events: ['update'],
-        payload: {...comment.toJson(), '\$id': 'c1', 'is_deleted': true},
+        events: ['delete'],
+        payload: {...comment.toJson(), '\$id': 'c1'},
         channels: const [],
         timestamp: DateTime.now().toIso8601String(),
       ),
@@ -98,6 +110,32 @@ void main() {
 
     await Future<void>.delayed(Duration.zero);
     expect(controller.comments.isEmpty, isTrue);
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['create'],
+        payload: {...comment.toJson(), '\$id': 'c1'},
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.comments.length, 1);
+
+    controller.disposeSubscription();
+
+    realtime.emit(
+      RealtimeMessage(
+        events: ['delete'],
+        payload: {...comment.toJson(), '\$id': 'c1'},
+        channels: const [],
+        timestamp: DateTime.now().toIso8601String(),
+      ),
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.comments.length, 1);
   });
 }
 
