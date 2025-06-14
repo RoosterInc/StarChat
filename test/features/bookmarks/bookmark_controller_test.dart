@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:myapp/features/bookmarks/controllers/bookmark_controller.dart';
 import 'package:myapp/features/bookmarks/models/bookmark.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
@@ -64,6 +67,12 @@ class FakeFeedService extends FeedService {
             createdAt: DateTime.now(),
           );
   }
+
+  @override
+  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
+    if (roomId == null) return posts;
+    return posts.where((p) => p.roomId == roomId).toList();
+  }
 }
 
 class OfflineGetBookmarkService extends FakeFeedService {
@@ -78,6 +87,14 @@ class OfflineRemoveService extends FakeFeedService {
   Future<void> removeBookmark(String bookmarkId) {
     return Future.error('offline');
   }
+}
+
+class _StubFeedController extends FeedController {
+  final List<FeedPost> _list;
+  _StubFeedController(this._list) : super(service: FakeFeedService());
+
+  @override
+  List<FeedPost> get posts => _list;
 }
 
 void main() {
@@ -119,5 +136,67 @@ void main() {
     expect(controller.isBookmarked('1'), isTrue);
     await controller.toggleBookmark('u', '1');
     expect(controller.isBookmarked('1'), isTrue);
+  });
+
+  test('loadBookmarks populates bookmarks list', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('posts');
+    await Hive.openBox('comments');
+    await Hive.openBox('action_queue');
+    await Hive.openBox('post_queue');
+    await Hive.openBox('bookmarks');
+    await Hive.openBox('hashtags');
+    await Hive.openBox('preferences');
+
+    final service = FakeFeedService();
+    service.posts.add(
+      FeedPost(id: '1', roomId: 'r', userId: 'u', username: 'n', content: 'c'),
+    );
+    service.bms['1'] = 'b1';
+    final controller = BookmarkController(service: service);
+    await controller.loadBookmarks('u');
+
+    expect(controller.bookmarks.length, 1);
+    expect(controller.isBookmarked('1'), isTrue);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+  });
+
+  test('toggleBookmark updates bookmark list when feed available', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('posts');
+    await Hive.openBox('comments');
+    await Hive.openBox('action_queue');
+    await Hive.openBox('post_queue');
+    await Hive.openBox('bookmarks');
+    await Hive.openBox('hashtags');
+    await Hive.openBox('preferences');
+
+    final service = FakeFeedService();
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r',
+      userId: 'u',
+      username: 'n',
+      content: 'c',
+    );
+    service.posts.add(post);
+    final feed = _StubFeedController([post]);
+    Get.put<FeedController>(feed);
+
+    final controller = BookmarkController(service: service);
+    await controller.toggleBookmark('u', '1');
+    expect(controller.bookmarks.length, 1);
+    expect(controller.bookmarks.first.post.id, '1');
+
+    await controller.toggleBookmark('u', '1');
+    expect(controller.bookmarks, isEmpty);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.reset();
   });
 }
