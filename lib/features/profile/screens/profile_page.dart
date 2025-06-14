@@ -28,7 +28,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
       appBar: AppBar(title: const Text('Profile')),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(DesignTokens.md(context)),
+              child: SkeletonLoader(height: DesignTokens.lg(context)),
+            ),
+          );
         }
         final profile = controller.profile.value;
         if (profile == null) {
@@ -37,21 +42,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(profile.username, style: Theme.of(context).textTheme.headlineSmall),
-            if (profile.bio != null) Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(profile.bio!),
-            ),
+            Text(profile.username,
+                style: Theme.of(context).textTheme.headlineSmall),
+            if (profile.bio != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(profile.bio!),
+              ),
             const SizedBox(height: 16),
             AnimatedButton(
-              onPressed: () => controller.followUser(profile.id),
+              onPressed: () => controller.isFollowing.value
+                  ? controller.unfollowUser(profile.id)
+                  : controller.followUser(profile.id),
               style: FilledButton.styleFrom(
                 padding: EdgeInsets.symmetric(
                   horizontal: DesignTokens.md(context),
                   vertical: DesignTokens.sm(context),
                 ),
               ),
-              child: const Text('Follow'),
+              child: Obx(() => Text(
+                    controller.isFollowing.value ? 'Unfollow' : 'Follow',
+                  )),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -61,7 +72,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Block User'),
-                      content: const Text('Are you sure you want to block this user?'),
+                      content: const Text(
+                          'Are you sure you want to block this user?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),

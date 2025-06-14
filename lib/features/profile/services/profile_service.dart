@@ -42,6 +42,29 @@ class ProfileService {
     }
   }
 
+  Future<void> unfollowUser(String followerId, String followedId) async {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: followsCollection,
+        queries: [
+          Query.equal('follower_id', followerId),
+          Query.equal('followed_id', followedId),
+        ],
+      );
+      for (final doc in res.documents) {
+        await databases.deleteDocument(
+          databaseId: databaseId,
+          collectionId: followsCollection,
+          documentId: doc.$id,
+        );
+      }
+      followsBox.delete("${followerId}_${followedId}");
+    } catch (_) {
+      followsBox.delete("${followerId}_${followedId}");
+    }
+  }
+
   Future<UserProfile> fetchProfile(String userId) async {
     try {
       final res = await databases.getDocument(
@@ -102,9 +125,12 @@ class ProfileService {
 
   List<String> getBlockedIds(String blockerId) {
     return blocksBox.keys
-        .where((k) => k.toString().startsWith('${blockerId}_'))
-        .map((k) => blocksBox.get(k)['blocked_id'] as String)
+        .where((k) => k.toString().startsWith("${blockerId}_"))
+        .map((k) => blocksBox.get(k)["blocked_id"] as String)
         .toList();
   }
-}
 
+  bool isFollowing(String followerId, String followedId) {
+    return followsBox.get("${followerId}_${followedId}") != null;
+  }
+}
