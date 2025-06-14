@@ -134,12 +134,18 @@ class SetUsernamePage extends GetView<AuthController> {
                 SizedBox(height: DesignTokens.spacing(context, 20)),
                 SizedBox(
                   width: double.infinity,
-                  child: Obx(() => ElevatedButton(
+                  child: Obx(() => AnimatedButton(
                         onPressed: controller.isLoading.value ||
                                 !controller.isUsernameValid.value ||
                                 !controller.usernameAvailable.value
                             ? null
                             : controller.submitUsername,
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: DesignTokens.md(context),
+                            vertical: DesignTokens.sm(context),
+                          ),
+                        ),
                         child: controller.isLoading.value
                             ? const CircularProgressIndicator()
                             : Text('save'.tr),
