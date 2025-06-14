@@ -930,6 +930,26 @@ class FeedService {
           'created_at': DateTime.now().toIso8601String(),
         },
       );
+
+      if (Get.isRegistered<NotificationService>()) {
+        try {
+          final post = await databases.getDocument(
+            databaseId: databaseId,
+            collectionId: postsCollectionId,
+            documentId: postId,
+          );
+          final ownerId = post.data['user_id'];
+          if (ownerId != userId) {
+            await Get.find<NotificationService>().createNotification(
+              ownerId,
+              userId,
+              'bookmark',
+              itemId: postId,
+              itemType: 'post',
+            );
+          }
+        } catch (_) {}
+      }
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'bookmark',
