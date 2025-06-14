@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../notifications/services/notification_service.dart';
@@ -117,13 +118,26 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
+
+                    final text = _controller.text.trim();
+                    if (text.isEmpty || text.length > 2000) {
+                      Get.snackbar(
+                        'error'.tr,
+                        'Post must be between 1 and 2000 characters.',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
+
+                    final sanitized = HtmlUnescape().convert(text);
+
                     final tags = RegExp(r'(?:#)([A-Za-z0-9_]+)')
-                        .allMatches(_controller.text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!.toLowerCase())
                         .toSet()
                         .toList();
                     final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
-                        .allMatches(_controller.text)
+                        .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
                         .toList();
@@ -136,7 +150,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       await feedController.createPostWithLink(
                         uid,
                         uname,
-                        _controller.text,
+                        sanitized,
                         widget.roomId,
                         linkText,
                         tags,
@@ -150,7 +164,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       await feedController.createPostWithImage(
                         uid,
                         uname,
-                        _controller.text,
+                        sanitized,
                         widget.roomId,
                         File(_image!.path),
                         tags,
@@ -166,7 +180,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         roomId: widget.roomId,
                         userId: uid,
                         username: uname,
-                        content: _controller.text,
+                        content: sanitized,
                         hashtags: tags,
                         mentions: mentions,
                       );
