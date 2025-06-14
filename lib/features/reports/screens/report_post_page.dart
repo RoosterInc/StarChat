@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../reports/services/report_service.dart';
+import '../models/report_type.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../design_system/modern_ui_system.dart';
 
@@ -14,7 +15,7 @@ class ReportPostPage extends StatefulWidget {
 
 class _ReportPostPageState extends State<ReportPostPage> {
   final _descController = TextEditingController();
-  String _type = 'spam';
+  ReportType _type = ReportType.spam;
 
   @override
   void dispose() {
@@ -31,14 +32,15 @@ class _ReportPostPageState extends State<ReportPostPage> {
         padding: EdgeInsets.all(DesignTokens.md(context)),
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
+            DropdownButtonFormField<ReportType>(
               value: _type,
               decoration: const InputDecoration(labelText: 'Type'),
               items: const [
-                DropdownMenuItem(value: 'spam', child: Text('Spam')),
-                DropdownMenuItem(value: 'harassment', child: Text('Harassment')),
-                DropdownMenuItem(value: 'nudity', child: Text('Nudity')),
-                DropdownMenuItem(value: 'other', child: Text('Other')),
+                DropdownMenuItem(value: ReportType.spam, child: Text('Spam')),
+                DropdownMenuItem(
+                    value: ReportType.harassment, child: Text('Harassment')),
+                DropdownMenuItem(value: ReportType.nudity, child: Text('Nudity')),
+                DropdownMenuItem(value: ReportType.other, child: Text('Other')),
               ],
               onChanged: (v) {
                 if (v != null) setState(() => _type = v);
