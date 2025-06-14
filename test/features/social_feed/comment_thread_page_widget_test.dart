@@ -193,4 +193,44 @@ void main() {
 
     expect(find.text('reply'), findsOneWidget);
   });
+
+  testWidgets('nested replies display correctly', (tester) async {
+    final service = TestFeedService();
+    final reply1 = PostComment(
+      id: 'c2',
+      postId: root.postId,
+      userId: 'u2',
+      username: 'other',
+      parentId: root.id,
+      content: 'first',
+    );
+    final reply2 = PostComment(
+      id: 'c3',
+      postId: root.postId,
+      userId: 'u3',
+      username: 'third',
+      parentId: reply1.id,
+      content: 'second',
+    );
+    service.commentStore.addAll([root, reply1, reply2]);
+    final controller = CommentsController(service: service);
+    await controller.loadComments(root.postId);
+    Get.put<CommentsController>(controller);
+    Get.put<NotificationService>(MockNotificationService());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: CommentThreadPage(rootComment: root),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('first'), findsOneWidget);
+    expect(find.text('second'), findsOneWidget);
+  });
 }
