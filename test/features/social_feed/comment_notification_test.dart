@@ -15,6 +15,7 @@ import 'package:myapp/features/social_feed/models/post_comment.dart';
 class RecordingNotificationService extends NotificationService {
   int count = 0;
   Map<String, dynamic>? last;
+  final List<Map<String, dynamic>> calls = [];
   RecordingNotificationService()
       : super(
           databases: Databases(Client()),
@@ -39,6 +40,7 @@ class RecordingNotificationService extends NotificationService {
       'itemId': itemId,
       'itemType': itemType,
     };
+    calls.add(last!);
   }
 }
 
@@ -199,11 +201,31 @@ void main() {
 
       await service.createComment(c);
 
-      expect(notification.count, 1);
+      expect(notification.count, 2);
       expect(notification.last?['userId'], 'post_owner');
       expect(notification.last?['actionType'], 'comment');
       expect(notification.last?['itemId'], 'p1');
       expect(notification.last?['itemType'], 'post');
+    });
+
+    test('createComment notifies parent author on reply', () async {
+      final c = PostComment(
+        id: 'reply1',
+        postId: 'p1',
+        userId: 'actor',
+        username: 'bob',
+        parentId: 'parent',
+        content: 'hi',
+      );
+
+      await service.createComment(c);
+
+      expect(notification.count, 2);
+      final first = notification.calls.first;
+      expect(first['userId'], 'comment_owner');
+      expect(first['actionType'], 'reply');
+      expect(first['itemId'], 'parent');
+      expect(first['itemType'], 'comment');
     });
 
     test('offline createComment queues and skips notification', () async {
@@ -220,6 +242,44 @@ void main() {
 
       expect(Hive.box('action_queue').isNotEmpty, isTrue);
       expect(notification.count, 0);
+    });
+
+    test('queued reply comment notifies parent after sync', () async {
+      db.failCreate = true;
+      final c = PostComment(
+        id: 'queued1',
+        postId: 'p1',
+        userId: 'actor',
+        username: 'bob',
+        parentId: 'parent',
+        content: 'hi',
+      );
+
+      await service.createComment(c);
+
+      expect(notification.count, 0);
+
+      db.failCreate = false;
+      final online = FeedService(
+        databases: db,
+        storage: Storage(Client()),
+        functions: Functions(Client()),
+        databaseId: 'db',
+        postsCollectionId: 'posts',
+        commentsCollectionId: 'comments',
+        likesCollectionId: 'likes',
+        repostsCollectionId: 'reposts',
+        bookmarksCollectionId: 'bookmarks',
+        connectivity: Connectivity(),
+        linkMetadataFunctionId: 'link',
+      );
+
+      await online.syncQueuedActions();
+
+      expect(notification.count, 2);
+      final first = notification.calls.first;
+      expect(first['userId'], 'comment_owner');
+      expect(first['actionType'], 'reply');
     });
   });
 }

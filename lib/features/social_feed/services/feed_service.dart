@@ -346,6 +346,25 @@ class FeedService {
           functionId: 'increment_reply_count',
           body: jsonEncode({'comment_id': comment.parentId}),
         );
+        if (Get.isRegistered<NotificationService>()) {
+          try {
+            final parent = await databases.getDocument(
+              databaseId: databaseId,
+              collectionId: commentsCollectionId,
+              documentId: comment.parentId!,
+            );
+            final parentAuthor = parent.data['user_id'];
+            if (parentAuthor != comment.userId) {
+              await Get.find<NotificationService>().createNotification(
+                parentAuthor,
+                comment.userId,
+                'reply',
+                itemId: comment.parentId,
+                itemType: 'comment',
+              );
+            }
+          } catch (_) {}
+        }
       }
 
       if (Get.isRegistered<NotificationService>()) {
