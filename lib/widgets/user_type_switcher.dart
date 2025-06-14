@@ -34,15 +34,27 @@ class UserTypeSwitcher extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
+              AnimatedButton(
                 onPressed: userTypeController.toggleUserType,
-                icon: Icon(
-                  userTypeController.isAstrologerRx.value
-                      ? Icons.person
-                      : Icons.stars,
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
                 ),
-                label: Text(
-                  'Switch to ${userTypeController.isAstrologerRx.value ? "General User" : "Astrologer"}',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      userTypeController.isAstrologerRx.value
+                          ? Icons.person
+                          : Icons.stars,
+                    ),
+                    SizedBox(width: DesignTokens.sm(context)),
+                    Text(
+                      'Switch to ${userTypeController.isAstrologerRx.value ? "General User" : "Astrologer"}',
+                    ),
+                  ],
                 ),
               ),
             ],

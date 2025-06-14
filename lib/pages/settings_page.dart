@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart';
+import '../design_system/modern_ui_system.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -62,8 +63,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       onPressed: () => Navigator.pop(context, false),
                       child: Text('cancel'.tr),
                     ),
-                    ElevatedButton(
+                    AnimatedButton(
                       onPressed: () => Navigator.pop(context, true),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.md(context),
+                          vertical: DesignTokens.sm(context),
+                        ),
+                      ),
                       child: Text('delete'.tr),
                     )
                   ],
@@ -88,8 +95,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       onPressed: () => Navigator.pop(context, false),
                       child: Text('cancel'.tr),
                     ),
-                    ElevatedButton(
+                    AnimatedButton(
                       onPressed: () => Navigator.pop(context, true),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.md(context),
+                          vertical: DesignTokens.sm(context),
+                        ),
+                      ),
                       child: Text('logout'.tr),
                     )
                   ],

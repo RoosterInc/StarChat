@@ -80,9 +80,15 @@ class _SignInPageState extends State<SignInPage> {
         SizedBox(height: DesignTokens.spacing(context, 20)),
         SizedBox(
           width: double.infinity,
-          child: Obx(() => ElevatedButton(
+          child: Obx(() => AnimatedButton(
                 onPressed:
                     controller.isLoading.value ? null : controller.sendOTP,
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
                 child: controller.isLoading.value
                     ? SkeletonLoader(
                         height: DesignTokens.lg(context),
@@ -151,9 +157,15 @@ class _SignInPageState extends State<SignInPage> {
           SizedBox(height: DesignTokens.spacing(context, 20)),
           SizedBox(
             width: double.infinity,
-            child: Obx(() => ElevatedButton(
+            child: Obx(() => AnimatedButton(
                   onPressed:
                       controller.isLoading.value ? null : controller.verifyOTP,
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.md(context),
+                      vertical: DesignTokens.sm(context),
+                    ),
+                  ),
                   child: controller.isLoading.value
                       ? SkeletonLoader(
                           height: DesignTokens.lg(context),
