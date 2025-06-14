@@ -221,4 +221,41 @@ void main() {
     await dir.delete(recursive: true);
     Get.reset();
   });
+
+  test('addComment logs comment and reply actions', () async {
+    final dir = await Directory.systemTemp.createTemp();
+    Hive.init(dir.path);
+    await Hive.openBox('activities');
+
+    Get.testMode = true;
+    final activity = RecordingActivityService();
+    Get.put<ActivityService>(activity);
+
+    final service = FakeFeedService();
+    final controller = CommentsController(service: service);
+    final comment = PostComment(
+      id: 'c3',
+      postId: 'p1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hi',
+    );
+    final reply = PostComment(
+      id: 'c4',
+      postId: 'p1',
+      parentId: 'c3',
+      userId: 'u1',
+      username: 'user',
+      content: 'reply',
+    );
+
+    await controller.addComment(comment);
+    await controller.addComment(reply);
+
+    expect(activity.actions, ['comment', 'reply']);
+
+    await Hive.deleteFromDisk();
+    await dir.delete(recursive: true);
+    Get.reset();
+  });
 }

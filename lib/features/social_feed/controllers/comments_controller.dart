@@ -52,9 +52,12 @@ class CommentsController extends GetxController {
   Future<void> addComment(PostComment comment) async {
     await service.createComment(comment);
     _comments.add(comment);
-    final action = comment.parentId == null ? 'comment' : 'reply';
-    await Get.find<ActivityService>()
-        .logActivity(comment.userId, action, itemId: comment.id, itemType: 'comment');
+    await Get.find<ActivityService>().logActivity(
+      comment.userId,
+      comment.parentId == null ? 'comment' : 'reply',
+      itemId: comment.id,
+      itemType: 'comment',
+    );
     _likeCounts[comment.id] = comment.likeCount;
   }
 
