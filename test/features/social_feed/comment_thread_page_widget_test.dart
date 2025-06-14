@@ -162,4 +162,35 @@ void main() {
     expect(controller.comments.length, 2);
     expect(find.text('hello'), findsOneWidget);
   });
+
+  testWidgets('replies shown when opening thread without preloading',
+      (tester) async {
+    final service = TestFeedService();
+    final reply = PostComment(
+      id: 'c2',
+      postId: root.postId,
+      userId: 'u2',
+      username: 'other',
+      parentId: root.id,
+      content: 'reply',
+    );
+    service.commentStore.addAll([root, reply]);
+    final controller = CommentsController(service: service);
+    Get.put<CommentsController>(controller);
+    Get.put<NotificationService>(MockNotificationService());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: MD3ThemeSystem.createTheme(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: CommentThreadPage(rootComment: root),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('reply'), findsOneWidget);
+  });
 }
