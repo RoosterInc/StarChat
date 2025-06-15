@@ -20,24 +20,18 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
 import 'package:appwrite/appwrite.dart';
+import '../../profile/services/profile_service.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
   const PostCard({super.key, required this.post});
 
   Future<void> _openProfile(String username) async {
-    final auth = Get.find<AuthController>();
-    final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
-    final profilesId =
-        dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles';
-    final res = await auth.databases.listDocuments(
-      databaseId: dbId,
-      collectionId: profilesId,
-      queries: [Query.equal('username', username)],
-    );
-    if (res.documents.isNotEmpty) {
+    final id = await Get.find<ProfileService>()
+        .getUserIdByUsername(username);
+    if (id != null) {
       Get.to(
-        () => UserProfilePage(userId: res.documents.first.data['\$id']),
+        () => UserProfilePage(userId: id),
         binding: ProfileBinding(),
       );
     }

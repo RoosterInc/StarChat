@@ -13,6 +13,7 @@ class ProfileService {
   final Box profileBox = Hive.box('profiles');
   final Box followsBox = Hive.box('follows');
   final Box blocksBox = Hive.box('blocks');
+  final Map<String, String> _usernameToId = {};
 
   ProfileService({
     required this.databases,
@@ -162,6 +163,24 @@ class ProfileService {
     } catch (_) {
       blocksBox.delete('${blockerId}_$blockedId');
     }
+  }
+
+  Future<String?> getUserIdByUsername(String username) async {
+    if (_usernameToId.containsKey(username)) return _usernameToId[username];
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: profilesCollection,
+        queries: [Query.equal('username', username)],
+      );
+      if (res.documents.isNotEmpty) {
+        final id = res.documents.first.data['\$id'] ??
+            res.documents.first.data['id'];
+        _usernameToId[username] = id;
+        return id;
+      }
+    } catch (_) {}
+    return null;
   }
 
   List<String> getBlockedIds(String blockerId) {
