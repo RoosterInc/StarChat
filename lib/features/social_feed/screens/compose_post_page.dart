@@ -68,7 +68,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                 padding: EdgeInsets.only(top: DesignTokens.sm(context)),
                 child: Image.file(
                   File(_image!.path),
-                  height: 150,
+                  height: ResponsiveUtils.fluidSize(
+                    context,
+                    min: 150,
+                    max: 250,
+                  ),
                 ),
               ),
             SizedBox(height: DesignTokens.md(context)),
