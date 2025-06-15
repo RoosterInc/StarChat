@@ -829,15 +829,7 @@ class FeedService {
             final c =
                 PostComment.fromJson(Map<String, dynamic>.from(item['data']));
             final newId = await createComment(c);
-            final mentionNames = _limitMentions(
-              c.mentions.isNotEmpty
-                  ? c.mentions
-                  : RegExp(r'@([A-Za-z0-9_]+)')
-                      .allMatches(c.content)
-                      .map((m) => m.group(1)!)
-                      .toSet()
-                      .toList(),
-            );
+            final mentionNames = _limitMentions(c.mentions);
             await commentsBox.delete(c.id);
             final listKey = 'comments_${c.postId}';
             final list = (commentsBox.get(listKey, defaultValue: []) as List)
@@ -873,10 +865,10 @@ class FeedService {
               }
             }
             await commentsBox.put(listKey, list);
-            if (Get.isRegistered<MentionService>()) {
+            if (newId != null && Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
                 mentionNames,
-                newId ?? c.id,
+                newId,
                 'comment',
               );
             }
@@ -895,10 +887,10 @@ class FeedService {
             final post =
                 FeedPost.fromJson(Map<String, dynamic>.from(item['data']));
             final newId = await createPost(post);
-            if (Get.isRegistered<MentionService>()) {
+            if (newId != null && Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
                 post.mentions,
-                newId ?? post.id,
+                newId,
                 'post',
               );
             }
@@ -922,10 +914,10 @@ class FeedService {
               createdAt: now,
             );
             final newId = await createPost(post);
-            if (Get.isRegistered<MentionService>()) {
+            if (newId != null && Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
                 linkMentions,
-                newId ?? post.id,
+                newId,
                 'post',
               );
             }
@@ -977,10 +969,10 @@ class FeedService {
             createdAt: now,
           );
           final newId = await createPost(post);
-          if (Get.isRegistered<MentionService>()) {
+          if (newId != null && Get.isRegistered<MentionService>()) {
             await Get.find<MentionService>().notifyMentions(
               mentions,
-              newId ?? post.id,
+              newId,
               'post',
             );
           }
