@@ -106,7 +106,7 @@ class PostCard extends StatelessWidget {
   }
 
 
-  Future<void> _handleDelete(FeedController controller) async {
+  Future<void> _handleDelete(BuildContext context, FeedController controller) async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Delete Post?'),
@@ -191,7 +191,7 @@ class PostCard extends StatelessWidget {
                     semanticLabel: 'Delete post',
                     isButton: true,
                     child: AnimatedButton(
-                      onPressed: () => _handleDelete(controller),
+                      onPressed: () => _handleDelete(context, controller),
                       child: const Text('Delete'),
                     ),
                   ),

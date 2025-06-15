@@ -13,6 +13,7 @@ import '../services/mention_service.dart';
 import '../../../utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html_unescape/html_unescape.dart';
+import '../../notifications/services/notification_service.dart';
 
 class CommentThreadPage extends StatefulWidget {
   final PostComment rootComment;
@@ -128,7 +129,7 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                         : 'You';
                     final sanitized = HtmlUnescape().convert(text);
 
-                    final mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
+                    var mentions = RegExp(r'(?:@)([A-Za-z0-9_]+)')
                         .allMatches(sanitized)
                         .map((m) => m.group(1)!)
                         .toSet()
