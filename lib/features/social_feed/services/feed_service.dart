@@ -15,7 +15,7 @@ import '../../notifications/services/notification_service.dart';
 import '../controllers/comments_controller.dart';
 import 'mention_service.dart';
 
-Future<File?> _compressImage(String path) async {
+Future<XFile?> _compressImage(String path) async {
   return FlutterImageCompress.compressAndGetFile(
     path,
     '${path}_compressed.jpg',
