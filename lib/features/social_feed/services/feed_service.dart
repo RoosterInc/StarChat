@@ -244,6 +244,7 @@ class FeedService {
     List<String> mentions = const [],
   }) async {
     final limited = _limitHashtags(hashtags);
+    final limitedMentions = _limitMentions(mentions);
     try {
       final metadata = await fetchLinkMetadata(linkUrl);
       final now2 = DateTime.now();
