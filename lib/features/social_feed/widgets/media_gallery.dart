@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class MediaGallery extends StatelessWidget {

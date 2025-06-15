@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../profile/services/activity_service.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import 'package:appwrite/appwrite.dart';
 import '../models/report.dart';
 import '../services/moderation_service.dart';

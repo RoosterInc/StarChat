@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../utils/logger.dart';
-import '../controllers/auth_controller.dart';
-import '../widgets/complete_enhanced_watchlist.dart';
+import '../shared/utils/logger.dart';
+import '../features/authentication/controllers/auth_controller.dart';
+import '../shared/widgets/complete_enhanced_watchlist.dart';
 
 class MasterDataController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();

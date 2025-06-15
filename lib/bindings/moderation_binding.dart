@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../controllers/auth_controller.dart';
+import '../features/authentication/controllers/auth_controller.dart';
 import '../features/admin/services/moderation_service.dart';
 import '../features/profile/services/activity_service.dart';
 import '../features/admin/controllers/moderation_controller.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../controllers/bookmark_controller.dart';
 import '../../social_feed/widgets/post_card.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 
 class BookmarkListPage extends StatefulWidget {
   const BookmarkListPage({super.key});

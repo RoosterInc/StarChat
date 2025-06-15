@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
-import '../controllers/chat_controller.dart';
+import '../features/authentication/controllers/auth_controller.dart';
+import '../features/chat/controllers/chat_controller.dart';
 
 class AuthBinding extends Bindings {
   @override

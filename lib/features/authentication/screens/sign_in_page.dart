@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../widgets/responsive_layout.dart';
-import '../widgets/animated_form_field.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../shared/widgets/responsive_layout.dart';
+import '../../shared/widgets/animated_form_field.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import 'comment_card.dart';

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/chat_controller.dart';
-import '../design_system/modern_ui_system.dart';
-import '../features/social_feed/screens/feed_page.dart';
+import '../../core/design_system/modern_ui_system.dart';
+import '../../social_feed/screens/feed_page.dart';
 
 class ChatRoomPage extends GetView<ChatController> {
   const ChatRoomPage({super.key});

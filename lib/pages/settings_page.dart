@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../controllers/auth_controller.dart';
-import '../controllers/theme_controller.dart';
-import '../design_system/modern_ui_system.dart';
+import '../features/authentication/controllers/auth_controller.dart';
+import '../shared/controllers/theme_controller.dart';
+import '../core/design_system/modern_ui_system.dart';
 import '../bindings/profile_binding.dart';
 import '../features/profile/screens/blocked_users_page.dart';
 

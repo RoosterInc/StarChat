@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../controllers/user_type_controller.dart';
+import '../../features/profile/controllers/user_type_controller.dart';
 
 class SimpleAstrologerFAB extends StatefulWidget {
   const SimpleAstrologerFAB({super.key});

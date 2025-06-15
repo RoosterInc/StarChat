@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 /// Simple responsive layout widget with mobile, tablet and desktop breakpoints.
 class ResponsiveLayout extends StatelessWidget {

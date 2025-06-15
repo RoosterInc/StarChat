@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../social_feed/services/feed_service.dart';
 import '../../social_feed/widgets/post_card.dart';
 import '../../social_feed/models/feed_post.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 
 class HashtagSearchPage extends StatefulWidget {
   final String hashtag;

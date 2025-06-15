@@ -3,11 +3,11 @@ import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../utils/logger.dart';
-import '../utils/modern_color_palettes.dart';
+import '../../../shared/utils/logger.dart';
+import '../../../shared/utils/modern_color_palettes.dart';
 
 import '../models/chat_room.dart';
-import 'auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 
 class ChatController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();

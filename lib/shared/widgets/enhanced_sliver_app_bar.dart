@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/enhanced_planet_house_controller.dart';
-import '../widgets/enhanced_planet_house_widgets.dart';
+import '../../controllers/enhanced_planet_house_controller.dart';
+import 'enhanced_planet_house_widgets.dart';
 import 'simple_dynamic_tabs.dart';
-import '../controllers/master_data_controller.dart';
+import '../../controllers/master_data_controller.dart';
 import 'complete_enhanced_watchlist.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 class EnhancedSliverAppBar extends StatelessWidget {
   const EnhancedSliverAppBar({super.key});

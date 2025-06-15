@@ -3,7 +3,7 @@ import 'package:flutter_app_badge/flutter_app_badge.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/notification_model.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class NotificationService {

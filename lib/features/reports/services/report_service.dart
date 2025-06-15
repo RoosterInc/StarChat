@@ -1,5 +1,5 @@
 import 'package:appwrite/appwrite.dart';
-import '../../../utils/logger.dart';
+import '../../../shared/utils/logger.dart';
 import '../models/report_type.dart';
 
 class ReportService {

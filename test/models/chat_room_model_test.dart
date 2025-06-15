@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myapp/models/chat_room.dart';
+import 'package:myapp/features/chat/models/chat_room.dart';
 
 void main() {
   group('ChatRoom model', () {
