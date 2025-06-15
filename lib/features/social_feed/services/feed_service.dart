@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:io';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import '../models/feed_post.dart';
@@ -13,6 +14,14 @@ import '../../bookmarks/models/bookmark.dart';
 import '../../notifications/services/notification_service.dart';
 import '../controllers/comments_controller.dart';
 import 'mention_service.dart';
+
+Future<File?> _compressImage(String path) async {
+  return FlutterImageCompress.compressAndGetFile(
+    path,
+    '${path}_compressed.jpg',
+    quality: 80,
+  );
+}
 
 class FeedService {
   final Databases databases;
@@ -170,11 +179,7 @@ class FeedService {
   }
 
   Future<String> uploadImage(File image) async {
-    final compressed = await FlutterImageCompress.compressAndGetFile(
-      image.path,
-      '${image.path}_compressed.jpg',
-      quality: 80,
-    );
+    final compressed = await compute(_compressImage, image.path);
     final result = await storage.createFile(
       bucketId: 'post_images',
       fileId: ID.unique(),
@@ -668,6 +673,27 @@ class FeedService {
     return PostLike.fromJson(res.documents.first.data);
   }
 
+  Future<Map<String, PostLike>> getUserLikesBulk(
+    List<String> itemIds,
+    String userId, {
+    String itemType = 'post',
+  }) async {
+    if (itemIds.isEmpty) return {};
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: likesCollectionId,
+      queries: [
+        Query.equal('user_id', userId),
+        Query.equal('item_id', itemIds),
+        if (itemType.isNotEmpty) Query.equal('item_type', itemType),
+      ],
+    );
+    return {
+      for (final doc in res.documents)
+        doc.data['item_id']: PostLike.fromJson(doc.data)
+    };
+  }
+
   Future<void> deleteLike(
     String likeId, {
     required String itemId,
@@ -744,6 +770,25 @@ class FeedService {
     );
     if (res.documents.isEmpty) return null;
     return PostRepost.fromJson(res.documents.first.data);
+  }
+
+  Future<Map<String, PostRepost>> getUserRepostsBulk(
+    List<String> postIds,
+    String userId,
+  ) async {
+    if (postIds.isEmpty) return {};
+    final res = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: repostsCollectionId,
+      queries: [
+        Query.equal('user_id', userId),
+        Query.equal('post_id', postIds),
+      ],
+    );
+    return {
+      for (final doc in res.documents)
+        doc.data['post_id']: PostRepost.fromJson(doc.data)
+    };
   }
 
   Future<void> editPost(

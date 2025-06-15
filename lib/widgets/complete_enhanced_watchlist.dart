@@ -487,47 +487,52 @@ class WatchlistController extends GetxController {
   Future<void> _updateItemCounts() async {
     if (testing) return;
     final dbId = dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB';
+    final tasks = <Future<void>>[];
     for (int i = 0; i < _items.length; i++) {
-      final item = _items[i];
-      try {
-        List<String> queries = [Query.equal('is_active', true)];
-        if (item.combinationKey != null) {
-          queries.add(Query.equal('combination_key', item.combinationKey!));
-        } else if (item.chatRoomId != null) {
-          final doc = await _auth.databases.getDocument(
+      final index = i;
+      final item = _items[index];
+      tasks.add(() async {
+        try {
+          List<String> queries = [Query.equal('is_active', true)];
+          if (item.combinationKey != null) {
+            queries.add(Query.equal('combination_key', item.combinationKey!));
+          } else if (item.chatRoomId != null) {
+            final doc = await _auth.databases.getDocument(
+              databaseId: dbId,
+              collectionId: 'chat_rooms',
+              documentId: item.chatRoomId!,
+            );
+            _items[index] = item.copyWith(
+                count: doc.data['total_messages_today'] ??
+                    doc.data['daily_messages'] ??
+                    0);
+            return;
+          } else {
+            if (item.rashiId != null) {
+              queries.add(Query.equal('rashi_id', item.rashiId!));
+            }
+            if (item.nakshatraId != null) {
+              queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
+            }
+          }
+          final res = await _auth.databases.listDocuments(
             databaseId: dbId,
             collectionId: 'chat_rooms',
-            documentId: item.chatRoomId!,
+            queries: queries,
           );
-          _items[i] = item.copyWith(
-              count: doc.data['total_messages_today'] ??
-                  doc.data['daily_messages'] ??
-                  0);
-          continue;
-        } else {
-          if (item.rashiId != null) {
-            queries.add(Query.equal('rashi_id', item.rashiId!));
+          if (res.documents.isNotEmpty) {
+            final count = res.documents.first.data['total_messages_today'] ??
+                res.documents.first.data['daily_messages'] ??
+                0;
+            _items[index] = item.copyWith(count: count);
           }
-          if (item.nakshatraId != null) {
-            queries.add(Query.equal('nakshatra_id', item.nakshatraId!));
-          }
+        } catch (e, st) {
+          logger.e('Error updating count for item ${item.name}',
+              error: e, stackTrace: st);
         }
-        final res = await _auth.databases.listDocuments(
-          databaseId: dbId,
-          collectionId: 'chat_rooms',
-          queries: queries,
-        );
-        if (res.documents.isNotEmpty) {
-          final count = res.documents.first.data['total_messages_today'] ??
-              res.documents.first.data['daily_messages'] ??
-              0;
-          _items[i] = item.copyWith(count: count);
-        }
-      } catch (e, st) {
-        logger.e('Error updating count for item ${item.name}',
-            error: e, stackTrace: st);
-      }
+      }());
     }
+    await Future.wait(tasks);
     await _saveItemsToPrefs();
   }
 

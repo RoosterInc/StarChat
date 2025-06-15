@@ -55,11 +55,13 @@ class CommentsController extends GetxController {
       _replyCounts.addAll({for (final c in data) c.id: c.replyCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
-      if (uid != null) {
-        for (final c in data) {
-          final like = await service.getUserLike(c.id, uid);
-          if (like != null) _likedIds[c.id] = like.id;
-        }
+      if (uid != null && data.isNotEmpty) {
+        final ids = data.map((c) => c.id).toList();
+        final likeMap =
+            await service.getUserLikesBulk(ids, uid, itemType: 'comment');
+        _likedIds.addAll({
+          for (final entry in likeMap.entries) entry.key: entry.value.id
+        });
       }
       if (data.isNotEmpty) _nextCursor = data.last.id;
       _listenToRealtime(postId);

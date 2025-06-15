@@ -68,13 +68,17 @@ class FeedController extends GetxController {
       _commentCounts.assignAll({for (final p in filtered) p.id: p.commentCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
-      if (uid != null) {
-        for (final post in filtered) {
-          final like = await service.getUserLike(post.id, uid);
-          if (like != null) _likedIds[post.id] = like.id;
-          final repost = await service.getUserRepost(post.id, uid);
-          if (repost != null) _repostedIds[post.id] = repost.id;
-        }
+      if (uid != null && filtered.isNotEmpty) {
+        final ids = filtered.map((p) => p.id).toList();
+        final likeMap =
+            await service.getUserLikesBulk(ids, uid, itemType: 'post');
+        _likedIds.assignAll({
+          for (final entry in likeMap.entries) entry.key: entry.value.id
+        });
+        final repostMap = await service.getUserRepostsBulk(ids, uid);
+        _repostedIds.assignAll({
+          for (final entry in repostMap.entries) entry.key: entry.value.id
+        });
       }
     } finally {
       _isLoading.value = false;
