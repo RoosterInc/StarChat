@@ -21,7 +21,8 @@ class CommentCard extends StatelessWidget {
     final words = comment.content.split(RegExp(r'(\s+)'));
     for (final word in words) {
       if (word.startsWith('@')) {
-        final name = word.substring(1);
+        final name =
+            word.substring(1).replaceAll(RegExp(r'[!?,.:;]+$'), '');
         spans.add(TextSpan(
           text: '$word ',
           style: TextStyle(color: Theme.of(context).colorScheme.primary),
