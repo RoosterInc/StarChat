@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/core/design_system/modern_ui_system.dart';
 import 'dart:ui';
 import '../models/chat_room.dart';
-import '../../core/design_system/modern_ui_system.dart';
+
 
 class ModernChatRoomCard extends StatefulWidget {
   final ChatRoom room;

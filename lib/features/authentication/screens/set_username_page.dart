@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:myapp/core/design_system/modern_ui_system.dart';
+import '../../../controllers/master_data_controller.dart';
+import '../../../shared/widgets/complete_enhanced_watchlist.dart';
+import '../../../shared/widgets/responsive_layout.dart';
 import '../controllers/auth_controller.dart';
-import '../../shared/widgets/responsive_layout.dart';
-import '../../controllers/master_data_controller.dart';
-import '../../shared/widgets/complete_enhanced_watchlist.dart';
-import '../../core/design_system/modern_ui_system.dart';
+
 
 class SetUsernamePage extends GetView<AuthController> {
   const SetUsernamePage({super.key});

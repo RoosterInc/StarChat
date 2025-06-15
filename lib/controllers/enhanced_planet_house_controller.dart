@@ -3,10 +3,10 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../features/authentication/controllers/auth_controller.dart';
 import '../shared/utils/logger.dart';
 import 'dart:convert';
 import '../models/planet_house_models.dart';
-import 'auth_controller.dart';
 
 class EnhancedPlanetHouseController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
@@ -40,7 +40,6 @@ class EnhancedPlanetHouseController extends GetxController {
       'planet_house_cache_timestamp_v2_${_auth.userId}_${_currentRashiId.value}';
   String get _fetchDateKey =>
       'planet_house_fetch_date_v2_${_auth.userId}_${_currentRashiId.value}';
-
 
   Future<void> initialize() async {
     _currentRashiId.value =
@@ -317,8 +316,7 @@ class EnhancedPlanetHouseController extends GetxController {
           .toList();
       await prefs.setStringList(_positionsKey, positionsJson);
       await prefs.setStringList(_interpretationsKey, interpretationsJson);
-      await prefs.setString(
-          _timestampKey, DateTime.now().toIso8601String());
+      await prefs.setString(_timestampKey, DateTime.now().toIso8601String());
       await prefs.setString('cached_rashi_id', _currentRashiId.value);
     } catch (e, stackTrace) {
       logger.e('Error saving to cache', error: e, stackTrace: stackTrace);

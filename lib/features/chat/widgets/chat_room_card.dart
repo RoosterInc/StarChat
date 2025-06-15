@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/core/design_system/modern_ui_system.dart';
 import '../models/chat_room.dart';
-import '../../core/design_system/modern_ui_system.dart';
+
 
 class ChatRoomCard extends StatelessWidget {
   final ChatRoom room;

@@ -5,10 +5,11 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
+import '../../../core/design_system/modern_ui_system.dart';
+import '../../../shared/widgets/safe_network_image.dart';
 import '../../authentication/controllers/auth_controller.dart';
-import '../../shared/widgets/safe_network_image.dart';
 import '../controllers/user_type_controller.dart';
-import '../../core/design_system/modern_ui_system.dart';
+
 
 class MyProfilePage extends GetView<AuthController> {
   const MyProfilePage({super.key});

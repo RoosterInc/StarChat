@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:myapp/features/profile/models/user_profile.dart';
 import '../controllers/profile_controller.dart';
 import '../../authentication/controllers/auth_controller.dart';
-import '../services/profile_service.dart';
 import 'blocked_users_page.dart';
 import '../../reports/screens/report_user_page.dart';
 import '../../../bindings/report_binding.dart';
