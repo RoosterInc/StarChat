@@ -9,7 +9,8 @@ import '../../reports/screens/report_user_page.dart';
 import '../../../bindings/report_binding.dart';
 import '../../../bindings/profile_binding.dart';
 import '../../../design_system/modern_ui_system.dart';
-import '../../../widgets/enhanced_responsive_layout.dart';
+import '../../../widgets/enhanced_responsive_layout.dart'
+    as responsive;
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -41,7 +42,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         }
         final isFollowing = controller.isFollowing.value;
         final count = controller.followerCount.value;
-        return EnhancedResponsiveLayout(
+          return responsive.EnhancedResponsiveLayout(
           mobile: (context) =>
               _buildPortraitLayout(context, profile, isFollowing, count),
           mobileLandscape: (context) =>
