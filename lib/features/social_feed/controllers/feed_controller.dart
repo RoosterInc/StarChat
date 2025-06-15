@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:hive/hive.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
 import '../models/feed_post.dart';
 import "../../profile/services/activity_service.dart";

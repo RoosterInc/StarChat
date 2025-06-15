@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../models/planet_house_models.dart';
-import '../controllers/enhanced_planet_house_controller.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../models/planet_house_models.dart';
+import '../../controllers/enhanced_planet_house_controller.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 class EnhancedPlanetHouseWidget extends StatelessWidget {
   final PlanetHouseData planetData;

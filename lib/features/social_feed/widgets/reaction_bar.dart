@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../services/feed_service.dart';
 
 enum ReactionTarget { post, comment, repost }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/parsing_utils.dart';
+import '../shared/utils/parsing_utils.dart';
 
 class PlanetHousePosition {
   final String date;

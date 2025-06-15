@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../controllers/moderation_controller.dart';
 import '../models/report.dart';
 

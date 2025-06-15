@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../controllers/auth_controller.dart';
+import '../features/authentication/controllers/auth_controller.dart';
 import '../features/search/services/search_service.dart';
 import '../features/search/controllers/search_controller.dart';
 

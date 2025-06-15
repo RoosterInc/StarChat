@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_app_badge/flutter_app_badge.dart';
 
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
 

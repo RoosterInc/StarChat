@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/splash_controller.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:collection/collection.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import '../controllers/feed_controller.dart';
 import '../models/post_comment.dart';
 import "../../profile/services/activity_service.dart";

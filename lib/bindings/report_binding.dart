@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../controllers/auth_controller.dart';
+import '../features/authentication/controllers/auth_controller.dart';
 import '../features/reports/services/report_service.dart';
 
 class ReportBinding extends Bindings {

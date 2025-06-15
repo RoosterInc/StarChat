@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:myapp/features/profile/models/user_profile.dart';
 import '../controllers/profile_controller.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import '../services/profile_service.dart';
 import 'blocked_users_page.dart';
 import '../../reports/screens/report_user_page.dart';
 import '../../../bindings/report_binding.dart';
 import '../../../bindings/profile_binding.dart';
-import '../../../design_system/modern_ui_system.dart';
-import '../../../widgets/enhanced_responsive_layout.dart'
+import '../../../core/design_system/modern_ui_system.dart';
+import '../../../shared/widgets/enhanced_responsive_layout.dart'
     as responsive;
 
 class UserProfilePage extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../utils/logger.dart';
-import 'auth_controller.dart';
+import '../../../shared/utils/logger.dart';
+import '../../authentication/controllers/auth_controller.dart';
 
 class SplashController extends GetxController {
 

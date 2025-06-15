@@ -2,8 +2,8 @@ import 'package:appwrite/appwrite.dart';
 import 'package:get/get.dart';
 
 import '../../notifications/services/notification_service.dart';
-import '../../../controllers/auth_controller.dart';
-import '../../../utils/logger.dart';
+import '../../authentication/controllers/auth_controller.dart';
+import '../../../shared/utils/logger.dart';
 
 class MentionService {
   final Databases databases;

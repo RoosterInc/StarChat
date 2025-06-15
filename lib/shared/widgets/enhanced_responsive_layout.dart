@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 /// Enhanced responsive layout with orientation support and utilities.
 class EnhancedResponsiveLayout extends StatelessWidget {

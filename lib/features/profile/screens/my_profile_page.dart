@@ -5,13 +5,13 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
-import '../controllers/auth_controller.dart';
-import '../widgets/safe_network_image.dart';
+import '../../authentication/controllers/auth_controller.dart';
+import '../../shared/widgets/safe_network_image.dart';
 import '../controllers/user_type_controller.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
-class ProfilePage extends GetView<AuthController> {
-  const ProfilePage({super.key});
+class MyProfilePage extends GetView<AuthController> {
+  const MyProfilePage({super.key});
 
   Future<void> _changePicture() async {
     final picker = ImagePicker();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/sample_sliver_app_bar.dart';
+import '../shared/widgets/sample_sliver_app_bar.dart';
 
 class SliverSamplePage extends StatelessWidget {
   const SliverSamplePage({super.key});

@@ -6,15 +6,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'features/social_feed/services/feed_service.dart';
 import 'package:appwrite/appwrite.dart' as appwrite;
-import 'controllers/auth_controller.dart';
-import 'pages/sign_in_page.dart';
+import 'features/authentication/controllers/auth_controller.dart';
+import 'features/authentication/screens/sign_in_page.dart';
 import 'pages/home_page.dart';
-import 'pages/set_username_page.dart';
-import 'pages/profile_page.dart';
+import 'features/authentication/screens/set_username_page.dart';
+import 'features/profile/screens/my_profile_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/sliver_sample_page.dart';
-import 'pages/chat_room_page.dart';
-import 'pages/chat_rooms_list_page.dart';
+import 'features/chat/screens/chat_room_page.dart';
+import 'features/chat/screens/chat_rooms_list_page.dart';
 import 'features/social_feed/screens/compose_post_page.dart';
 import 'features/search/screens/search_page.dart';
 import 'features/notifications/screens/notification_page.dart';
@@ -25,7 +25,7 @@ import 'features/reports/screens/report_post_page.dart';
 import 'features/reports/screens/report_user_page.dart';
 import 'features/admin/screens/moderation_dashboard.dart';
 import 'pages/empty_page.dart';
-import 'pages/splash_screen.dart';
+import 'features/splash/screens/splash_screen.dart';
 import 'bindings/splash_binding.dart';
 import 'bindings/feed_binding.dart';
 import 'bindings/search_binding.dart';
@@ -33,11 +33,11 @@ import 'bindings/notification_binding.dart';
 import 'bindings/profile_binding.dart';
 import 'bindings/report_binding.dart';
 import 'bindings/moderation_binding.dart';
-import 'design_system/modern_ui_system.dart';
+import 'core/design_system/modern_ui_system.dart';
 import 'assets/translations/app_translations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'controllers/theme_controller.dart'; // Import the ThemeController
-import 'controllers/user_type_controller.dart';
+import 'shared/controllers/theme_controller.dart'; // Import the ThemeController
+import 'features/profile/controllers/user_type_controller.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -166,7 +166,7 @@ class MyApp extends StatelessWidget {
             ),
             GetPage(
               name: '/profile',
-              page: () => const ProfilePage(),
+              page: () => const MyProfilePage(),
               binding: AuthBinding(),
               transition: Transition.rightToLeft,
             ),

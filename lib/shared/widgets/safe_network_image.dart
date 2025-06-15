@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 import '../utils/logger.dart';
 
 class SafeNetworkImage extends StatelessWidget {

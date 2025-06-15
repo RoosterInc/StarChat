@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../widgets/post_card.dart';
 import 'compose_post_page.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
 
 class FeedPage extends StatefulWidget {

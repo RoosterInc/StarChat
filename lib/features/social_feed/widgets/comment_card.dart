@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../models/post_comment.dart';
 import '../controllers/comments_controller.dart';
 import '../screens/comment_thread_page.dart';
 import 'reaction_bar.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 import 'package:flutter/gestures.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

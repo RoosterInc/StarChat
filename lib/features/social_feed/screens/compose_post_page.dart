@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:validators/validators.dart';
 import 'package:html_unescape/html_unescape.dart';
-import '../../../utils/logger.dart';
+import '../../../shared/utils/logger.dart';
 import '../services/mention_service.dart';
 import 'package:flutter/foundation.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../controllers/feed_controller.dart';
 import '../models/feed_post.dart';
-import '../../../controllers/auth_controller.dart';
+import '../../authentication/controllers/auth_controller.dart';
 
 class ComposePostPage extends StatefulWidget {
   final String roomId;

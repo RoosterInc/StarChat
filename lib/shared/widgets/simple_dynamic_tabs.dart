@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/user_type_controller.dart';
+import '../../features/profile/controllers/user_type_controller.dart';
 
 class SimpleDynamicTabs extends StatelessWidget {
   const SimpleDynamicTabs({super.key});

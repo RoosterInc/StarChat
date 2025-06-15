@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../controllers/auth_controller.dart';
-import '../../../design_system/modern_ui_system.dart';
+import '../../authentication/controllers/auth_controller.dart';
+import '../../../core/design_system/modern_ui_system.dart';
 import '../controllers/notification_controller.dart';
 import '../models/notification_model.dart';
 

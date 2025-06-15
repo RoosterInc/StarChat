@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/user_type_controller.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../features/profile/controllers/user_type_controller.dart';
+import '../../core/design_system/modern_ui_system.dart';
 
 class UserTypeSwitcher extends StatelessWidget {
   const UserTypeSwitcher({super.key});

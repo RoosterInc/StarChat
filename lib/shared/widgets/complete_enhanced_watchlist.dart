@@ -8,9 +8,9 @@ import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../design_system/modern_ui_system.dart';
+import '../../core/design_system/modern_ui_system.dart';
 import '../utils/logger.dart';
-import '../controllers/auth_controller.dart';
+import '../../features/authentication/controllers/auth_controller.dart';
 import '../utils/parsing_utils.dart';
 
 // Helper function to determine if we should use light or dark text

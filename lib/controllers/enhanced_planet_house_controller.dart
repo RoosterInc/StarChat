@@ -3,7 +3,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/logger.dart';
+import '../shared/utils/logger.dart';
 import 'dart:convert';
 import '../models/planet_house_models.dart';
 import 'auth_controller.dart';
