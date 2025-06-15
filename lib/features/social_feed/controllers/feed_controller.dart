@@ -81,7 +81,7 @@ class FeedController extends GetxController {
     }
   }
 
-  Future<void> createPost(FeedPost post) async {
+  Future<String> createPost(FeedPost post) async {
     final limited = _limitHashtags(post.hashtags);
     final toSave = limited.length == post.hashtags.length
         ? post
@@ -107,12 +107,37 @@ class FeedController extends GetxController {
             editedAt: post.editedAt,
             createdAt: post.createdAt,
           );
-    await service.createPost(toSave);
-    _posts.insert(0, toSave);
-    _commentCounts[toSave.id] = toSave.commentCount;
+    final id = await service.createPost(toSave) ?? toSave.id;
+    final saved = id == toSave.id
+        ? toSave
+        : FeedPost(
+            id: id,
+            roomId: toSave.roomId,
+            userId: toSave.userId,
+            username: toSave.username,
+            userAvatar: toSave.userAvatar,
+            content: toSave.content,
+            mediaUrls: toSave.mediaUrls,
+            pollId: toSave.pollId,
+            linkUrl: toSave.linkUrl,
+            linkMetadata: toSave.linkMetadata,
+            likeCount: toSave.likeCount,
+            commentCount: toSave.commentCount,
+            repostCount: toSave.repostCount,
+            shareCount: toSave.shareCount,
+            hashtags: toSave.hashtags,
+            mentions: toSave.mentions,
+            isEdited: toSave.isEdited,
+            isDeleted: toSave.isDeleted,
+            editedAt: toSave.editedAt,
+            createdAt: toSave.createdAt,
+          );
+    _posts.insert(0, saved);
+    _commentCounts[id] = saved.commentCount;
+    return id;
   }
 
-  Future<void> createPostWithImage(
+  Future<String> createPostWithImage(
     String userId,
     String username,
     String content,
@@ -122,7 +147,7 @@ class FeedController extends GetxController {
     List<String> mentions,
   ) async {
     final limited = _limitHashtags(hashtags);
-    await service.createPostWithImage(
+    final id = await service.createPostWithImage(
       userId,
       username,
       content,
@@ -132,10 +157,11 @@ class FeedController extends GetxController {
       mentions: mentions,
     );
     final now = DateTime.now();
+    final newId = id ?? now.toIso8601String();
     _posts.insert(
       0,
       FeedPost(
-        id: now.toIso8601String(),
+        id: newId,
         roomId: roomId,
         userId: userId,
         username: username,
@@ -146,11 +172,12 @@ class FeedController extends GetxController {
         createdAt: now,
       ),
     );
-    _commentCounts[_posts.first.id] = 0;
+    _commentCounts[newId] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
+    return newId;
   }
 
-  Future<void> createPostWithLink(
+  Future<String> createPostWithLink(
     String userId,
     String username,
     String content,
@@ -161,7 +188,7 @@ class FeedController extends GetxController {
   ) async {
     final metadata = await service.fetchLinkMetadata(linkUrl);
     final limited = _limitHashtags(hashtags);
-    await service.createPostWithLink(
+    final id = await service.createPostWithLink(
       userId,
       username,
       content,
@@ -171,10 +198,11 @@ class FeedController extends GetxController {
       mentions: mentions,
     );
     final now2 = DateTime.now();
+    final newId = id ?? now2.toIso8601String();
     _posts.insert(
       0,
       FeedPost(
-        id: now2.toIso8601String(),
+        id: newId,
         roomId: roomId,
         userId: userId,
         username: username,
@@ -186,8 +214,9 @@ class FeedController extends GetxController {
         createdAt: now2,
       ),
     );
-    _commentCounts[_posts.first.id] = 0;
+    _commentCounts[newId] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
+    return newId;
   }
 
   Future<void> toggleLikePost(String postId) async {

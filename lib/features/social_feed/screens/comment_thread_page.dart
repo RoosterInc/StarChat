@@ -149,10 +149,10 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                       content: sanitized,
                       mentions: mentions,
                     );
-                    commentsController.replyToComment(comment);
+                    final id = await commentsController.replyToComment(comment);
                     await Get.find<MentionService>().notifyMentions(
                       mentions,
-                      comment.id,
+                      id,
                       'comment',
                     );
                     await _notifyParentAuthor(root.userId, root.id);

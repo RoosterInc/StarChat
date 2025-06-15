@@ -109,8 +109,9 @@ class ServiceWithPosts extends FeedService {
   }
 
   @override
-  Future<void> createPost(FeedPost post) async {
+  Future<String?> createPost(FeedPost post) async {
     posts.add(post);
+    return post.id;
   }
 
   @override

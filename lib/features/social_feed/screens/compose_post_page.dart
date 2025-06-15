@@ -128,7 +128,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                     final linkText = _linkController.text.trim();
                     if (linkText.isNotEmpty && isURL(linkText) &&
                         linkText.startsWith('http')) {
-                      await feedController.createPostWithLink(
+                      final id = await feedController.createPostWithLink(
                         uid,
                         uname,
                         sanitized,
@@ -139,11 +139,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       );
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        feedController.posts.first.id,
+                        id,
                         'post',
                       );
                     } else if (_image != null) {
-                      await feedController.createPostWithImage(
+                      final id = await feedController.createPostWithImage(
                         uid,
                         uname,
                         sanitized,
@@ -154,7 +154,7 @@ class _ComposePostPageState extends State<ComposePostPage> {
                       );
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        feedController.posts.first.id,
+                        id,
                         'post',
                       );
                     } else {
@@ -169,10 +169,10 @@ class _ComposePostPageState extends State<ComposePostPage> {
                         mentions: mentions,
                         createdAt: now,
                       );
-                      await feedController.createPost(post);
+                      final id = await feedController.createPost(post);
                       await Get.find<MentionService>().notifyMentions(
                         mentions,
-                        post.id,
+                        id,
                         'post',
                       );
                     }

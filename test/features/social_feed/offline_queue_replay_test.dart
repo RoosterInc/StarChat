@@ -39,8 +39,9 @@ class _RecordingService extends FeedService {
         );
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     created.add(comment.id);
+    return comment.id;
   }
 }
 

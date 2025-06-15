@@ -145,10 +145,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       content: sanitized,
                       mentions: mentions,
                     );
-                    commentsController.addComment(comment);
+                    final id = await commentsController.addComment(comment);
                     await Get.find<MentionService>().notifyMentions(
                       mentions,
-                      comment.id,
+                      id,
                       'comment',
                     );
                     await _notifyPostAuthor(widget.post.userId, widget.post.id);
