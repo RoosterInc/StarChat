@@ -29,8 +29,9 @@ class RecordingFeedService extends FeedService {
   final List<FeedPost> store = [];
 
   @override
-  Future<void> createPost(FeedPost post) async {
+  Future<String?> createPost(FeedPost post) async {
     store.add(post);
+    return post.id;
   }
 }
 

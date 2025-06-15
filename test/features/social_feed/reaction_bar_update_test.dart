@@ -35,8 +35,9 @@ class _FakeService extends FeedService {
   }
 
   @override
-  Future<void> createPost(FeedPost post) async {
+  Future<String?> createPost(FeedPost post) async {
     posts.add(post);
+    return post.id;
   }
 
   @override
@@ -49,8 +50,9 @@ class _FakeService extends FeedService {
   }
 
   @override
-  Future<void> createComment(PostComment comment) async {
+  Future<String?> createComment(PostComment comment) async {
     comments.add(comment);
+    return comment.id;
   }
 
   @override

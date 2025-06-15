@@ -68,23 +68,40 @@ class CommentsController extends GetxController {
     }
   }
 
-  Future<void> addComment(PostComment comment) async {
-    await service.createComment(comment);
-    _comments.add(comment);
+  Future<String> addComment(PostComment comment) async {
+    final id = await service.createComment(comment) ?? comment.id;
+    final toAdd = id == comment.id
+        ? comment
+        : PostComment(
+            id: id,
+            postId: comment.postId,
+            userId: comment.userId,
+            username: comment.username,
+            userAvatar: comment.userAvatar,
+            parentId: comment.parentId,
+            content: comment.content,
+            mediaUrls: comment.mediaUrls,
+            mentions: comment.mentions,
+            likeCount: comment.likeCount,
+            replyCount: comment.replyCount,
+            isDeleted: comment.isDeleted,
+          );
+    _comments.add(toAdd);
     final action = comment.parentId == null ? 'comment' : 'reply';
     await Get.find<ActivityService>()
-        .logActivity(comment.userId, action, itemId: comment.id, itemType: 'comment');
-    _likeCounts[comment.id] = comment.likeCount;
-    _replyCounts[comment.id] = comment.replyCount;
+        .logActivity(comment.userId, action, itemId: id, itemType: 'comment');
+    _likeCounts[id] = comment.likeCount;
+    _replyCounts[id] = comment.replyCount;
     if (comment.parentId != null) {
       incrementReplyCount(comment.parentId!);
     } else if (Get.isRegistered<FeedController>()) {
       Get.find<FeedController>().incrementCommentCount(comment.postId);
     }
+    return id;
   }
 
-  Future<void> replyToComment(PostComment comment) async {
-    await addComment(comment);
+  Future<String> replyToComment(PostComment comment) async {
+    return await addComment(comment);
   }
 
   Future<void> toggleLikeComment(String commentId) async {

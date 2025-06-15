@@ -122,7 +122,7 @@ class FeedService {
         .toList();
   }
 
-  Future<void> createPost(FeedPost post) async {
+  Future<String?> createPost(FeedPost post) async {
     final limitedTags = _limitHashtags(post.hashtags);
     final limitedMentions = _limitMentions(post.mentions);
     final toSave =
@@ -152,18 +152,20 @@ class FeedService {
                 createdAt: post.createdAt,
               );
     try {
-      await databases.createDocument(
+      final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: postsCollectionId,
         documentId: ID.unique(),
         data: toSave.toJson(),
       );
+      return doc.data['\$id'] ?? doc.data['id'];
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'post',
         'data': toSave.toJson(),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
+      return null;
     }
   }
 
@@ -181,7 +183,7 @@ class FeedService {
     return '${storage.client.endPoint}/storage/buckets/post_images/files/${result.$id}/view?project=${storage.client.config['project']}';
   }
 
-  Future<void> createPostWithImage(
+  Future<String?> createPostWithImage(
     String userId,
     String username,
     String content,
@@ -206,7 +208,7 @@ class FeedService {
         mentions: limitedMentions,
         createdAt: now,
       );
-      await createPost(post);
+      return await createPost(post);
     } catch (_) {
       await _addToBoxWithLimit(postQueueBox, {
         'action': 'post_with_image',
@@ -220,6 +222,7 @@ class FeedService {
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Image post queued for syncing');
+      return null;
     }
   }
 
@@ -231,7 +234,7 @@ class FeedService {
     return jsonDecode(result.responseBody) as Map<String, dynamic>;
   }
 
-  Future<void> createPostWithLink(
+  Future<String?> createPostWithLink(
     String userId,
     String username,
     String content,
@@ -256,7 +259,7 @@ class FeedService {
         mentions: limitedMentions,
         createdAt: now2,
       );
-      await createPost(post);
+      return await createPost(post);
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'post_with_link',
@@ -270,6 +273,7 @@ class FeedService {
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       Get.snackbar('Offline', 'Link post queued for syncing');
+      return null;
     }
   }
 
@@ -890,11 +894,11 @@ class FeedService {
           case 'post':
             final post =
                 FeedPost.fromJson(Map<String, dynamic>.from(item['data']));
-            await createPost(post);
+            final newId = await createPost(post);
             if (Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
                 post.mentions,
-                post.id,
+                newId ?? post.id,
                 'post',
               );
             }
@@ -917,11 +921,11 @@ class FeedService {
               mentions: linkMentions,
               createdAt: now,
             );
-            await createPost(post);
+            final newId = await createPost(post);
             if (Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
                 linkMentions,
-                post.id,
+                newId ?? post.id,
                 'post',
               );
             }
@@ -972,11 +976,11 @@ class FeedService {
             mentions: mentions,
             createdAt: now,
           );
-          await createPost(post);
+          final newId = await createPost(post);
           if (Get.isRegistered<MentionService>()) {
             await Get.find<MentionService>().notifyMentions(
               mentions,
-              post.id,
+              newId ?? post.id,
               'post',
             );
           }
