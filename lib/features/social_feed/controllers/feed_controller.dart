@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:hive/hive.dart';
+import 'package:appwrite/appwrite.dart';
 import '../../authentication/controllers/auth_controller.dart';
 import '../../profile/services/profile_service.dart';
 import '../models/feed_post.dart';
@@ -18,6 +19,10 @@ class FeedController extends GetxController {
 
   final _posts = <FeedPost>[].obs;
   List<FeedPost> get posts => _posts;
+
+  Realtime? _realtime;
+  RealtimeSubscription? _subscription;
+  String? _roomId;
 
   final _sortType = 'chronological'.obs;
   String get sortType => _sortType.value;
@@ -47,6 +52,82 @@ class FeedController extends GetxController {
 
   List<String> _limitHashtags(List<String> tags) =>
       tags.length > 10 ? tags.sublist(0, 10) : tags;
+
+  void _listenToRealtime(String roomId) {
+    if (_roomId == roomId && _subscription != null) return;
+    final auth = Get.isRegistered<AuthController>() ? Get.find<AuthController>() : null;
+    if (auth == null) return;
+    _roomId = roomId;
+    _realtime ??= Realtime(auth.client);
+    _subscription?.close();
+    _subscription = _realtime!.subscribe([
+      'databases.${service.databaseId}.collections.${service.postsCollectionId}.documents'
+    ]);
+    _subscription!.stream.listen((event) {
+      final payload = event.payload;
+      if (payload['room_id'] != _roomId) return;
+      final id = payload['\$id'] ?? payload['id'];
+      if (event.events.any((e) => e.contains('.create'))) {
+        final post = FeedPost.fromJson(payload);
+        if (!_posts.any((p) => p.id == id) && !post.isDeleted) {
+          _posts.insert(0, post);
+          _likeCounts[id] = post.likeCount;
+          _repostCounts[id] = post.repostCount;
+          _commentCounts[id] = post.commentCount;
+          for (final key in service.postsBox.keys) {
+            final cached = service.postsBox.get(key, defaultValue: []) as List;
+            cached.insert(
+              0,
+              {...post.toJson(), '_cachedAt': DateTime.now().toIso8601String()},
+            );
+            service.postsBox.put(key, cached);
+          }
+        }
+      } else if (event.events.any((e) => e.contains('.update')) ||
+          event.events.any((e) => e.contains('.delete'))) {
+        final post = FeedPost.fromJson(payload);
+        final index = _posts.indexWhere((p) => p.id == id);
+        if (post.isDeleted || event.events.any((e) => e.contains('.delete'))) {
+          if (index != -1) {
+            _posts.removeAt(index);
+          }
+          _likedIds.remove(id);
+          _repostedIds.remove(id);
+          _likeCounts.remove(id);
+          _repostCounts.remove(id);
+          _commentCounts.remove(id);
+          for (final key in service.postsBox.keys) {
+            final cached = service.postsBox.get(key, defaultValue: []) as List;
+            final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
+            if (idx != -1) {
+              cached.removeAt(idx);
+              service.postsBox.put(key, cached);
+            }
+          }
+        } else {
+          if (index != -1) {
+            _posts[index] = post;
+          }
+          _likeCounts[id] = post.likeCount;
+          _repostCounts[id] = post.repostCount;
+          _commentCounts[id] = post.commentCount;
+          for (final key in service.postsBox.keys) {
+            final cached = service.postsBox.get(key, defaultValue: []) as List;
+            final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
+            if (idx != -1) {
+              cached[idx] = {...post.toJson(), '_cachedAt': DateTime.now().toIso8601String()};
+              service.postsBox.put(key, cached);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  void disposeSubscription() {
+    _subscription?.close();
+    _subscription = null;
+  }
 
   Future<void> loadPosts(String roomId, {List<String>? blockedIds}) async {
     _isLoading.value = true;
@@ -120,6 +201,7 @@ class FeedController extends GetxController {
           for (final entry in repostMap.entries) entry.key: entry.value.id
         });
       }
+      _listenToRealtime(roomId);
     } finally {
       _isLoading.value = false;
     }
@@ -392,5 +474,11 @@ class FeedController extends GetxController {
 
   void decrementCommentCount(String postId) {
     _commentCounts[postId] = math.max(0, (_commentCounts[postId] ?? 1) - 1);
+  }
+
+  @override
+  void onClose() {
+    disposeSubscription();
+    super.onClose();
   }
 }
