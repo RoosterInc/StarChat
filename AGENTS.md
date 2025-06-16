@@ -5,6 +5,8 @@ You are developing for a modern Flutter app with an established design system. F
 Mandatory Requirements Checklist
 Before implementing any feature, ensure you adhere to the following requirements:
 
+The schema details for the Appwrite backend collections are located in `lib/models/all_collections_config.json`. Please consult this file when working on tasks that require backend collection information. If a task needs specific details, use this file to retrieve them. If the required details are missing, request users to implement them in the Appwrite backend and, if feasible, provide the JSON schema to help them update the database.
+
 All backend functionalities, including authentication, data storage, file management, and serverless functions, must be implemented using Appwrite.
 Use the official Appwrite Flutter SDK (latest version) for all interactions with Appwrite services.
 Regularly monitor the Appwrite Changelog for new features, deprecations, and updates to maintain app reliability.
