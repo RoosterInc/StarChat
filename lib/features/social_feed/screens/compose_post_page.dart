@@ -85,7 +85,11 @@ class _ComposePostPageState extends State<ComposePostPage> {
                 const Spacer(),
                 AnimatedButton(
                   onPressed: () async {
-                    final uid = auth.userId ?? '';
+                    final uid = auth.userId;
+                    if (uid == null) {
+                      Get.snackbar('Error', 'Login required');
+                      return;
+                    }
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';

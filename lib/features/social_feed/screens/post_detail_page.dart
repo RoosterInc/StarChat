@@ -30,10 +30,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
     if (!Get.isRegistered<NotificationService>()) return;
     try {
       final auth = Get.find<AuthController>();
-      if (authorId == auth.userId) return;
+      final uid = auth.userId;
+      if (uid == null || authorId == uid) return;
       await Get.find<NotificationService>().createNotification(
         authorId,
-        auth.userId ?? '',
+        uid,
         'comment',
         itemId: postId,
         itemType: 'post',
@@ -129,7 +130,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
                     final sanitized = HtmlUnescape().convert(text);
 
-                    final uid = auth.userId ?? '';
+                    final uid = auth.userId;
+                    if (uid == null) {
+                      Get.snackbar('Error', 'Login required');
+                      return;
+                    }
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';
