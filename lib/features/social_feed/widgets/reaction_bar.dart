@@ -54,7 +54,17 @@ class ReactionBar extends StatelessWidget {
         child: AnimatedButton(
           onPressed: onTap,
           enableHaptics: true,
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            padding: EdgeInsets.symmetric(
+              horizontal: DesignTokens.sm(context),
+              vertical: DesignTokens.xs(context),
+            ),
+          ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               icon,
               if (count != null) ...[
@@ -166,6 +176,8 @@ class ReactionBar extends StatelessWidget {
     }
 
     return Wrap(
+      direction: Axis.horizontal,
+      alignment: WrapAlignment.spaceEvenly,
       spacing: DesignTokens.sm(context),
       runSpacing: DesignTokens.sm(context),
       children: children,
