@@ -94,10 +94,11 @@ class CommentsController extends GetxController {
         .logActivity(comment.userId, action, itemId: id, itemType: 'comment');
     _likeCounts[id] = comment.likeCount;
     _replyCounts[id] = comment.replyCount;
+    if (Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().incrementCommentCount(comment.postId);
+    }
     if (comment.parentId != null) {
       incrementReplyCount(comment.parentId!);
-    } else if (Get.isRegistered<FeedController>()) {
-      Get.find<FeedController>().incrementCommentCount(comment.postId);
     }
     return id;
   }
@@ -143,10 +144,11 @@ class CommentsController extends GetxController {
     _likeCounts.remove(commentId);
     if (comment != null) {
       _replyCounts.remove(commentId);
+      if (Get.isRegistered<FeedController>()) {
+        Get.find<FeedController>().decrementCommentCount(comment.postId);
+      }
       if (comment.parentId != null) {
         decrementReplyCount(comment.parentId!);
-      } else if (Get.isRegistered<FeedController>()) {
-        Get.find<FeedController>().decrementCommentCount(comment.postId);
       }
     }
   }
@@ -189,10 +191,11 @@ class CommentsController extends GetxController {
             _comments.add(comment);
             _likeCounts[id] = comment.likeCount;
             _replyCounts[id] = comment.replyCount;
+            if (Get.isRegistered<FeedController>()) {
+              Get.find<FeedController>().incrementCommentCount(comment.postId);
+            }
             if (comment.parentId != null) {
               incrementReplyCount(comment.parentId!);
-            } else if (Get.isRegistered<FeedController>()) {
-              Get.find<FeedController>().incrementCommentCount(comment.postId);
             }
           }
         } else if ((event.events.any((e) => e.contains('.update')) &&
@@ -202,11 +205,12 @@ class CommentsController extends GetxController {
           _likedIds.remove(id);
           _likeCounts.remove(id);
           _replyCounts.remove(id);
+          if (Get.isRegistered<FeedController>()) {
+            Get.find<FeedController>().decrementCommentCount(payload['post_id']);
+          }
           final parentId = payload['parent_id'];
           if (parentId != null) {
             decrementReplyCount(parentId as String);
-          } else if (Get.isRegistered<FeedController>()) {
-            Get.find<FeedController>().decrementCommentCount(payload['post_id']);
           }
         }
       }
