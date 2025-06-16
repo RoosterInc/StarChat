@@ -66,6 +66,7 @@ void main() {
     final post = FeedPost(id: 'p1', roomId: 'room', userId: 'u', username: 'user', content: 'post');
     service.store.add(PostComment(id: 'parent', postId: 'p1', userId: 'u', username: 'user', content: 'parent'));
     await feed.loadPosts('room');
+    expect(feed.postCommentCount('p1'), 0);
     final controller = CommentsController(service: service);
     await controller.loadComments('p1');
 
