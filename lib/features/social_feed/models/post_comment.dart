@@ -44,9 +44,9 @@ class PostComment {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool includeId = true}) {
     return {
-      'id': id,
+      if (includeId) 'id': id,
       'post_id': postId,
       'user_id': userId,
       'username': username,
