@@ -849,31 +849,36 @@ class FeedService {
     final expiry = DateTime.now().subtract(const Duration(days: 30));
     final keys = queueBox.keys.toList();
     for (final key in keys) {
-      final Map item = queueBox.get(key);
-      final ts = DateTime.tryParse(item['_cachedAt'] ?? '');
+      final item = queueBox.get(key);
+      if (item == null || item is! Map) {
+        await queueBox.delete(key);
+        continue;
+      }
+      final Map mapItem = Map<String, dynamic>.from(item);
+      final ts = DateTime.tryParse(mapItem['_cachedAt'] ?? '');
       if (ts != null && ts.isBefore(expiry)) {
         await queueBox.delete(key);
         continue;
       }
       try {
-        switch (item['action']) {
+        switch (mapItem['action']) {
           case 'like':
-            await createLike(Map<String, dynamic>.from(item['data']));
+            await createLike(Map<String, dynamic>.from(mapItem['data']));
             break;
           case 'repost':
-            await createRepost(Map<String, dynamic>.from(item['data']));
+            await createRepost(Map<String, dynamic>.from(mapItem['data']));
             break;
           case 'bookmark':
-            final data = Map<String, dynamic>.from(item['data']);
+            final data = Map<String, dynamic>.from(mapItem['data']);
             await bookmarkPost(data['user_id'], data['post_id']);
             break;
           case 'remove_bookmark':
-            final data = Map<String, dynamic>.from(item['data']);
+            final data = Map<String, dynamic>.from(mapItem['data']);
             await removeBookmark(data['bookmark_id']);
             break;
           case 'comment':
             final c =
-                PostComment.fromJson(Map<String, dynamic>.from(item['data']));
+                PostComment.fromJson(Map<String, dynamic>.from(mapItem['data']));
             final newId = await createComment(c);
             final mentionNames = _limitMentions(c.mentions);
             await commentsBox.delete(c.id);
@@ -921,17 +926,17 @@ class FeedService {
             break;
           case 'unlike':
             await deleteLike(
-              item['like_id'],
-              itemId: item['item_id'],
-              itemType: item['item_type'],
+              mapItem['like_id'],
+              itemId: mapItem['item_id'],
+              itemType: mapItem['item_type'],
             );
             break;
           case 'delete_repost':
-            await deleteRepost(item['id'], item['post_id']);
+            await deleteRepost(mapItem['id'], mapItem['post_id']);
             break;
           case 'post':
             final post =
-                FeedPost.fromJson(Map<String, dynamic>.from(item['data']));
+                FeedPost.fromJson(Map<String, dynamic>.from(mapItem['data']));
             final newId = await createPost(post);
             if (newId != null && Get.isRegistered<MentionService>()) {
               await Get.find<MentionService>().notifyMentions(
@@ -943,19 +948,19 @@ class FeedService {
             break;
           case 'post_with_link':
             final linkMentions =
-                (item['mentions'] as List?)?.cast<String>() ?? const [];
-            final metadata = await fetchLinkMetadata(item['link_url']);
+                (mapItem['mentions'] as List?)?.cast<String>() ?? const [];
+            final metadata = await fetchLinkMetadata(mapItem['link_url']);
             final now = DateTime.now();
             final post = FeedPost(
               id: now.toIso8601String(),
-              roomId: item['room_id'] ?? '',
-              userId: item['user_id'],
-              username: item['username'],
-              content: item['content'],
-              linkUrl: item['link_url'],
+              roomId: mapItem['room_id'] ?? '',
+              userId: mapItem['user_id'],
+              username: mapItem['username'],
+              content: mapItem['content'],
+              linkUrl: mapItem['link_url'],
               linkMetadata: metadata,
               hashtags:
-                  (item['hashtags'] as List?)?.cast<String>() ?? const [],
+                  (mapItem['hashtags'] as List?)?.cast<String>() ?? const [],
               mentions: linkMentions,
               createdAt: now,
             );
@@ -969,7 +974,7 @@ class FeedService {
             }
             break;
           case 'hashtag':
-            final tag = (item['data'] as String).toLowerCase();
+            final tag = (mapItem['data'] as String).toLowerCase();
             await saveHashtags([tag]);
             await hashtagsBox.put(tag, {
               'hashtag': tag,
@@ -977,10 +982,10 @@ class FeedService {
             });
             break;
           case 'follow':
-            await createFollow(Map<String, dynamic>.from(item['data']));
+            await createFollow(Map<String, dynamic>.from(mapItem['data']));
             break;
           case 'unfollow':
-            final data = Map<String, dynamic>.from(item['data']);
+            final data = Map<String, dynamic>.from(mapItem['data']);
             await deleteFollow(data['follower_id'], data['followed_id']);
             break;
         }
@@ -990,27 +995,32 @@ class FeedService {
 
     final imageKeys = postQueueBox.keys.toList();
     for (final key in imageKeys) {
-      final Map item = postQueueBox.get(key);
-      final ts = DateTime.tryParse(item['_cachedAt'] ?? '');
+      final item = postQueueBox.get(key);
+      if (item == null || item is! Map) {
+        await postQueueBox.delete(key);
+        continue;
+      }
+      final Map mapItem = Map<String, dynamic>.from(item);
+      final ts = DateTime.tryParse(mapItem['_cachedAt'] ?? '');
       if (ts != null && ts.isBefore(expiry)) {
         await postQueueBox.delete(key);
         continue;
       }
       try {
-        if (item['action'] == 'post_with_image') {
-          final file = File(item['image_path']);
+        if (mapItem['action'] == 'post_with_image') {
+          final file = File(mapItem['image_path']);
           final imageUrl = await uploadImage(file);
           final mentions =
-              (item['mentions'] as List?)?.cast<String>() ?? const [];
+              (mapItem['mentions'] as List?)?.cast<String>() ?? const [];
           final now = DateTime.now();
           final post = FeedPost(
             id: now.toIso8601String(),
-            roomId: item['room_id'] ?? '',
-            userId: item['user_id'],
-            username: item['username'],
-            content: item['content'],
+            roomId: mapItem['room_id'] ?? '',
+            userId: mapItem['user_id'],
+            username: mapItem['username'],
+            content: mapItem['content'],
             mediaUrls: [imageUrl],
-            hashtags: (item['hashtags'] as List?)?.cast<String>() ?? const [],
+            hashtags: (mapItem['hashtags'] as List?)?.cast<String>() ?? const [],
             mentions: mentions,
             createdAt: now,
           );
