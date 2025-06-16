@@ -123,6 +123,29 @@ void main() {
 
     expect(find.byType(PostDetailPage), findsOneWidget);
   });
+
+  testWidgets('post menu shows report option', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u2',
+      username: 'other',
+      content: 'menu test',
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text('Flag or Report Post'), findsOneWidget);
+  });
 }
 
 class FakeFeedService extends FeedService {
