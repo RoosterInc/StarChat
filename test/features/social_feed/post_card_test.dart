@@ -10,6 +10,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:myapp/features/social_feed/models/post_like.dart';
 import 'package:myapp/features/social_feed/models/post_repost.dart';
+import 'package:myapp/controllers/auth_controller.dart';
 
 void main() {
   testWidgets('renders post content', (tester) async {
@@ -124,16 +125,44 @@ void main() {
     expect(find.byType(PostDetailPage), findsOneWidget);
   });
 
-  testWidgets('post menu shows report option', (tester) async {
+  testWidgets('post menu shows owner actions', (tester) async {
     final service = FakeFeedService();
     final controller = FeedController(service: service);
     Get.put(controller);
+    Get.put<AuthController>(FakeAuthController(id: 'u1'));
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'menu owner',
+      createdAt: DateTime.now(),
+    );
+    service.store.add(post);
+    await controller.loadPosts('r1');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PostCard(post: post),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit Post'), findsOneWidget);
+    expect(find.text('Delete Post'), findsOneWidget);
+  });
+
+  testWidgets('post menu shows report and user actions', (tester) async {
+    final service = FakeFeedService();
+    final controller = FeedController(service: service);
+    Get.put(controller);
+    Get.put<AuthController>(FakeAuthController(id: 'u1'));
     final post = FeedPost(
       id: '1',
       roomId: 'r1',
       userId: 'u2',
       username: 'other',
       content: 'menu test',
+      createdAt: DateTime.now(),
     );
     service.store.add(post);
     await controller.loadPosts('r1');
@@ -145,6 +174,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(find.text('Flag or Report Post'), findsOneWidget);
+    expect(find.text('Follow User'), findsOneWidget);
+    expect(find.text('Block User'), findsOneWidget);
   });
 }
 
@@ -204,4 +235,13 @@ class FakeFeedService extends FeedService {
 
   @override
   Future<PostRepost?> getUserRepost(String postId, String userId) async => null;
+}
+
+class FakeAuthController extends AuthController {
+  FakeAuthController({String? id}) {
+    userId = id;
+  }
+
+  @override
+  Future<void> checkExistingSession({bool navigateOnMissing = true}) async {}
 }
