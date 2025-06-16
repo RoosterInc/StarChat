@@ -174,6 +174,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(find.text('Flag or Report Post'), findsOneWidget);
+
+    // Open the submenu to reveal user actions
+    await tester.tap(find.text('@other'));
+    await tester.pumpAndSettle();
     expect(find.text('Follow User'), findsOneWidget);
     expect(find.text('Block User'), findsOneWidget);
   });
