@@ -24,10 +24,33 @@ import '../../profile/services/profile_service.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../profile/services/activity_service.dart';
 import '../../profile/controllers/activity_controller.dart';
+import '../../profile/models/user_profile.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
   const PostCard({super.key, required this.post});
+
+  Future<UserProfile?> _loadProfile() async {
+    try {
+      return await Get.find<ProfileService>().fetchProfile(post.userId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _relativeTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inDays > 7) {
+      return '${time.day}/${time.month}/${time.year}';
+    } else if (diff.inDays > 0) {
+      return '${diff.inDays}d';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours}h';
+    } else if (diff.inMinutes > 0) {
+      return '${diff.inMinutes}m';
+    }
+    return 'now';
+  }
 
   Future<void> _openProfile(String username) async {
     final id = await Get.find<ProfileService>()
@@ -245,22 +268,54 @@ class PostCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.labelMedium,
                 ),
               ),
-            Row(
-              children: [
-                Text(
-                  post.username,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (post.isEdited)
-                  Padding(
-                    padding: EdgeInsets.only(left: DesignTokens.xs(context)),
-                    child: Text(
-                      'Edited',
+            FutureBuilder<UserProfile?>(
+              future: _loadProfile(),
+              builder: (context, snapshot) {
+                final display = snapshot.data?.displayName ?? '';
+                final avatarSize = DesignTokens.spacing(context, 32);
+                return Row(
+                  children: [
+                    CircleAvatar(
+                      radius: avatarSize / 2,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      child: ClipOval(
+                        child: SafeNetworkImage(
+                          imageUrl: post.userAvatar,
+                          width: avatarSize,
+                          height: avatarSize,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: DesignTokens.sm(context)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (display.isNotEmpty)
+                          Text(
+                            display,
+                            style:
+                                Theme.of(context).textTheme.titleMedium,
+                          ),
+                        Text(
+                          '@${post.username}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      _relativeTime(post.createdAt),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                  ),
-                const Spacer(),
-                MenuAnchor(
+                    MenuAnchor(
                   builder: (context, menuController, _) => IconButton(
                     icon: const Icon(Icons.more_vert),
                     tooltip: 'Post options',
@@ -302,8 +357,8 @@ class PostCard extends StatelessWidget {
                         child: Text('@${post.username}'),
                       ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
             SizedBox(height: DesignTokens.sm(context)),
             _buildContent(context),
@@ -371,6 +426,7 @@ class PostCard extends StatelessWidget {
               repostCount: controller.postRepostCount(post.id),
               shareCount: post.shareCount,
             ),
+            Divider(height: DesignTokens.lg(context)),
           ],
         ),
       ),
