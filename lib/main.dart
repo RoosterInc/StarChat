@@ -87,6 +87,7 @@ Future<void> main() async {
   );
   Get.put(feedService, permanent: true);
   Get.put(notificationService, permanent: true);
+  await feedService.cleanupCachedEntries();
   if (!(await connectivity.checkConnectivity()).contains(ConnectivityResult.none)) {
     await feedService.syncQueuedActions();
     await notificationService.syncQueuedNotifications();
