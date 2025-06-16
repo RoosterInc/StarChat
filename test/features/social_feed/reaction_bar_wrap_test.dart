@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/features/social_feed/widgets/reaction_bar.dart';
 
 void main() {
-  testWidgets('ReactionBar wraps in small width without overflow', (tester) async {
+  testWidgets('ReactionBar stays horizontal without overflow', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: SizedBox(
@@ -23,7 +23,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.byType(Wrap), findsOneWidget);
+    expect(find.byType(Row), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
