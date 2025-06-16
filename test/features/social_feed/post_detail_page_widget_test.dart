@@ -52,14 +52,29 @@ class TestFeedService extends FeedService {
   }
 
   @override
-  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
-    return postStore.where((p) => p.roomId == roomId).toList();
+  Future<List<FeedPost>> fetchSortedPosts(
+    String sortType, {
+    String? roomId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    var list = postStore.where((p) => p.roomId == roomId).toList();
+    if (cursor != null) {
+      final index = list.indexWhere((p) => p.id == cursor);
+      if (index != -1) list = list.sublist(index + 1);
+    }
+    return list.take(limit).toList();
   }
 }
 
 class DelayedFeedService extends TestFeedService {
   @override
-  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) {
+  Future<List<FeedPost>> fetchSortedPosts(
+    String sortType, {
+    String? roomId,
+    String? cursor,
+    int limit = 20,
+  }) {
     return Future.delayed(const Duration(milliseconds: 100), () => []);
   }
 }

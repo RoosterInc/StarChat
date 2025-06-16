@@ -28,17 +28,32 @@ class FakeSortingService extends FeedService {
   List<FeedPost> mostLiked = [];
 
   @override
-  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
+  Future<List<FeedPost>> fetchSortedPosts(
+    String sortType, {
+    String? roomId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    List<FeedPost> list;
     switch (sortType) {
       case 'chronological':
       case 'most-recent':
-        return chronological;
+        list = chronological;
+        break;
       case 'most-commented':
-        return mostCommented;
+        list = mostCommented;
+        break;
       case 'most-liked':
-        return mostLiked;
+        list = mostLiked;
+        break;
+      default:
+        list = [];
     }
-    return [];
+    if (cursor != null) {
+      final index = list.indexWhere((p) => p.id == cursor);
+      if (index != -1) list = list.sublist(index + 1);
+    }
+    return list.take(limit).toList();
   }
 
   @override

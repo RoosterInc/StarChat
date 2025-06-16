@@ -17,6 +17,13 @@ class FeedPage extends StatefulWidget {
 
 class _FeedPageState extends State<FeedPage> {
   late FeedController controller;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Widget _buildSortMenu(BuildContext context) {
     return Align(
@@ -69,6 +76,12 @@ class _FeedPageState extends State<FeedPage> {
       blocked = Get.find<ProfileService>().getBlockedIds(auth.userId!);
     }
     controller.loadPosts(widget.roomId, blockedIds: blocked);
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100) {
+        controller.loadMorePosts();
+      }
+    });
   }
 
   @override
@@ -103,9 +116,20 @@ class _FeedPageState extends State<FeedPage> {
             ),
             Expanded(
               child: OptimizedListView(
-                itemCount: controller.posts.length,
+                controller: _scrollController,
+                itemCount:
+                    controller.posts.length + (controller.isLoadingMore ? 3 : 0),
                 padding: EdgeInsets.all(DesignTokens.md(context)),
                 itemBuilder: (context, index) {
+                  if (index >= controller.posts.length) {
+                    return Padding(
+                      padding:
+                          EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                      child: SkeletonLoader(
+                        height: DesignTokens.xl(context),
+                      ),
+                    );
+                  }
                   final post = controller.posts[index];
                   return Padding(
                     padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
