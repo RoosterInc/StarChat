@@ -401,6 +401,7 @@ class PostCard extends StatelessWidget {
               commentCount: controller.postCommentCount(post.id),
               repostCount: controller.postRepostCount(post.id),
               shareCount: post.shareCount,
+              bookmarkCount: controller.postBookmarkCount(post.id),
             ),
             Padding(
               padding:

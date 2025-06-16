@@ -1088,6 +1088,24 @@ class FeedService {
           'created_at': DateTime.now().toIso8601String(),
         },
       );
+      await functions.createExecution(
+        functionId: 'increment_bookmark_count',
+        body: jsonEncode({'post_id': postId}),
+      );
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == postId || p['\$id'] == postId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['bookmark_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'bookmark_count': count + 1,
+          };
+          await postsBox.put(key, cached);
+        }
+      }
 
       if (Get.isRegistered<NotificationService>()) {
         try {
@@ -1119,11 +1137,35 @@ class FeedService {
 
   Future<void> removeBookmark(String bookmarkId) async {
     try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: bookmarksCollectionId,
+        documentId: bookmarkId,
+      );
+      final postId = doc.data['post_id'] as String;
       await databases.deleteDocument(
         databaseId: databaseId,
         collectionId: bookmarksCollectionId,
         documentId: bookmarkId,
       );
+      await functions.createExecution(
+        functionId: 'decrement_bookmark_count',
+        body: jsonEncode({'post_id': postId}),
+      );
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == postId || p['\$id'] == postId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['bookmark_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'bookmark_count': count > 0 ? count - 1 : 0,
+          };
+          await postsBox.put(key, cached);
+        }
+      }
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
         'action': 'remove_bookmark',

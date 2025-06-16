@@ -12,16 +12,17 @@ void main() {
             onLike: null,
             onComment: null,
             onRepost: null,
-            onBookmark: null,
-            onShare: null,
-            likeCount: 1,
-            commentCount: 1,
-            repostCount: 1,
-            shareCount: 1,
-          ),
+          onBookmark: null,
+          onShare: null,
+          likeCount: 1,
+          commentCount: 1,
+          repostCount: 1,
+          shareCount: 1,
+          bookmarkCount: 1,
         ),
       ),
-    );
+    ),
+  );
     await tester.pump();
     expect(find.byType(Wrap), findsOneWidget);
     expect(tester.takeException(), isNull);
