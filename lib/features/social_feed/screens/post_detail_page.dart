@@ -9,6 +9,7 @@ import '../../authentication/controllers/auth_controller.dart';
 import '../widgets/comment_card.dart';
 import '../utils/comment_validation.dart';
 import '../widgets/post_card.dart';
+import '../controllers/feed_controller.dart';
 import '../../../shared/utils/logger.dart';
 import '../services/mention_service.dart';
 import 'package:flutter/foundation.dart';
@@ -57,6 +58,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
     commentsController = Get.find<CommentsController>();
     commentsController.loadComments(widget.post.id);
+    if (Get.isRegistered<FeedController>()) {
+      final feed = Get.find<FeedController>();
+      feed.service.getPostById(widget.post.id).then((post) {
+        if (post != null) feed.updatePostCounts(post);
+      });
+    }
   }
 
   @override

@@ -613,6 +613,17 @@ class FeedController extends GetxController {
     _commentCounts[postId] = math.max(0, (_commentCounts[postId] ?? 1) - 1);
   }
 
+  void updatePostCounts(FeedPost post) {
+    _likeCounts[post.id] = post.likeCount;
+    _repostCounts[post.id] = post.repostCount;
+    _commentCounts[post.id] = post.commentCount;
+    _bookmarkCount[post.id] = post.bookmarkCount;
+    final index = _posts.indexWhere((p) => p.id == post.id);
+    if (index != -1) {
+      _posts[index] = post;
+    }
+  }
+
   @override
   void onClose() {
     disposeSubscription();
