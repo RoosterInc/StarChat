@@ -186,9 +186,9 @@ class _ReactionBarState extends State<ReactionBar>
               count: widget.repostCount,
               index: 2,
             ),
-          if (widget.onBookmark != null)
+          if (widget.onBookmark != null || widget.bookmarkCount > 0)
             buildItem(
-          icon:
+              icon:
                   widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
               label: widget.isBookmarked ? 'Remove bookmark' : 'Bookmark',
               onTap: widget.onBookmark,
