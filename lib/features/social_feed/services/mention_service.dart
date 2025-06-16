@@ -26,24 +26,47 @@ class MentionService {
     if (mentions.isEmpty) return;
     final actorId = Get.find<AuthController>().userId;
     if (actorId == null) return;
-    for (final name in mentions) {
-      try {
-        final res = await databases.listDocuments(
-          databaseId: databaseId,
-          collectionId: profilesCollectionId,
-          queries: [Query.equal('username', name)],
-        );
-        if (res.documents.isNotEmpty) {
+    try {
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: profilesCollectionId,
+        queries: [Query.equal('username', mentions)],
+      );
+
+      for (final doc in res.documents) {
+        try {
           await notificationService.createNotification(
-            res.documents.first.data['\$id'],
+            doc.data['\$id'],
             actorId,
             'mention',
             itemId: itemId,
             itemType: itemType,
           );
+        } catch (e, st) {
+          logger.e('Error notifying mention', error: e, stackTrace: st);
         }
-      } catch (e, st) {
-        logger.e('Error notifying mentions', error: e, stackTrace: st);
+      }
+    } catch (e, st) {
+      logger.e('Error bulk fetching mentions', error: e, stackTrace: st);
+      for (final name in mentions) {
+        try {
+          final res = await databases.listDocuments(
+            databaseId: databaseId,
+            collectionId: profilesCollectionId,
+            queries: [Query.equal('username', name)],
+          );
+          if (res.documents.isNotEmpty) {
+            await notificationService.createNotification(
+              res.documents.first.data['\$id'],
+              actorId,
+              'mention',
+              itemId: itemId,
+              itemType: itemType,
+            );
+          }
+        } catch (e, st) {
+          logger.e('Error notifying mentions', error: e, stackTrace: st);
+        }
       }
     }
   }

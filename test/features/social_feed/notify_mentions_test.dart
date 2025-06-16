@@ -9,23 +9,57 @@ import 'package:myapp/controllers/auth_controller.dart';
 
 class FakeDatabases extends Databases {
   FakeDatabases() : super(Client());
+
+  List<String> _parseNames(String query) {
+    final start = query.indexOf('[');
+    if (start != -1) {
+      final end = query.indexOf(']', start);
+      final inside =
+          query.substring(start + 1, end).replaceAll('"', '').trim();
+      if (inside.isEmpty) return [];
+      return inside.split(',').map((e) => e.trim()).toList();
+    }
+    final match = RegExp(r'"([^"]+)"').firstMatch(query);
+    return match != null ? [match.group(1)!] : [];
+  }
+
   @override
   Future<models.DocumentList> listDocuments({
     required String databaseId,
     required String collectionId,
     List<String>? queries,
   }) async {
-    return models.DocumentList(total: 1, documents: [
-      models.Document.fromMap({
-        '\$id': 'uid',
-        '\$collectionId': collectionId,
-        '\$databaseId': databaseId,
-        '\$createdAt': '',
-        '\$updatedAt': '',
-        '\$permissions': [],
-        'username': 'bob',
-      })
-    ]);
+    final query = queries?.first ?? '';
+    final names = _parseNames(query);
+    final docs = names
+        .map((n) => models.Document.fromMap({
+              '\$id': n,
+              '\$collectionId': collectionId,
+              '\$databaseId': databaseId,
+              '\$createdAt': '',
+              '\$updatedAt': '',
+              '\$permissions': [],
+              'username': n,
+            }))
+        .toList();
+    return models.DocumentList(total: docs.length, documents: docs);
+  }
+}
+
+class CountingDatabases extends FakeDatabases {
+  int calls = 0;
+  @override
+  Future<models.DocumentList> listDocuments({
+    required String databaseId,
+    required String collectionId,
+    List<String>? queries,
+  }) async {
+    calls++;
+    return super.listDocuments(
+      databaseId: databaseId,
+      collectionId: collectionId,
+      queries: queries,
+    );
   }
 }
 
@@ -73,6 +107,20 @@ class FakeAuthController extends AuthController {
   void onInit() {}
 }
 
+class CountingAuthController extends AuthController {
+  CountingAuthController(this.db) {
+    account = Account(client);
+    databases = db;
+    storage = Storage(client);
+    userId = 'actor';
+  }
+
+  final Databases db;
+
+  @override
+  void onInit() {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -115,5 +163,27 @@ void main() {
       'post',
     );
     expect(recorder.count, 1);
+  });
+
+  test('notifyMentions queries all names once', () async {
+    Get.reset();
+    Get.testMode = true;
+    final db = CountingDatabases();
+    Get.put<AuthController>(CountingAuthController(db));
+    final recorder = RecordingNotificationService();
+    Get.put<NotificationService>(recorder);
+    final service = MentionService(
+      databases: db,
+      notificationService: Get.find<NotificationService>(),
+      databaseId: 'db',
+      profilesCollectionId: 'profiles',
+    );
+    await service.notifyMentions(
+      ['bob', 'alice'],
+      '1',
+      'post',
+    );
+    expect(db.calls, 1);
+    expect(recorder.count, 2);
   });
 }
