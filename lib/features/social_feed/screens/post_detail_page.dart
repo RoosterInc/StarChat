@@ -47,6 +47,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   void initState() {
     super.initState();
+    final auth = Get.find<AuthController>();
+    if (auth.userId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.snackbar('Error', 'Login required');
+        Get.back();
+      });
+      return;
+    }
     commentsController = Get.find<CommentsController>();
     commentsController.loadComments(widget.post.id);
   }
