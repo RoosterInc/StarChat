@@ -34,11 +34,11 @@
         {
           "key": "createdAt",
           "type": "datetime",
-          "required": true,
+          "required": false,
           "array": false
         },
         {
-          "key": "updatedAt",
+          "key": "UpdateAt",
           "type": "datetime",
           "required": false,
           "array": false
@@ -1472,7 +1472,7 @@
           "default": "Free"
         },
         {
-          "key": "updatedAt",
+          "key": "UpdateAt",
           "type": "datetime",
           "required": false,
           "array": false
@@ -1640,6 +1640,12 @@
         {
           "key": "edited_at",
           "type": "datetime",
+          "required": false,
+          "array": false
+        },
+        {
+          "key": "bookmark_count",
+          "type": "integer",
           "required": false,
           "array": false
         }
