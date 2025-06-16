@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../core/design_system/modern_ui_system.dart';
-import '../services/feed_service.dart';
 
 enum ReactionTarget { post, comment, repost }
 
-class ReactionBar extends StatelessWidget {
+class ReactionBar extends StatefulWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onRepost;
@@ -41,146 +39,177 @@ class ReactionBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    Widget buildItem({
-      required Widget icon,
-      required String label,
-      required VoidCallback? onTap,
-      int? count,
-    }) {
-      return AccessibilityWrapper(
-        semanticLabel: label,
-        isButton: true,
-        child: AnimatedButton(
-          onPressed: onTap,
-          enableHaptics: true,
-          style: FilledButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            padding: EdgeInsets.symmetric(
-              horizontal: DesignTokens.sm(context),
-              vertical: DesignTokens.xs(context),
+  _ReactionBarState createState() => _ReactionBarState();
+}
+
+class _ReactionBarState extends State<ReactionBar>
+    with TickerProviderStateMixin {
+  final Map<int, AnimationController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < 5; i++) {
+      _controllers[i] = AnimationController(
+        duration: const Duration(milliseconds: 100),
+        vsync: this,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controllers.forEach((_, controller) => controller.dispose());
+    super.dispose();
+  }
+
+  Widget buildItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+    required bool isActive,
+    required Color activeColor,
+    int? count,
+    required int index,
+  }) {
+    final isEnabled = onTap != null;
+    final color = isActive ? activeColor : Colors.grey[600]!;
+    final animation =
+        Tween<double>(begin: 1.0, end: 0.9).animate(_controllers[index]!);
+
+    return MouseRegion(
+      onEnter: (_) => _controllers[index]!.forward(),
+      onExit: (_) => _controllers[index]!.reverse(),
+      child: Semantics(
+        label: label,
+        button: true,
+        enabled: isEnabled,
+        child: GestureDetector(
+          onTap: () {
+            if (isEnabled) {
+              _controllers[index]!
+                  .forward()
+                  .then((_) => _controllers[index]!.reverse());
+              onTap();
+            }
+          },
+          child: ScaleTransition(
+            scale: animation,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16.0,
+                  color: isEnabled ? color : Colors.grey[400],
+                ),
+                if (count != null && count > 0) ...[
+                  const SizedBox(width: 4.0),
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      color: isEnabled ? color : Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              icon,
-              if (count != null) ...[
-                SizedBox(width: DesignTokens.xs(context)),
-                Text('$count'),
-              ]
-            ],
-          ),
         ),
-      );
-    }
-    Future<void> defaultShare() async {
-      if (postId == null) return;
-      try {
-        final link = await Get.find<FeedService>().sharePost(postId!);
-        await Share.share('Check out this post: $link');
-      } catch (_) {
-        Get.snackbar("Error", "Failed to share post");
-      }
-    }
-
-
-    String targetName() {
-      switch (target) {
-        case ReactionTarget.comment:
-          return 'comment';
-        case ReactionTarget.repost:
-          return 'repost';
-        case ReactionTarget.post:
-        default:
-          return 'post';
-      }
-    }
-
-    final children = <Widget>[];
-
-    void addItem(Widget item) {
-      children.add(item);
-    }
-
-    addItem(
-      buildItem(
-        icon: Icon(
-          isLiked ? Icons.favorite : Icons.favorite_border,
-          color: isLiked
-              ? context.colorScheme.primary
-              : ContextExtensions(context).theme.iconTheme.color,
-        ),
-        label: isLiked ? 'Unlike ${targetName()}' : 'Like ${targetName()}',
-        onTap: onLike,
-        count: likeCount,
       ),
     );
+  }
 
-    if (onComment != null || commentCount > 0) {
-      addItem(
-        buildItem(
-          icon: const Icon(Icons.mode_comment_outlined),
-          label: target == ReactionTarget.comment
-              ? 'Reply to comment'
-              : 'Comment on ${targetName()}',
-          onTap: onComment,
-          count: commentCount,
-        ),
-      );
+  Future<void> defaultShare() async {
+    if (widget.postId == null) return;
+    try {
+      final link = "https://example.com/post/${widget.postId}";
+      await Share.share('Check out this post: $link');
+    } catch (_) {
+      Get.snackbar("Error", "Failed to share post");
     }
+  }
 
-    if ((onRepost != null || repostCount > 0) && target == ReactionTarget.post) {
-      addItem(
-        buildItem(
-          icon: Icon(
-            Icons.repeat,
-            color: isReposted
-                ? context.colorScheme.primary
-                : ContextExtensions(context).theme.iconTheme.color,
+  String targetName() {
+    switch (widget.target) {
+      case ReactionTarget.comment:
+        return 'comment';
+      case ReactionTarget.repost:
+        return 'repost';
+      case ReactionTarget.post:
+      default:
+        return 'post';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          buildItem(
+            icon: widget.isLiked ? Icons.favorite : Icons.favorite_border,
+            label: widget.isLiked
+                ? 'Unlike ${targetName()}'
+                : 'Like ${targetName()}',
+            onTap: widget.onLike,
+            isActive: widget.isLiked,
+            activeColor: Colors.red,
+            count: widget.likeCount,
+            index: 0,
           ),
-          label: isReposted ? 'Undo Repost' : 'Repost',
-          onTap: onRepost,
-          count: repostCount,
-        ),
-      );
-    }
-
-    if ((onShare != null || postId != null || shareCount > 0) &&
-        target == ReactionTarget.post) {
-      addItem(
-        buildItem(
-          icon: const Icon(Icons.share),
-          label: 'Share',
-          onTap: onShare ?? defaultShare,
-          count: shareCount,
-        ),
-      );
-    }
-
-    if (onBookmark != null) {
-      addItem(
-        buildItem(
-          icon: Icon(
-            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-            color: isBookmarked
-                ? context.colorScheme.primary
-                : ContextExtensions(context).theme.iconTheme.color,
-          ),
-          label: isBookmarked ? 'Remove bookmark' : 'Bookmark',
-          onTap: onBookmark,
-        ),
-      );
-    }
-
-    return Wrap(
-      direction: Axis.horizontal,
-      alignment: WrapAlignment.spaceEvenly,
-      spacing: DesignTokens.sm(context),
-      runSpacing: DesignTokens.sm(context),
-      children: children,
+          if (widget.onComment != null || widget.commentCount > 0)
+            buildItem(
+              icon: Icons.chat_bubble_outline,
+              label: widget.target == ReactionTarget.comment
+                  ? 'Reply to comment'
+                  : 'Comment on ${targetName()}',
+              onTap: widget.onComment,
+              isActive: false,
+              activeColor: Colors.blue,
+              count: widget.commentCount,
+              index: 1,
+            ),
+          if ((widget.onRepost != null || widget.repostCount > 0) &&
+              widget.target == ReactionTarget.post)
+            buildItem(
+              icon: Icons.repeat,
+              label: widget.isReposted ? 'Undo Repost' : 'Repost',
+              onTap: widget.onRepost,
+              isActive: widget.isReposted,
+              activeColor: Colors.green,
+              count: widget.repostCount,
+              index: 2,
+            ),
+          if (widget.onBookmark != null)
+            buildItem(
+              icon:
+                  widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              label: widget.isBookmarked ? 'Remove bookmark' : 'Bookmark',
+              onTap: widget.onBookmark,
+              isActive: widget.isBookmarked,
+              activeColor: Colors.yellow[700]!,
+              count: null,
+              index: 3,
+            ),
+          if ((widget.onShare != null ||
+                  widget.postId != null ||
+                  widget.shareCount > 0) &&
+              widget.target == ReactionTarget.post)
+            buildItem(
+              icon: Icons.share,
+              label: 'Share',
+              onTap: widget.onShare ?? defaultShare,
+              isActive: false,
+              activeColor: Colors.blue,
+              count: widget.shareCount,
+              index: 4,
+            ),
+        ],
+      ),
     );
   }
 }
