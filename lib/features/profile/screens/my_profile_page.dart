@@ -23,6 +23,35 @@ class MyProfilePage extends GetView<AuthController> {
     await controller.updateProfilePicture(file);
   }
 
+  Future<void> _changeDisplayName(BuildContext context) async {
+    final textController =
+        TextEditingController(text: controller.displayName.value);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('display_name'.tr),
+        content: TextField(
+          controller: textController,
+          decoration: InputDecoration(labelText: 'display_name'.tr),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('cancel'.tr),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, textController.text.trim()),
+            child: Text('save'.tr),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      await controller.updateDisplayName(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userTypeController = Get.find<UserTypeController>();
@@ -58,6 +87,11 @@ class MyProfilePage extends GetView<AuthController> {
                 controller.username.value,
                 style: const TextStyle(fontSize: 20),
               ),
+              if (controller.displayName.value.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: DesignTokens.sm(context)),
+                  child: Text(controller.displayName.value),
+                ),
               const SizedBox(height: 16),
               AnimatedButton(
                 onPressed: () => Get.toNamed('/set_username'),
@@ -68,6 +102,17 @@ class MyProfilePage extends GetView<AuthController> {
                   ),
                 ),
                 child: Text('change_username'.tr),
+              ),
+              const SizedBox(height: 8),
+              AnimatedButton(
+                onPressed: () => _changeDisplayName(context),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.md(context),
+                    vertical: DesignTokens.sm(context),
+                  ),
+                ),
+                child: Text('change_displayname'.tr),
               ),
               const SizedBox(height: 8),
               AnimatedButton(

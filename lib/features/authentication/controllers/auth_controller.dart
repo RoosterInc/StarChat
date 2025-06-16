@@ -24,6 +24,7 @@ class AuthController extends GetxController {
   final usernameAvailable = false.obs;
   final hasCheckedUsername = false.obs;
   final username = ''.obs;
+  final displayName = ''.obs;
   final profilePictureUrl = ''.obs;
   final isUsernameValid = false.obs;
   final usernameText = ''.obs;
@@ -92,6 +93,7 @@ class AuthController extends GetxController {
     emailError.value = '';
     otpError.value = '';
     usernameError.value = '';
+    displayName.value = '';
     birthRashiId.value = '';
     birthNakshatraId.value = '';
     cancelTimers();
@@ -495,6 +497,7 @@ class AuthController extends GetxController {
       if (result.documents.isNotEmpty) {
         final data = result.documents.first.data;
         final fetchedUsername = data['username'];
+        final fetchedDisplayName = data['displayname'];
         final fetchedTypeRaw = data['userType'];
         birthRashiId.value = data['birth_rashi'] ?? '';
         birthNakshatraId.value = data['birth_nakshatra'] ?? '';
@@ -502,6 +505,7 @@ class AuthController extends GetxController {
             "[Auth] ensureUsername: Document found. Username from DB: '$fetchedUsername'. Profile Pic URL: '${data['profilePicture']}'");
         if (fetchedUsername != null && fetchedUsername != '') {
           username.value = fetchedUsername;
+          displayName.value = fetchedDisplayName ?? '';
           if (data['profilePicture'] != null && data['profilePicture'] != '') {
             profilePictureUrl.value = data['profilePicture'];
           }
@@ -515,6 +519,7 @@ class AuthController extends GetxController {
             } catch (_) {}
           }
           await prefs.setString('username', username.value);
+          await prefs.setString('displayname', displayName.value);
           logger.i(
               "[Auth] ensureUsername: Returning true (username found and set).");
           return true;
@@ -528,7 +533,9 @@ class AuthController extends GetxController {
       }
 
       await prefs.remove('username');
+      await prefs.remove('displayname');
       username.value = '';
+      displayName.value = '';
       profilePictureUrl.value = '';
       birthRashiId.value = '';
       birthNakshatraId.value = '';
@@ -544,10 +551,12 @@ class AuthController extends GetxController {
       }
 
       final cachedName = prefs.getString('username');
+      final cachedDisplay = prefs.getString('displayname');
       logger.i(
           "[Auth] ensureUsername: Attempting fallback to cached username. Cached name: '$cachedName'");
       if (cachedName != null) {
         username.value = cachedName;
+        displayName.value = cachedDisplay ?? '';
         logger.i(
             "[Auth] ensureUsername: Returning true (using cached username due to server error).");
         return true;
@@ -759,11 +768,12 @@ class AuthController extends GetxController {
       } else {
         logger.i("[Auth] _saveUsername: STEP 3B - Creating new user profile");
 
-        final profileData = {
-          'userId': uid,
-          'username': name,
-          'profilePicture': '',
-          'userType': 'General User',
+      final profileData = {
+        'userId': uid,
+        'username': name,
+        'displayname': '',
+        'profilePicture': '',
+        'userType': 'General User',
           'firstName': '',
           'lastName': '',
           'birth_rashi': rashiId ?? '',
@@ -1100,6 +1110,7 @@ class AuthController extends GetxController {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('username');
+        await prefs.remove('displayname');
         await prefs.remove(UserTypeController.storageKey);
         if (uid != null) {
           await prefs.remove('watchlist_items_$uid');
@@ -1118,6 +1129,7 @@ class AuthController extends GetxController {
 
       isOTPSent.value = false;
       username.value = '';
+      displayName.value = '';
       profilePictureUrl.value = '';
       userId = null;
 
@@ -1237,6 +1249,45 @@ class AuthController extends GetxController {
       await userTypeController.updateUserType(type);
     } catch (e) {
       logger.e('Error updating user type', error: e);
+      Get.snackbar('error'.tr, 'unexpected_error'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateDisplayName(String name) async {
+    isLoading.value = true;
+    final dbId = dotenv.env[_databaseIdKey] ?? 'StarChat_DB';
+    final collectionId = dotenv.env[_profilesCollectionKey] ?? 'user_profiles';
+    try {
+      final session = await account.get();
+      final uid = session.$id;
+      final result = await databases.listDocuments(
+        databaseId: dbId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('userId', uid),
+          Query.limit(1),
+        ],
+      );
+      if (result.documents.isNotEmpty) {
+        final docId = result.documents.first.$id;
+        await databases.updateDocument(
+          databaseId: dbId,
+          collectionId: collectionId,
+          documentId: docId,
+          data: {
+            'displayname': name,
+            'updatedAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      }
+      displayName.value = name;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('displayname', name);
+    } catch (e) {
+      logger.e('Error updating display name', error: e);
       Get.snackbar('error'.tr, 'unexpected_error'.tr,
           snackPosition: SnackPosition.BOTTOM);
     } finally {
