@@ -108,36 +108,59 @@ class _FeedPageState extends State<FeedPage> {
             ),
           );
         }
-        return Column(
+        return Stack(
           children: [
-            Padding(
-              padding: EdgeInsets.all(DesignTokens.sm(context)),
-              child: _buildSortMenu(context),
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(DesignTokens.sm(context)),
+                  child: _buildSortMenu(context),
+                ),
+                Expanded(
+                  child: OptimizedListView(
+                    controller: _scrollController,
+                    itemCount: controller.posts.length +
+                        (controller.isLoadingMore ? 3 : 0),
+                    padding: EdgeInsets.all(DesignTokens.md(context)),
+                    itemBuilder: (context, index) {
+                      if (index >= controller.posts.length) {
+                        return Padding(
+                          padding: EdgeInsets.only(
+                              bottom: DesignTokens.sm(context)),
+                          child: SkeletonLoader(
+                            height: DesignTokens.xl(context),
+                          ),
+                        );
+                      }
+                      final post = controller.posts[index];
+                      return Padding(
+                        padding:
+                            EdgeInsets.only(bottom: DesignTokens.sm(context)),
+                        child: PostCard(post: post),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: OptimizedListView(
-                controller: _scrollController,
-                itemCount:
-                    controller.posts.length + (controller.isLoadingMore ? 3 : 0),
-                padding: EdgeInsets.all(DesignTokens.md(context)),
-                itemBuilder: (context, index) {
-                  if (index >= controller.posts.length) {
-                    return Padding(
-                      padding:
-                          EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                      child: SkeletonLoader(
-                        height: DesignTokens.xl(context),
+            if (controller.unseenCount.value > 0)
+              Positioned(
+                top: DesignTokens.lg(context),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: AnimatedButton(
+                    onPressed: controller.refreshFeed,
+                    style: FilledButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.md(context),
+                        vertical: DesignTokens.sm(context),
                       ),
-                    );
-                  }
-                  final post = controller.posts[index];
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: DesignTokens.sm(context)),
-                    child: PostCard(post: post),
-                  );
-                },
+                    ),
+                    child: Text('Refresh (${controller.unseenCount.value})'),
+                  ),
+                ),
               ),
-            ),
           ],
         );
       }),
