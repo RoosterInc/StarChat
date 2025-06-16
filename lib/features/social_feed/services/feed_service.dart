@@ -42,6 +42,42 @@ class FeedService {
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
 
+  Future<void> cleanupCachedEntries() async {
+    final expiry = DateTime.now().subtract(const Duration(days: 30));
+
+    Future<void> cleanBox(Box box) async {
+      final keys = box.keys.toList();
+      for (final key in keys) {
+        final value = box.get(key);
+        if (value is Map) {
+          final ts = DateTime.tryParse(value['_cachedAt'] ?? '');
+          if (ts != null && ts.isBefore(expiry)) {
+            await box.delete(key);
+          }
+        } else if (value is List) {
+          final cleaned = value.where((element) {
+            if (element is Map) {
+              final ts = DateTime.tryParse(element['_cachedAt'] ?? '');
+              return ts == null || ts.isAfter(expiry);
+            }
+            return true;
+          }).toList();
+          if (cleaned.isEmpty) {
+            await box.delete(key);
+          } else if (cleaned.length != value.length) {
+            await box.put(key, cleaned);
+          }
+        }
+      }
+    }
+
+    await cleanBox(postsBox);
+    await cleanBox(commentsBox);
+    await cleanBox(bookmarksBox);
+    await cleanBox(queueBox);
+    await cleanBox(postQueueBox);
+  }
+
   FeedService({
     required this.databases,
     required this.storage,
@@ -1036,6 +1072,8 @@ class FeedService {
         await postQueueBox.delete(key);
       } catch (_) {}
     }
+
+    await cleanupCachedEntries();
   }
 
   Future<void> bookmarkPost(String userId, String postId) async {
