@@ -167,6 +167,28 @@ class FeedService {
         .toList();
   }
 
+  Future<FeedPost?> getPostById(String postId) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+      );
+      return FeedPost.fromJson(doc.data);
+    } catch (_) {
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        for (final item in cached) {
+          if (item is Map &&
+              (item['id'] == postId || item['\$id'] == postId)) {
+            return FeedPost.fromJson(Map<String, dynamic>.from(item));
+          }
+        }
+      }
+      return null;
+    }
+  }
+
   Future<String?> createPost(FeedPost post) async {
     final limitedTags = _limitHashtags(post.hashtags);
     final limitedMentions = _limitMentions(post.mentions);
