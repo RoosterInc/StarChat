@@ -29,6 +29,9 @@ class BookmarkController extends GetxController {
       final removed = index != -1 ? bookmarks.removeAt(index) : null;
       try {
         await service.removeBookmark(id);
+        if (Get.isRegistered<FeedController>()) {
+          Get.find<FeedController>().decrementBookmarkCount(postId);
+        }
       } catch (_) {
         if (removed != null) {
           bookmarks.insert(index, removed);
@@ -38,6 +41,9 @@ class BookmarkController extends GetxController {
     } else {
       try {
         await service.bookmarkPost(userId, postId);
+        if (Get.isRegistered<FeedController>()) {
+          Get.find<FeedController>().incrementBookmarkCount(postId);
+        }
       } catch (_) {}
 
       try {

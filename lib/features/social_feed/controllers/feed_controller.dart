@@ -46,6 +46,7 @@ class FeedController extends GetxController {
   final _likeCounts = <String, int>{}.obs; // postId -> like count
   final _repostCounts = <String, int>{}.obs; // postId -> repost count
   final _commentCounts = <String, int>{}.obs; // postId -> comment count
+  final _bookmarkCounts = <String, int>{}.obs; // postId -> bookmark count
 
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
@@ -74,6 +75,7 @@ class FeedController extends GetxController {
           _likeCounts[id] = post.likeCount;
           _repostCounts[id] = post.repostCount;
           _commentCounts[id] = post.commentCount;
+          _bookmarkCounts[id] = post.bookmarkCount;
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             cached.insert(
@@ -96,6 +98,7 @@ class FeedController extends GetxController {
           _likeCounts.remove(id);
           _repostCounts.remove(id);
           _commentCounts.remove(id);
+          _bookmarkCounts.remove(id);
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
@@ -111,6 +114,7 @@ class FeedController extends GetxController {
           _likeCounts[id] = post.likeCount;
           _repostCounts[id] = post.repostCount;
           _commentCounts[id] = post.commentCount;
+          _bookmarkCounts[id] = post.bookmarkCount;
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
@@ -187,6 +191,7 @@ class FeedController extends GetxController {
       _likeCounts.assignAll({for (final p in enriched) p.id: p.likeCount});
       _repostCounts.assignAll({for (final p in enriched) p.id: p.repostCount});
       _commentCounts.assignAll({for (final p in enriched) p.id: p.commentCount});
+      _bookmarkCounts.assignAll({for (final p in enriched) p.id: p.bookmarkCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null && enriched.isNotEmpty) {
@@ -260,6 +265,7 @@ class FeedController extends GetxController {
           );
     _posts.insert(0, saved);
     _commentCounts[id] = saved.commentCount;
+    _bookmarkCounts[id] = saved.bookmarkCount;
     return id;
   }
 
@@ -460,6 +466,7 @@ class FeedController extends GetxController {
     _likeCounts.remove(postId);
     _repostCounts.remove(postId);
     _commentCounts.remove(postId);
+    _bookmarkCounts.remove(postId);
   }
 
   bool isPostLiked(String postId) => _likedIds.containsKey(postId);
@@ -467,6 +474,16 @@ class FeedController extends GetxController {
   int postLikeCount(String postId) => _likeCounts[postId] ?? 0;
   int postRepostCount(String postId) => _repostCounts[postId] ?? 0;
   int postCommentCount(String postId) => _commentCounts[postId] ?? 0;
+  int postBookmarkCount(String postId) => _bookmarkCounts[postId] ?? 0;
+
+  void incrementBookmarkCount(String postId) {
+    _bookmarkCounts[postId] = (_bookmarkCounts[postId] ?? 0) + 1;
+  }
+
+  void decrementBookmarkCount(String postId) {
+    _bookmarkCounts[postId] =
+        math.max(0, (_bookmarkCounts[postId] ?? 1) - 1);
+  }
 
   void incrementCommentCount(String postId) {
     _commentCounts[postId] = (_commentCounts[postId] ?? 0) + 1;

@@ -17,6 +17,7 @@ class ReactionBar extends StatefulWidget {
   final int commentCount;
   final int repostCount;
   final int shareCount;
+  final int bookmarkCount;
   final ReactionTarget target;
   final bool isReposted;
 
@@ -34,6 +35,7 @@ class ReactionBar extends StatefulWidget {
     this.commentCount = 0,
     this.repostCount = 0,
     this.shareCount = 0,
+    this.bookmarkCount = 0,
     this.target = ReactionTarget.post,
     this.isReposted = false,
   });
@@ -186,13 +188,13 @@ class _ReactionBarState extends State<ReactionBar>
             ),
           if (widget.onBookmark != null)
             buildItem(
-              icon:
+          icon:
                   widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
               label: widget.isBookmarked ? 'Remove bookmark' : 'Bookmark',
               onTap: widget.onBookmark,
               isActive: widget.isBookmarked,
               activeColor: Colors.yellow[700]!,
-              count: null,
+              count: widget.bookmarkCount,
               index: 3,
             ),
           if ((widget.onShare != null ||
