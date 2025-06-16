@@ -6,6 +6,7 @@ class FeedPost {
   final String userId;
   final String username;
   final String? userAvatar;
+  final String? displayName;
   final String content;
   final List<String> mediaUrls;
   final String? pollId;
@@ -28,6 +29,7 @@ class FeedPost {
     required this.userId,
     required this.username,
     this.userAvatar,
+    this.displayName,
     required this.content,
     this.mediaUrls = const [],
     this.pollId,
@@ -52,6 +54,7 @@ class FeedPost {
       userId: json['user_id'] ?? '',
       username: json['username'] ?? '',
       userAvatar: json['user_avatar'],
+      displayName: json['displayname'],
       content: json['content'] ?? '',
       mediaUrls: (json['media_urls'] as List?)?.cast<String>() ?? const [],
       pollId: json['poll_id'],
@@ -81,6 +84,7 @@ class FeedPost {
       'user_id': userId,
       'username': username,
       'user_avatar': userAvatar,
+      'displayname': displayName,
       'content': content,
       'media_urls': mediaUrls,
       'poll_id': pollId,

@@ -62,14 +62,54 @@ class FeedController extends GetxController {
       }
       final data = await service.fetchSortedPosts(_sortType.value, roomId: roomId);
       final filtered = data.where((p) => !ids.contains(p.userId)).toList();
-      _posts.assignAll(filtered);
-      _likeCounts.assignAll({for (final p in filtered) p.id: p.likeCount});
-      _repostCounts.assignAll({for (final p in filtered) p.id: p.repostCount});
-      _commentCounts.assignAll({for (final p in filtered) p.id: p.commentCount});
+      final profileService = Get.isRegistered<ProfileService>()
+          ? Get.find<ProfileService>()
+          : null;
+      final enriched = <FeedPost>[];
+      for (final post in filtered) {
+        String? avatar = post.userAvatar;
+        String? name = post.displayName;
+        if (profileService != null && (avatar == null || name == null)) {
+          try {
+            final profile = await profileService.fetchProfile(post.userId);
+            name ??= profile.displayName;
+            avatar ??= profile.profilePicture;
+          } catch (_) {}
+        }
+        enriched.add(
+          FeedPost(
+            id: post.id,
+            roomId: post.roomId,
+            userId: post.userId,
+            username: post.username,
+            userAvatar: avatar,
+            displayName: name,
+            content: post.content,
+            mediaUrls: post.mediaUrls,
+            pollId: post.pollId,
+            linkUrl: post.linkUrl,
+            linkMetadata: post.linkMetadata,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            shareCount: post.shareCount,
+            hashtags: post.hashtags,
+            mentions: post.mentions,
+            isEdited: post.isEdited,
+            isDeleted: post.isDeleted,
+            editedAt: post.editedAt,
+            createdAt: post.createdAt,
+          ),
+        );
+      }
+      _posts.assignAll(enriched);
+      _likeCounts.assignAll({for (final p in enriched) p.id: p.likeCount});
+      _repostCounts.assignAll({for (final p in enriched) p.id: p.repostCount});
+      _commentCounts.assignAll({for (final p in enriched) p.id: p.commentCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
-      if (uid != null && filtered.isNotEmpty) {
-        final ids = filtered.map((p) => p.id).toList();
+      if (uid != null && enriched.isNotEmpty) {
+        final ids = enriched.map((p) => p.id).toList();
         final likeMap =
             await service.getUserLikesBulk(ids, uid, itemType: 'post');
         _likedIds.assignAll({
