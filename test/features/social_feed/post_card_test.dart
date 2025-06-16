@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
 import 'package:myapp/features/social_feed/widgets/post_card.dart';
+import 'package:myapp/shared/utils/time_utils.dart';
 import 'package:myapp/features/social_feed/screens/post_detail_page.dart';
 import 'package:get/get.dart';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
@@ -13,13 +14,17 @@ import 'package:myapp/features/social_feed/models/post_repost.dart';
 import 'package:myapp/controllers/auth_controller.dart';
 
 void main() {
-  testWidgets('renders post content', (tester) async {
+  testWidgets('renders header elements', (tester) async {
+    final now = DateTime.now().subtract(const Duration(minutes: 5));
     final post = FeedPost(
       id: '1',
       roomId: 'r1',
       userId: 'u1',
       username: 'user',
+      displayName: 'Test User',
+      userAvatar: 'http://example.com/a.png',
       content: 'hello',
+      createdAt: now,
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -27,6 +32,10 @@ void main() {
       ),
     );
     expect(find.text('hello'), findsOneWidget);
+    expect(find.byType(CircleAvatar), findsOneWidget);
+    expect(find.text('Test User'), findsOneWidget);
+    expect(find.text('@user'), findsOneWidget);
+    expect(find.text(formatRelativeTime(now)), findsOneWidget);
   });
 
   testWidgets('like button toggles', (tester) async {
