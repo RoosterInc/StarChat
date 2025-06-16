@@ -31,9 +31,9 @@ Each function expects the target document ID in the request body:
 2. In the Appwrite Console, create a new function with runtime **Node.js 18**.
 3. Upload the ZIP as the deployment and set the entrypoint to the JS file name.
 4. Configure these environment variables for each function:
-   - `APPWRITE_ENDPOINT`
-   - `APPWRITE_PROJECT_ID`
-   - `APPWRITE_API_KEY`
+   - `APPWRITE_FUNCTION_API_ENDPOINT`
+   - `APPWRITE_FUNCTION_PROJECT_ID`
+   - The Appwrite API key must be provided in the request header `x-appwrite-key`
    - `APPWRITE_DATABASE_ID`
    - `FEED_POSTS_COLLECTION_ID` (for post-related functions)
    - `POST_COMMENTS_COLLECTION_ID` (for comment-related functions)
