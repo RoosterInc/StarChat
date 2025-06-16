@@ -25,6 +25,18 @@ class _ComposePostPageState extends State<ComposePostPage> {
   final _linkController = TextEditingController();
   XFile? _image;
 
+  @override
+  void initState() {
+    super.initState();
+    final auth = Get.find<AuthController>();
+    if (auth.userId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.snackbar('Error', 'Login required');
+        Get.back();
+      });
+    }
+  }
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();

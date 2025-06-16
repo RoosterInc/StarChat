@@ -29,6 +29,14 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
   @override
   void initState() {
     super.initState();
+    final auth = Get.find<AuthController>();
+    if (auth.userId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.snackbar('Error', 'Login required');
+        Get.back();
+      });
+      return;
+    }
     final commentsController = Get.find<CommentsController>();
     if (commentsController.comments.isEmpty ||
         commentsController.comments.first.postId !=
