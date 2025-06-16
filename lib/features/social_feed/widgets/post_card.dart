@@ -21,6 +21,9 @@ import '../../profile/screens/profile_page.dart';
 import '../../../bindings/profile_binding.dart';
 import 'package:appwrite/appwrite.dart';
 import '../../profile/services/profile_service.dart';
+import '../../profile/controllers/profile_controller.dart';
+import '../../profile/services/activity_service.dart';
+import '../../profile/controllers/activity_controller.dart';
 
 class PostCard extends StatelessWidget {
   final FeedPost post;
@@ -104,6 +107,80 @@ class PostCard extends StatelessWidget {
     controller.toggleBookmark(uid, post.id);
   }
 
+  void _ensureProfileBindings() {
+    final auth = Get.find<AuthController>();
+    if (!Get.isRegistered<ActivityService>()) {
+      Get.lazyPut<ActivityService>(
+        () => ActivityService(
+          databases: auth.databases,
+          databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+          collectionId:
+              dotenv.env['ACTIVITY_LOGS_COLLECTION_ID'] ?? 'activity_logs',
+        ),
+      );
+      Get.lazyPut<ActivityController>(
+        () => ActivityController(service: Get.find<ActivityService>()),
+      );
+    }
+    if (!Get.isRegistered<ProfileService>()) {
+      Get.lazyPut<ProfileService>(
+        () => ProfileService(
+          databases: auth.databases,
+          databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'StarChat_DB',
+          profilesCollection:
+              dotenv.env['USER_PROFILES_COLLECTION_ID'] ?? 'user_profiles',
+          followsCollection:
+              dotenv.env['FOLLOWS_COLLECTION_ID'] ?? 'follows',
+          blocksCollection:
+              dotenv.env['BLOCKS_COLLECTION_ID'] ?? 'blocked_users',
+        ),
+      );
+    }
+    if (!Get.isRegistered<ProfileController>()) {
+      Get.lazyPut<ProfileController>(() => ProfileController());
+    }
+  }
+
+  Future<void> _handleFollow() async {
+    _ensureProfileBindings();
+    final uid = Get.find<AuthController>().userId;
+    if (uid == null) {
+      Get.snackbar('Error', 'Login required');
+      return;
+    }
+    await Get.find<ProfileService>().followUser(uid, post.userId);
+    Get.snackbar('Followed', 'You followed @${post.username}');
+  }
+
+  Future<void> _handleBlock() async {
+    _ensureProfileBindings();
+    final uid = Get.find<AuthController>().userId;
+    if (uid == null) {
+      Get.snackbar('Error', 'Login required');
+      return;
+    }
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Block User'),
+        content: const Text('Are you sure you want to block this user?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await Get.find<ProfileService>().blockUser(uid, post.userId);
+      Get.snackbar('Blocked', 'User has been blocked');
+    }
+  }
+
 
   Future<void> _handleDelete(BuildContext context, FeedController controller) async {
     final confirm = await Get.dialog<bool>(
@@ -173,43 +250,49 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 const Spacer(),
-                if (auth.userId == post.userId) ...[
-                  if (canEdit)
-                    AccessibilityWrapper(
-                      semanticLabel: 'Edit post',
-                      isButton: true,
-                      child: AnimatedButton(
-                        onPressed: () {
-                          Get.to(() => EditPostPage(post: post));
-                        },
-                        child: const Text('Edit'),
+                MenuAnchor(
+                  builder: (context, menuController, _) => IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: 'Post options',
+                    onPressed: menuController.open,
+                  ),
+                  menuChildren: [
+                    if (auth.userId == post.userId && canEdit)
+                      MenuItemButton(
+                        onPressed: () => Get.to(() => EditPostPage(post: post)),
+                        child: const Text('Edit Post'),
                       ),
-                    ),
-                  if (canEdit) SizedBox(width: DesignTokens.xs(context)),
-                  AccessibilityWrapper(
-                    semanticLabel: 'Delete post',
-                    isButton: true,
-                    child: AnimatedButton(
-                      onPressed: () => _handleDelete(context, controller),
-                      child: const Text('Delete'),
-                    ),
-                  ),
-                ]
-                else if (auth.userId != null) ...[
-                  AccessibilityWrapper(
-                    semanticLabel: 'Report post',
-                    isButton: true,
-                    child: AnimatedButton(
-                      onPressed: () {
-                        Get.to(
-                          () => ReportPostPage(postId: post.id),
-                          binding: ReportBinding(),
-                        );
-                      },
-                      child: const Text('Report'),
-                    ),
-                  ),
-                ],
+                    if (auth.userId == post.userId)
+                      MenuItemButton(
+                        onPressed: () => _handleDelete(context, controller),
+                        child: const Text('Delete Post'),
+                      ),
+                    if (auth.userId != post.userId && auth.userId != null)
+                      MenuItemButton(
+                        onPressed: () {
+                          Get.to(
+                            () => ReportPostPage(postId: post.id),
+                            binding: ReportBinding(),
+                          );
+                        },
+                        child: const Text('Flag or Report Post'),
+                      ),
+                    if (auth.userId != post.userId && auth.userId != null)
+                      SubmenuButton(
+                        menuChildren: [
+                          MenuItemButton(
+                            onPressed: _handleFollow,
+                            child: const Text('Follow User'),
+                          ),
+                          MenuItemButton(
+                            onPressed: _handleBlock,
+                            child: const Text('Block User'),
+                          ),
+                        ],
+                        child: Text('@${post.username}'),
+                      ),
+                  ],
+                ),
               ],
             ),
             SizedBox(height: DesignTokens.sm(context)),
