@@ -51,6 +51,11 @@ class FeedController extends GetxController {
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
+  final _isLoadingMore = false.obs;
+  bool get isLoadingMore => _isLoadingMore.value;
+
+  String? _nextCursor;
+
   List<String> _limitHashtags(List<String> tags) =>
       tags.length > 10 ? tags.sublist(0, 10) : tags;
 
@@ -135,6 +140,7 @@ class FeedController extends GetxController {
 
   Future<void> loadPosts(String roomId, {List<String>? blockedIds}) async {
     _isLoading.value = true;
+    _nextCursor = null;
     try {
       List<String> ids = blockedIds ?? [];
       if (ids.isEmpty &&
@@ -207,8 +213,91 @@ class FeedController extends GetxController {
         });
       }
       _listenToRealtime(roomId);
+      if (enriched.isNotEmpty) _nextCursor = enriched.last.id;
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMorePosts() async {
+    if (_isLoadingMore.value || _nextCursor == null || _roomId == null) return;
+    _isLoadingMore.value = true;
+    try {
+      List<String> blocked = [];
+      if (Get.isRegistered<AuthController>() && Get.isRegistered<ProfileService>()) {
+        final uid = Get.find<AuthController>().userId;
+        if (uid != null) {
+          blocked = Get.find<ProfileService>().getBlockedIds(uid);
+        }
+      }
+      final data = await service.fetchSortedPosts(
+        _sortType.value,
+        roomId: _roomId,
+        cursor: _nextCursor,
+      );
+      final filtered = data.where((p) => !blocked.contains(p.userId)).toList();
+      final profileService = Get.isRegistered<ProfileService>()
+          ? Get.find<ProfileService>()
+          : null;
+      final enriched = <FeedPost>[];
+      for (final post in filtered) {
+        String? avatar = post.userAvatar;
+        String? name = post.displayName;
+        if (profileService != null && (avatar == null || name == null)) {
+          try {
+            final profile = await profileService.fetchProfile(post.userId);
+            name ??= profile.displayName;
+            avatar ??= profile.profilePicture;
+          } catch (_) {}
+        }
+        enriched.add(
+          FeedPost(
+            id: post.id,
+            roomId: post.roomId,
+            userId: post.userId,
+            username: post.username,
+            userAvatar: avatar,
+            displayName: name,
+            content: post.content,
+            mediaUrls: post.mediaUrls,
+            pollId: post.pollId,
+            linkUrl: post.linkUrl,
+            linkMetadata: post.linkMetadata,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            shareCount: post.shareCount,
+            hashtags: post.hashtags,
+            mentions: post.mentions,
+            isEdited: post.isEdited,
+            isDeleted: post.isDeleted,
+            editedAt: post.editedAt,
+            createdAt: post.createdAt,
+          ),
+        );
+      }
+      _posts.addAll(enriched);
+      _likeCounts.addAll({for (final p in enriched) p.id: p.likeCount});
+      _repostCounts.addAll({for (final p in enriched) p.id: p.repostCount});
+      _commentCounts.addAll({for (final p in enriched) p.id: p.commentCount});
+      _bookmarkCount.addAll({for (final p in enriched) p.id: p.bookmarkCount});
+      final auth = Get.find<AuthController>();
+      final uid = auth.userId;
+      if (uid != null && enriched.isNotEmpty) {
+        final ids = enriched.map((p) => p.id).toList();
+        final likeMap =
+            await service.getUserLikesBulk(ids, uid, itemType: 'post');
+        _likedIds.addAll({
+          for (final entry in likeMap.entries) entry.key: entry.value.id
+        });
+        final repostMap = await service.getUserRepostsBulk(ids, uid);
+        _repostedIds.addAll({
+          for (final entry in repostMap.entries) entry.key: entry.value.id
+        });
+      }
+      if (data.isNotEmpty) _nextCursor = data.last.id;
+    } finally {
+      _isLoadingMore.value = false;
     }
   }
 

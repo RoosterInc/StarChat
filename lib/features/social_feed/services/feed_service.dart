@@ -1367,11 +1367,18 @@ class FeedService {
     }
   }
 
-  Future<List<FeedPost>> fetchSortedPosts(String sortType,
-      {String? roomId}) async {
-    final queries = <String>[Query.limit(20)];
+  Future<List<FeedPost>> fetchSortedPosts(
+    String sortType, {
+    String? roomId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final queries = <String>[Query.limit(limit)];
     if (roomId != null) {
       queries.add(Query.equal('room_id', roomId));
+    }
+    if (cursor != null) {
+      queries.add(Query.cursorAfter(cursor));
     }
     switch (sortType) {
       case 'chronological':
@@ -1396,18 +1403,30 @@ class FeedService {
           .map((e) => FeedPost.fromJson(e.data))
           .where((p) => !p.isDeleted)
           .toList();
+      final existing =
+          (postsBox.get(key, defaultValue: []) as List).cast<dynamic>();
       final cache = posts
           .map((e) =>
               {...e.toJson(), '_cachedAt': DateTime.now().toIso8601String()})
           .toList();
-      await postsBox.put(key, cache);
+      await postsBox.put(key, cursor == null ? cache : [...existing, ...cache]);
       return posts;
     } catch (_) {
       final cached = postsBox.get(key, defaultValue: []) as List;
-      return cached
+      final expiry = DateTime.now().subtract(const Duration(days: 30));
+      var list = cached
+          .where((e) {
+            final ts = DateTime.tryParse(e['_cachedAt'] ?? '');
+            return ts == null || ts.isAfter(expiry);
+          })
           .map((e) => FeedPost.fromJson(Map<String, dynamic>.from(e)))
           .where((p) => !p.isDeleted)
           .toList();
+      if (cursor != null) {
+        final index = list.indexWhere((p) => p.id == cursor);
+        if (index != -1) list = list.sublist(index + 1);
+      }
+      return list.take(limit).toList();
     }
   }
 

@@ -69,9 +69,20 @@ class FakeFeedService extends FeedService {
   }
 
   @override
-  Future<List<FeedPost>> fetchSortedPosts(String sortType, {String? roomId}) async {
-    if (roomId == null) return posts;
-    return posts.where((p) => p.roomId == roomId).toList();
+  Future<List<FeedPost>> fetchSortedPosts(
+    String sortType, {
+    String? roomId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final list = roomId == null
+        ? posts
+        : posts.where((p) => p.roomId == roomId).toList();
+    if (cursor != null) {
+      final index = list.indexWhere((p) => p.id == cursor);
+      if (index != -1) return list.sublist(index + 1).take(limit).toList();
+    }
+    return list.take(limit).toList();
   }
 }
 
