@@ -37,23 +37,40 @@ class RecordingFeedService extends FeedService {
 
 class FakeDatabases extends Databases {
   FakeDatabases() : super(Client());
+
+  List<String> _parseNames(String query) {
+    final start = query.indexOf('[');
+    if (start != -1) {
+      final end = query.indexOf(']', start);
+      final inside =
+          query.substring(start + 1, end).replaceAll('"', '').trim();
+      if (inside.isEmpty) return [];
+      return inside.split(',').map((e) => e.trim()).toList();
+    }
+    final match = RegExp(r'"([^"]+)"').firstMatch(query);
+    return match != null ? [match.group(1)!] : [];
+  }
+
   @override
   Future<models.DocumentList> listDocuments({
     required String databaseId,
     required String collectionId,
     List<String>? queries,
   }) async {
-    return models.DocumentList(total: 1, documents: [
-      models.Document.fromMap({
-        '\$id': 'uid',
-        '\$collectionId': collectionId,
-        '\$databaseId': databaseId,
-        '\$createdAt': '',
-        '\$updatedAt': '',
-        '\$permissions': [],
-        'username': 'user0',
-      })
-    ]);
+    final query = queries?.first ?? '';
+    final names = _parseNames(query);
+    final docs = names
+        .map((n) => models.Document.fromMap({
+              '\$id': n,
+              '\$collectionId': collectionId,
+              '\$databaseId': databaseId,
+              '\$createdAt': '',
+              '\$updatedAt': '',
+              '\$permissions': [],
+              'username': n,
+            }))
+        .toList();
+    return models.DocumentList(total: docs.length, documents: docs);
   }
 }
 
