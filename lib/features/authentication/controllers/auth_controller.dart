@@ -140,6 +140,7 @@ class AuthController extends GetxController {
       logger.i(
           "[Auth] checkExistingSession: account.get() succeeded. User ID: ${session.$id}, Email: ${session.email}");
 
+      userId = session.$id;
       bool hasUsername = await ensureUsername();
       if (hasUsername) {
         logger.i(
@@ -318,7 +319,8 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      await account.get();
+      final session = await account.get();
+      userId = session.$id;
       Get.offAllNamed('/home');
       clearControllers();
       isOTPSent.value = false;
@@ -337,11 +339,12 @@ class AuthController extends GetxController {
         return;
       }
       try {
-        await account.createSession(
+        final session = await account.createSession(
           userId: userId!,
           secret: otp,
         );
 
+        userId = session.$id;
         otpError.value = '';
         bool hasUsername = await ensureUsername();
         if (hasUsername) {
@@ -474,6 +477,7 @@ class AuthController extends GetxController {
     try {
       final session = await account.get();
       final uid = session.$id;
+      userId = uid;
       logger.i(
           "[Auth] ensureUsername: Fetched session successfully. User ID for query: $uid, Email: ${session.email}");
 

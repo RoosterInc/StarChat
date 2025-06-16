@@ -41,10 +41,11 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
     if (!Get.isRegistered<NotificationService>()) return;
     try {
       final auth = Get.find<AuthController>();
-      if (authorId == auth.userId) return;
+      final uid = auth.userId;
+      if (uid == null || authorId == uid) return;
       await Get.find<NotificationService>().createNotification(
         authorId,
-        auth.userId ?? '',
+        uid,
         'reply',
         itemId: commentId,
         itemType: 'comment',
@@ -123,7 +124,11 @@ class _CommentThreadPageState extends State<CommentThreadPage> {
                     }
 
                     final root = widget.rootComment;
-                    final uid = auth.userId ?? '';
+                    final uid = auth.userId;
+                    if (uid == null) {
+                      Get.snackbar('Error', 'Login required');
+                      return;
+                    }
                     final uname = auth.username.value.isNotEmpty
                         ? auth.username.value
                         : 'You';

@@ -95,8 +95,13 @@ class PostCard extends StatelessWidget {
     }
   }
 
-  void _handleBookmark(BookmarkController controller, String userId) {
-    controller.toggleBookmark(userId, post.id);
+  void _handleBookmark(BookmarkController controller) {
+    final uid = Get.find<AuthController>().userId;
+    if (uid == null) {
+      Get.snackbar('Error', 'Login required');
+      return;
+    }
+    controller.toggleBookmark(uid, post.id);
   }
 
 
@@ -263,7 +268,7 @@ class PostCard extends StatelessWidget {
               onLike: () => _handleLike(controller),
               onComment: _handleComment,
               onRepost: () => _handleRepost(controller),
-              onBookmark: () => _handleBookmark(bookmarkController, auth.userId ?? ''),
+              onBookmark: () => _handleBookmark(bookmarkController),
               postId: post.id,
               isReposted: controller.isPostReposted(post.id),
               isLiked: controller.isPostLiked(post.id),
