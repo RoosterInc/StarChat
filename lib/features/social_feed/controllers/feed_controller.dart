@@ -20,6 +20,10 @@ class FeedController extends GetxController {
   final _posts = <FeedPost>[].obs;
   List<FeedPost> get posts => _posts;
 
+  final _pendingPosts = <FeedPost>[];
+  final unseenCount = 0.obs;
+  bool _initialLoadComplete = false;
+
   Realtime? _realtime;
   RealtimeSubscription? _subscription;
   String? _roomId;
@@ -76,7 +80,12 @@ class FeedController extends GetxController {
       if (event.events.any((e) => e.contains('.create'))) {
         final post = FeedPost.fromJson(payload);
         if (!_posts.any((p) => p.id == id) && !post.isDeleted) {
-          _posts.insert(0, post);
+          if (_initialLoadComplete) {
+            _pendingPosts.insert(0, post);
+            unseenCount.value = _pendingPosts.length;
+          } else {
+            _posts.insert(0, post);
+          }
           _likeCounts[id] = post.likeCount;
           _repostCounts[id] = post.repostCount;
           _commentCounts[id] = post.commentCount;
@@ -94,9 +103,14 @@ class FeedController extends GetxController {
           event.events.any((e) => e.contains('.delete'))) {
         final post = FeedPost.fromJson(payload);
         final index = _posts.indexWhere((p) => p.id == id);
+        final pendingIndex = _pendingPosts.indexWhere((p) => p.id == id);
         if (post.isDeleted || event.events.any((e) => e.contains('.delete'))) {
           if (index != -1) {
             _posts.removeAt(index);
+          }
+          if (pendingIndex != -1) {
+            _pendingPosts.removeAt(pendingIndex);
+            unseenCount.value = _pendingPosts.length;
           }
           _likedIds.remove(id);
           _repostedIds.remove(id);
@@ -115,6 +129,8 @@ class FeedController extends GetxController {
         } else {
           if (index != -1) {
             _posts[index] = post;
+          } else if (pendingIndex != -1) {
+            _pendingPosts[pendingIndex] = post;
           }
           _likeCounts[id] = post.likeCount;
           _repostCounts[id] = post.repostCount;
@@ -141,6 +157,9 @@ class FeedController extends GetxController {
   Future<void> loadPosts(String roomId, {List<String>? blockedIds}) async {
     _isLoading.value = true;
     _nextCursor = null;
+    _initialLoadComplete = false;
+    _pendingPosts.clear();
+    unseenCount.value = 0;
     try {
       List<String> ids = blockedIds ?? [];
       if (ids.isEmpty &&
@@ -214,6 +233,7 @@ class FeedController extends GetxController {
       }
       _listenToRealtime(roomId);
       if (enriched.isNotEmpty) _nextCursor = enriched.last.id;
+      _initialLoadComplete = true;
     } finally {
       _isLoading.value = false;
     }
@@ -299,6 +319,17 @@ class FeedController extends GetxController {
     } finally {
       _isLoadingMore.value = false;
     }
+  }
+
+  void refreshFeed() {
+    if (_pendingPosts.isEmpty) return;
+    _posts.insertAll(0, _pendingPosts);
+    _likeCounts.addAll({for (final p in _pendingPosts) p.id: p.likeCount});
+    _repostCounts.addAll({for (final p in _pendingPosts) p.id: p.repostCount});
+    _commentCounts.addAll({for (final p in _pendingPosts) p.id: p.commentCount});
+    _bookmarkCount.addAll({for (final p in _pendingPosts) p.id: p.bookmarkCount});
+    _pendingPosts.clear();
+    unseenCount.value = 0;
   }
 
   Future<String> createPost(FeedPost post) async {
