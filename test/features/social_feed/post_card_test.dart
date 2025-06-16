@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/features/social_feed/models/feed_post.dart';
 import 'package:myapp/features/social_feed/widgets/post_card.dart';
+import 'package:myapp/features/social_feed/screens/post_detail_page.dart';
 import 'package:get/get.dart';
 import 'package:myapp/features/social_feed/controllers/feed_controller.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
@@ -102,6 +103,25 @@ void main() {
     await tester.pump();
 
     expect(find.bySemanticsLabel('Repost'), findsOneWidget);
+  });
+
+  testWidgets('tapping card navigates to detail page', (tester) async {
+    final post = FeedPost(
+      id: '1',
+      roomId: 'r1',
+      userId: 'u1',
+      username: 'user',
+      content: 'hello',
+    );
+
+    await tester.pumpWidget(
+      GetMaterialApp(home: PostCard(post: post)),
+    );
+
+    await tester.tap(find.byType(PostCard));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostDetailPage), findsOneWidget);
   });
 }
 

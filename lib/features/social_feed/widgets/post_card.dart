@@ -144,10 +144,16 @@ class PostCard extends StatelessWidget {
     final canEdit =
         DateTime.now().difference(post.editedAt ?? post.createdAt).inMinutes <=
             30;
-    return Obx(
-      () => GlassmorphicCard(
-        padding: DesignTokens.md(context).all,
-        child: Column(
+    return InkWell(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMd(context)),
+      onTap: () {
+        MicroInteractions.selectionHaptic();
+        Get.to(() => PostDetailPage(post: post));
+      },
+      child: Obx(
+        () => GlassmorphicCard(
+          padding: DesignTokens.md(context).all,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (controller.isPostReposted(post.id))
@@ -281,6 +287,7 @@ class PostCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
