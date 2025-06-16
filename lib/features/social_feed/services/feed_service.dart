@@ -393,7 +393,7 @@ class FeedService {
         databaseId: databaseId,
         collectionId: commentsCollectionId,
         documentId: ID.unique(),
-        data: comment.toJson(),
+        data: comment.toJson(includeId: false),
       );
       id = doc.data['\$id'] ?? doc.data['id'];
       await functions.createExecution(
@@ -449,8 +449,7 @@ class FeedService {
       await commentsBox.put(
         comment.id,
         {
-          ...comment.toJson(),
-          'id': comment.id,
+          ...comment.toJson(includeId: true),
           '_cachedAt': DateTime.now().toIso8601String(),
         },
       );
@@ -458,17 +457,13 @@ class FeedService {
       final current =
           (commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
       current.add({
-        ...comment.toJson(),
-        'id': comment.id,
+        ...comment.toJson(includeId: true),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
       await commentsBox.put(listKey, current);
       await _addToBoxWithLimit(queueBox, {
         'action': 'comment',
-        'data': {
-          ...comment.toJson(),
-          'id': comment.id,
-        },
+        'data': comment.toJson(includeId: true),
         '_cachedAt': DateTime.now().toIso8601String(),
       });
     }

@@ -47,6 +47,7 @@ class _RecordingFunctions extends Functions {
 
 class _FakeDatabases extends Databases {
   _FakeDatabases() : super(Client());
+  Map<dynamic, dynamic>? lastData;
 
   @override
   Future<Document> createDocument({
@@ -56,6 +57,7 @@ class _FakeDatabases extends Databases {
     required Map<dynamic, dynamic> data,
     List<String>? permissions,
   }) async {
+    lastData = data;
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -114,6 +116,7 @@ void main() {
   late FeedService service;
   late _RecordingNotificationService notification;
   late _RecordingFunctions functions;
+  late _FakeDatabases db;
 
   setUp(() async {
     dir = await Directory.systemTemp.createTemp();
@@ -133,9 +136,10 @@ void main() {
     }
     functions = _RecordingFunctions();
     notification = _RecordingNotificationService();
+    db = _FakeDatabases();
     Get.put<NotificationService>(notification);
     service = FeedService(
-      databases: _FakeDatabases(),
+      databases: db,
       storage: Storage(Client()),
       functions: functions,
       databaseId: 'db',
@@ -173,5 +177,20 @@ void main() {
     final cached = Hive.box('posts').get('key') as List;
     expect(cached.first['comment_count'], 1);
     expect(notification.calls, 1);
+  });
+
+  test('createComment sends data without id', () async {
+    final comment = PostComment(
+      id: 'temp',
+      postId: 'p2',
+      userId: 'actor',
+      username: 'name',
+      content: 'hello',
+    );
+
+    await service.createComment(comment);
+
+    expect(db.lastData?['id'], isNull);
+    expect(db.lastData?['post_id'], 'p2');
   });
 }
