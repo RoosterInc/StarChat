@@ -92,9 +92,6 @@ class ReactionBar extends StatelessWidget {
     final children = <Widget>[];
 
     void addItem(Widget item) {
-      if (children.isNotEmpty) {
-        children.add(SizedBox(width: DesignTokens.sm(context)));
-      }
       children.add(item);
     }
 
@@ -168,6 +165,10 @@ class ReactionBar extends StatelessWidget {
       );
     }
 
-    return Row(children: children);
+    return Wrap(
+      spacing: DesignTokens.sm(context),
+      runSpacing: DesignTokens.sm(context),
+      children: children,
+    );
   }
 }
