@@ -143,12 +143,16 @@ class PostCard extends StatelessWidget {
 
   Future<void> _handleFollow() async {
     _ensureProfileBindings();
-    final uid = Get.find<AuthController>().userId;
+    final auth = Get.find<AuthController>();
+    final uid = auth.userId;
     if (uid == null) {
       Get.snackbar('Error', 'Login required');
       return;
     }
-    await Get.find<ProfileService>().followUser(uid, post.userId);
+    final service = Get.find<ProfileService>();
+    final alreadyFollowing = await service.isFollowing(uid, post.userId);
+    if (alreadyFollowing) return;
+    await Get.find<ProfileController>().followUser(post.userId);
     Get.snackbar('Followed', 'You followed @${post.username}');
   }
 
@@ -176,7 +180,7 @@ class PostCard extends StatelessWidget {
       ),
     );
     if (confirm == true) {
-      await Get.find<ProfileService>().blockUser(uid, post.userId);
+      await Get.find<ProfileController>().blockUser(post.userId);
       Get.snackbar('Blocked', 'User has been blocked');
     }
   }
