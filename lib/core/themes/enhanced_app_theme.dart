@@ -86,7 +86,7 @@ class EnhancedAppTheme {
       ),
       indicatorColor: _lightColorScheme.primaryContainer,
     ),
-    cardTheme: const CardThemeData(
+    cardTheme: CardThemeData(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -192,7 +192,7 @@ class EnhancedAppTheme {
       color: _lightColorScheme.outlineVariant,
       thickness: 1,
     ),
-    dialogTheme: const DialogThemeData(
+    dialogTheme: DialogThemeData(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: _lightColorScheme.surface,
@@ -286,7 +286,7 @@ class EnhancedAppTheme {
       ),
       indicatorColor: _darkColorScheme.primaryContainer,
     ),
-    cardTheme: const CardThemeData(
+    cardTheme: CardThemeData(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -392,7 +392,7 @@ class EnhancedAppTheme {
       color: _darkColorScheme.outlineVariant,
       thickness: 1,
     ),
-    dialogTheme: const DialogThemeData(
+    dialogTheme: DialogThemeData(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: _darkColorScheme.surface,
