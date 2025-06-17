@@ -9,6 +9,7 @@ import 'package:myapp/features/social_feed/services/feed_service.dart';
 class FakeDatabases extends Databases {
   FakeDatabases() : super(Client());
   final List<Map<String, dynamic>> updates = [];
+  final Map<String, Map<String, dynamic>> docs = {};
 
   @override
   @override
@@ -19,6 +20,7 @@ class FakeDatabases extends Databases {
     required Map<dynamic, dynamic> data,
     List<String>? permissions,
   }) async {
+    docs[documentId] = Map<String, dynamic>.from(data);
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -38,6 +40,26 @@ class FakeDatabases extends Databases {
   }) async {}
 
   @override
+  Future<Document> getDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    List<String>? queries,
+  }) async {
+    final data = docs[documentId] ?? {};
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      'user_id': 'owner',
+      ...data,
+    });
+  }
+
+  @override
   Future<Document> updateDocument({
     required String databaseId,
     required String collectionId,
@@ -50,6 +72,11 @@ class FakeDatabases extends Databases {
       'documentId': documentId,
       'data': data,
     });
+    final existing = docs[documentId] ?? {};
+    docs[documentId] = {
+      ...existing,
+      ...?data,
+    };
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -57,7 +84,7 @@ class FakeDatabases extends Databases {
       '\$createdAt': '',
       '\$updatedAt': '',
       '\$permissions': [],
-      ...?data,
+      ...docs[documentId]!,
     });
   }
 }
@@ -131,7 +158,7 @@ void main() {
       validateReactionFunctionId: 'validate',
     );
     await service.createRepost({'post_id': '1', 'user_id': 'u'});
-    expect(db.updates.last['data'], {'repost_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'repost_count': 1});
   });
 
   test('deleteRepost triggers decrement function', () async {
@@ -151,7 +178,7 @@ void main() {
       validateReactionFunctionId: 'validate',
     );
     await service.deleteRepost('r1', '1');
-    expect(db.updates.last['data'], {'repost_count': {'$increment': -1}});
+    expect(db.updates.last['data'], {'repost_count': -1});
   });
 
   test('queued repost executes function on sync', () async {
@@ -185,6 +212,6 @@ void main() {
       linkMetadataFunctionId: 'link',
     );
     await service.syncQueuedActions();
-    expect(onlineDb.updates.last['data'], {'repost_count': {'$increment': 1}});
+    expect(onlineDb.updates.last['data'], {'repost_count': 1});
   });
 }

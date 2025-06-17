@@ -165,7 +165,7 @@ void main() {
     await service.createComment(comment);
 
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'comment_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'comment_count': 1});
     final cached = Hive.box('posts').get('key') as List;
     expect(cached.first['comment_count'], 1);
     expect(notification.calls, 1);

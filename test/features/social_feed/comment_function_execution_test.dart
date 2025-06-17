@@ -11,6 +11,7 @@ import 'package:myapp/features/social_feed/models/post_comment.dart';
 class FakeDatabases extends Databases {
   FakeDatabases() : super(Client());
   final List<Map<String, dynamic>> updates = [];
+  final Map<String, Map<String, dynamic>> docs = {};
 
   @override
   Future<Document> createDocument({
@@ -20,6 +21,26 @@ class FakeDatabases extends Databases {
     required Map<dynamic, dynamic> data,
     List<String>? permissions,
   }) async {
+    docs[documentId] = Map<String, dynamic>.from(data);
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...data,
+    });
+  }
+
+  @override
+  Future<Document> getDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    List<String>? queries,
+  }) async {
+    final data = docs[documentId] ?? {};
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -44,6 +65,11 @@ class FakeDatabases extends Databases {
       'documentId': documentId,
       'data': data,
     });
+    final existing = docs[documentId] ?? {};
+    docs[documentId] = {
+      ...existing,
+      ...?data,
+    };
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -51,7 +77,7 @@ class FakeDatabases extends Databases {
       '\$createdAt': '',
       '\$updatedAt': '',
       '\$permissions': [],
-      ...?data,
+      ...docs[documentId]!,
     });
   }
 }
@@ -110,7 +136,7 @@ void main() {
     );
     await service.createComment(comment);
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'comment_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'comment_count': 1});
     final cached = Hive.box('posts').get('k') as List;
     expect(cached.first['comment_count'], 1);
   });
@@ -133,9 +159,9 @@ void main() {
     await service.createComment(reply);
     expect(db.updates.length, 2);
     expect(db.updates.first['collectionId'], 'posts');
-    expect(db.updates.first['data'], {'comment_count': {'$increment': 1}});
+    expect(db.updates.first['data'], {'comment_count': 1});
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'reply_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'reply_count': 1});
     final cachedComments = Hive.box('comments').get('c_post') as List;
     expect(cachedComments.first['reply_count'], 1);
     final cachedPosts = Hive.box('posts').get('k') as List;
@@ -158,7 +184,7 @@ void main() {
     );
     await service.deleteComment(comment);
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'comment_count': {'$increment': -1}});
+    expect(db.updates.last['data'], {'comment_count': -1});
     final post = Hive.box('posts').get('k') as List;
     expect(post.first['comment_count'], 1);
     final cached = Hive.box('comments').get('c_post') as List;
@@ -180,7 +206,7 @@ void main() {
     );
     await service.deleteComment(reply);
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'reply_count': {'$increment': -1}});
+    expect(db.updates.last['data'], {'reply_count': -1});
     final cached = Hive.box('comments').get('c_post') as List;
     expect(cached.first['reply_count'], 0);
   });

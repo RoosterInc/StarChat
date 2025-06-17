@@ -127,6 +127,30 @@ class FeedService {
   List<String> _limitMentions(List<String> names) =>
       names.length > 10 ? names.sublist(0, 10) : names;
 
+  Future<void> _incrementField({
+    required String collectionId,
+    required String documentId,
+    required String field,
+    required int delta,
+  }) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: documentId,
+      );
+      final current = (doc.data[field] ?? 0) as int;
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: documentId,
+        data: {field: current + delta},
+      );
+    } catch (e, st) {
+      logger.e('increment $field failed', error: e, stackTrace: st);
+    }
+  }
+
   Future<bool> validateReaction(
     String type,
     String itemId,
@@ -461,22 +485,18 @@ class FeedService {
         data: comment.toJson(includeId: false, includeMentions: true),
       );
       id = doc.data['\$id'] ?? doc.data['id'];
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: comment.postId,
-          data: {
-            'comment_count': {r'$increment': 1}
-          },
+        field: 'comment_count',
+        delta: 1,
       );
       if (comment.parentId != null) {
-        await databases.updateDocument(
-          databaseId: databaseId,
+        await _incrementField(
           collectionId: commentsCollectionId,
           documentId: comment.parentId!,
-          data: {
-            'reply_count': {r'$increment': 1}
-          },
+          field: 'reply_count',
+          delta: 1,
         );
         if (Get.isRegistered<NotificationService>()) {
           try {
@@ -601,22 +621,18 @@ class FeedService {
         data: like,
       );
       if (like['item_type'] == 'comment') {
-        await databases.updateDocument(
-          databaseId: databaseId,
+        await _incrementField(
           collectionId: commentsCollectionId,
           documentId: like['item_id'],
-          data: {
-            'like_count': {r'$increment': 1}
-          },
+          field: 'like_count',
+          delta: 1,
         );
       } else {
-        await databases.updateDocument(
-          databaseId: databaseId,
+        await _incrementField(
           collectionId: postsCollectionId,
           documentId: like['item_id'],
-          data: {
-            'like_count': {r'$increment': 1}
-          },
+          field: 'like_count',
+          delta: 1,
         );
       }
       if (Get.isRegistered<NotificationService>()) {
@@ -681,13 +697,11 @@ class FeedService {
         documentId: ID.unique(),
         data: repost,
       );
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: repost['post_id'],
-        data: {
-          'repost_count': {r'$increment': 1}
-        },
+        field: 'repost_count',
+        delta: 1,
       );
       try {
         final res = await databases.getDocument(
@@ -727,13 +741,11 @@ class FeedService {
         collectionId: repostsCollectionId,
         documentId: repostId,
       );
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: postId,
-        data: {
-          'repost_count': {r'$increment': -1}
-        },
+        field: 'repost_count',
+        delta: -1,
       );
     } catch (e, st) {
       logger.e('deleteRepost failed', error: e, stackTrace: st);
@@ -845,22 +857,18 @@ class FeedService {
         documentId: likeId,
       );
       if (itemType == 'comment') {
-        await databases.updateDocument(
-          databaseId: databaseId,
+        await _incrementField(
           collectionId: commentsCollectionId,
           documentId: itemId,
-          data: {
-            'like_count': {r'$increment': -1}
-          },
+          field: 'like_count',
+          delta: -1,
         );
       } else {
-        await databases.updateDocument(
-          databaseId: databaseId,
+        await _incrementField(
           collectionId: postsCollectionId,
           documentId: itemId,
-          data: {
-            'like_count': {r'$increment': -1}
-          },
+          field: 'like_count',
+          delta: -1,
         );
       }
     } catch (e, st) {
@@ -1210,13 +1218,11 @@ class FeedService {
           'created_at': DateTime.now().toIso8601String(),
         },
       );
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: postId,
-        data: {
-          'bookmark_count': {r'$increment': 1}
-        },
+        field: 'bookmark_count',
+        delta: 1,
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
@@ -1277,13 +1283,11 @@ class FeedService {
         collectionId: bookmarksCollectionId,
         documentId: bookmarkId,
       );
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: postId,
-        data: {
-          'bookmark_count': {r'$increment': -1}
-        },
+        field: 'bookmark_count',
+        delta: -1,
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
@@ -1342,18 +1346,13 @@ class FeedService {
         documentId: comment.id,
         data: {'is_deleted': true},
       );
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId:
             comment.parentId == null ? postsCollectionId : commentsCollectionId,
         documentId:
             comment.parentId == null ? comment.postId : comment.parentId!,
-        data: {
-          if (comment.parentId == null)
-            'comment_count': {r'$increment': -1}
-          else
-            'reply_count': {r'$increment': -1}
-        },
+        field: comment.parentId == null ? 'comment_count' : 'reply_count',
+        delta: -1,
       );
       for (final key in commentsBox.keys) {
         final cached = commentsBox.get(key, defaultValue: []) as List;
@@ -1633,13 +1632,11 @@ class FeedService {
 
   Future<String> sharePost(String postId) async {
     try {
-      await databases.updateDocument(
-        databaseId: databaseId,
+      await _incrementField(
         collectionId: postsCollectionId,
         documentId: postId,
-        data: {
-          'share_count': {r'$increment': 1}
-        },
+        field: 'share_count',
+        delta: 1,
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
