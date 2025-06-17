@@ -14,6 +14,7 @@ import '../../bookmarks/models/bookmark.dart';
 import '../../notifications/services/notification_service.dart';
 import '../controllers/comments_controller.dart';
 import 'mention_service.dart';
+import '../../../shared/utils/logger.dart';
 
 Future<XFile?> _compressImage(String path) async {
   return FlutterImageCompress.compressAndGetFile(
@@ -143,7 +144,8 @@ class FeedService {
       final data =
           jsonDecode(result.responseBody) as Map<String, dynamic>? ?? {};
       return data['duplicate'] == true;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('validateReaction failed', error: e, stackTrace: st);
       return false;
     }
   }
@@ -173,7 +175,8 @@ class FeedService {
           .toList();
       await postsBox.put('posts_$roomId', cache);
       return posts;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('getPosts failed', error: e, stackTrace: st);
       final cached = postsBox.get('posts_$roomId', defaultValue: []) as List;
       final expiry = DateTime.now().subtract(const Duration(days: 30));
       return cached
@@ -210,7 +213,8 @@ class FeedService {
         documentId: postId,
       );
       return FeedPost.fromJson(doc.data);
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('getPostById failed', error: e, stackTrace: st);
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
         for (final item in cached) {
@@ -261,7 +265,8 @@ class FeedService {
         data: toSave.toJson(),
       );
       return doc.data['\$id'] ?? doc.data['id'];
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createPost failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'post',
         'data': toSave.toJson(),
@@ -307,7 +312,8 @@ class FeedService {
         createdAt: now,
       );
       return await createPost(post);
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createPostWithImage failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(postQueueBox, {
         'action': 'post_with_image',
         'user_id': userId,
@@ -359,7 +365,8 @@ class FeedService {
         createdAt: now2,
       );
       return await createPost(post);
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createPostWithLink failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'post_with_link',
         'user_id': userId,
@@ -409,7 +416,8 @@ class FeedService {
         cursor == null ? cache : [...existing, ...cache],
       );
       return comments;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('getComments failed', error: e, stackTrace: st);
       final listKey = 'comments_$postId';
       final cachedList = (commentsBox.get(listKey, defaultValue: []) as List)
           .map((e) => Map<String, dynamic>.from(e));
@@ -487,7 +495,9 @@ class FeedService {
                 itemType: 'comment',
               );
             }
-          } catch (_) {}
+          } catch (e, st) {
+            logger.e('notify parent comment failed', error: e, stackTrace: st);
+          }
         }
       }
 
@@ -508,9 +518,12 @@ class FeedService {
               itemType: 'post',
             );
           }
-        } catch (_) {}
+        } catch (e, st) {
+          logger.e('notify post owner failed', error: e, stackTrace: st);
+        }
       }
-      } catch (_) {
+      } catch (e, st) {
+      logger.e('createComment failed', error: e, stackTrace: st);
       await commentsBox.put(
         comment.id,
         {
@@ -643,9 +656,12 @@ class FeedService {
               itemType: like['item_type'],
             );
           }
-        } catch (_) {}
+        } catch (e, st) {
+          logger.e('notify like owner failed', error: e, stackTrace: st);
+        }
       }
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createLike failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'like',
         'data': like,
@@ -689,9 +705,12 @@ class FeedService {
             itemType: 'post',
           );
         }
-      } catch (_) {}
+      } catch (e, st) {
+        logger.e('notify repost owner failed', error: e, stackTrace: st);
+      }
       return doc.$id;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createRepost failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'repost',
         'data': repost,
@@ -716,7 +735,8 @@ class FeedService {
           'repost_count': {'$increment': -1}
         },
       );
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('deleteRepost failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'delete_repost',
         'id': repostId,
@@ -764,7 +784,8 @@ class FeedService {
           'hashtag': tag,
           'last_used_at': DateTime.now().toIso8601String(),
         });
-      } catch (_) {
+      } catch (e, st) {
+        logger.e('saveHashtags failed', error: e, stackTrace: st);
         await hashtagsBox.put(tag, {
           'hashtag': tag,
           'last_used_at': DateTime.now().toIso8601String(),
@@ -842,7 +863,8 @@ class FeedService {
           },
         );
       }
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('deleteLike failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'unlike',
         'like_id': likeId,
@@ -966,7 +988,8 @@ class FeedService {
           await postsBox.put(key, cached);
         }
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('editPost failed', error: e, stackTrace: st);
       throw Exception('Failed to edit post: $e');
     }
   }
@@ -1119,7 +1142,9 @@ class FeedService {
             break;
         }
         await queueBox.delete(key);
-      } catch (_) {}
+      } catch (e, st) {
+        logger.e('syncQueuedActions item failed', error: e, stackTrace: st);
+      }
     }
 
     final imageKeys = postQueueBox.keys.toList();
@@ -1163,7 +1188,9 @@ class FeedService {
           }
         }
         await postQueueBox.delete(key);
-      } catch (_) {}
+      } catch (e, st) {
+        logger.e('syncQueuedActions post image failed', error: e, stackTrace: st);
+      }
     }
 
     await cleanupCachedEntries();
@@ -1223,9 +1250,12 @@ class FeedService {
               itemType: 'post',
             );
           }
-        } catch (_) {}
+        } catch (e, st) {
+          logger.e('bookmark notification failed', error: e, stackTrace: st);
+        }
       }
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('bookmarkPost failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'bookmark',
         'data': {'user_id': userId, 'post_id': postId},
@@ -1269,7 +1299,8 @@ class FeedService {
           await postsBox.put(key, cached);
         }
       }
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('removeBookmark failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'remove_bookmark',
         'data': {'bookmark_id': bookmarkId},
@@ -1297,7 +1328,8 @@ class FeedService {
           await postsBox.put(key, cached);
         }
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('deletePost failed', error: e, stackTrace: st);
       throw Exception('Failed to delete post: $e');
     }
   }
@@ -1362,7 +1394,8 @@ class FeedService {
           }
         }
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('deleteComment failed', error: e, stackTrace: st);
       throw Exception('Failed to delete comment: $e');
     }
   }
@@ -1414,7 +1447,8 @@ class FeedService {
             .toList(),
       );
       return items;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('listBookmarks failed', error: e, stackTrace: st);
       final cached =
           bookmarksBox.get('bookmarks_$userId', defaultValue: []) as List;
       final expiry = DateTime.now().subtract(const Duration(days: 30));
@@ -1436,7 +1470,8 @@ class FeedService {
         documentId: ID.unique(),
         data: follow,
       );
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('createFollow failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'follow',
         'data': follow,
@@ -1462,7 +1497,8 @@ class FeedService {
           documentId: doc.$id,
         );
       }
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('deleteFollow failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'unfollow',
         'data': {
@@ -1519,7 +1555,8 @@ class FeedService {
           .toList();
       await postsBox.put(key, cursor == null ? cache : [...existing, ...cache]);
       return posts;
-    } catch (_) {
+    } catch (e, st) {
+      logger.e('fetchSortedPosts failed', error: e, stackTrace: st);
       final cached = postsBox.get(key, defaultValue: []) as List;
       final expiry = DateTime.now().subtract(const Duration(days: 30));
       var list = cached
@@ -1563,7 +1600,8 @@ class FeedService {
         }
       }
       return 'https://your-app.com/post/$postId';
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('sharePost failed', error: e, stackTrace: st);
       await _addToBoxWithLimit(queueBox, {
         'action': 'share',
         'post_id': postId,
