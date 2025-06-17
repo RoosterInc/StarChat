@@ -466,7 +466,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: comment.postId,
           data: {
-            'comment_count': {'$increment': 1}
+            'comment_count': {r'$increment': 1}
           },
       );
       if (comment.parentId != null) {
@@ -475,7 +475,7 @@ class FeedService {
           collectionId: commentsCollectionId,
           documentId: comment.parentId!,
           data: {
-            'reply_count': {'$increment': 1}
+            'reply_count': {r'$increment': 1}
           },
         );
         if (Get.isRegistered<NotificationService>()) {
@@ -606,7 +606,7 @@ class FeedService {
           collectionId: commentsCollectionId,
           documentId: like['item_id'],
           data: {
-            'like_count': {'$increment': 1}
+            'like_count': {r'$increment': 1}
           },
         );
       } else {
@@ -615,7 +615,7 @@ class FeedService {
           collectionId: postsCollectionId,
           documentId: like['item_id'],
           data: {
-            'like_count': {'$increment': 1}
+            'like_count': {r'$increment': 1}
           },
         );
       }
@@ -686,7 +686,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: repost['post_id'],
         data: {
-          'repost_count': {'$increment': 1}
+          'repost_count': {r'$increment': 1}
         },
       );
       try {
@@ -732,7 +732,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: postId,
         data: {
-          'repost_count': {'$increment': -1}
+          'repost_count': {r'$increment': -1}
         },
       );
     } catch (e, st) {
@@ -850,7 +850,7 @@ class FeedService {
           collectionId: commentsCollectionId,
           documentId: itemId,
           data: {
-            'like_count': {'$increment': -1}
+            'like_count': {r'$increment': -1}
           },
         );
       } else {
@@ -859,7 +859,7 @@ class FeedService {
           collectionId: postsCollectionId,
           documentId: itemId,
           data: {
-            'like_count': {'$increment': -1}
+            'like_count': {r'$increment': -1}
           },
         );
       }
@@ -1215,7 +1215,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: postId,
         data: {
-          'bookmark_count': {'$increment': 1}
+          'bookmark_count': {r'$increment': 1}
         },
       );
       for (final key in postsBox.keys) {
@@ -1282,7 +1282,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: postId,
         data: {
-          'bookmark_count': {'$increment': -1}
+          'bookmark_count': {r'$increment': -1}
         },
       );
       for (final key in postsBox.keys) {
@@ -1350,9 +1350,9 @@ class FeedService {
             comment.parentId == null ? comment.postId : comment.parentId!,
         data: {
           if (comment.parentId == null)
-            'comment_count': {'$increment': -1}
+            'comment_count': {r'$increment': -1}
           else
-            'reply_count': {'$increment': -1}
+            'reply_count': {r'$increment': -1}
         },
       );
       for (final key in commentsBox.keys) {
@@ -1582,7 +1582,7 @@ class FeedService {
         collectionId: postsCollectionId,
         documentId: postId,
         data: {
-          'share_count': {'$increment': 1}
+          'share_count': {r'$increment': 1}
         },
       );
       for (final key in postsBox.keys) {
