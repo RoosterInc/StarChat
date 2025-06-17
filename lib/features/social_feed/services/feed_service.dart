@@ -38,6 +38,7 @@ class FeedService {
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
   final Box bookmarksBox = Hive.box('bookmarks');
+  final Box reactionsBox = Hive.box('reactions');
   final Box hashtagsBox = Hive.box('hashtags');
   final Box queueBox = Hive.box('action_queue');
   final Box postQueueBox = Hive.box('post_queue');
@@ -76,6 +77,16 @@ class FeedService {
     await cleanBox(bookmarksBox);
     await cleanBox(queueBox);
     await cleanBox(postQueueBox);
+    final reactionKeys = reactionsBox.keys.toList();
+    for (final key in reactionKeys) {
+      final value = reactionsBox.get(key);
+      if (value is Map) {
+        final ts = DateTime.tryParse(value['likedAt'] ?? '');
+        if (ts != null && ts.isBefore(expiry)) {
+          await reactionsBox.delete(key);
+        }
+      }
+    }
   }
 
   FeedService({
