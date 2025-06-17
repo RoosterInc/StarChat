@@ -338,8 +338,8 @@ class MD3ThemeSystem {
     );
   }
 
-  static CardTheme _createCardTheme(ColorScheme colorScheme) {
-    return CardTheme(
+  static CardThemeData _createCardTheme(ColorScheme colorScheme) {
+    return CardThemeData(
       color: colorScheme.surface,
       surfaceTintColor: colorScheme.surfaceTint,
       elevation: 1,
