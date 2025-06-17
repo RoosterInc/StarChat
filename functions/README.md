@@ -17,7 +17,6 @@ This directory contains serverless functions used by the StarChat application. E
 - **increment_bookmark_count** – Adds 1 to the `bookmark_count` of a post document.
 - **decrement_bookmark_count** – Subtracts 1 from the `bookmark_count` of a post document.
 - **increment_share_count** – Adds 1 to the `share_count` of a post document.
-- **validate_reaction** – Checks if a like, repost, or bookmark already exists for a user and item.
 
 Each function expects the target document ID in the request body:
 

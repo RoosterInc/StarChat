@@ -40,7 +40,6 @@ ACTIVITY_LOGS_COLLECTION_ID=activity_logs
 FOLLOWS_COLLECTION_ID=follows
 BLOCKS_COLLECTION_ID=blocked_users
 FETCH_LINK_METADATA_FUNCTION_ID=fetch_link_metadata
-VALIDATE_REACTION_FUNCTION_ID=validate_reaction
 APPWRITE_API_KEY=<your_appwrite_api_key>
 ```
 

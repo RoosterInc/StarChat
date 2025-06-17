@@ -140,7 +140,6 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'fetch_link_metadata',
-      validateReactionFunctionId: 'validate',
     );
   });
 

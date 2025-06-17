@@ -35,7 +35,6 @@ class FeedService {
   final String repostsCollectionId;
   final String bookmarksCollectionId;
   final String linkMetadataFunctionId;
-  final String validateReactionFunctionId;
   final Connectivity connectivity;
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
@@ -103,7 +102,6 @@ class FeedService {
     required this.bookmarksCollectionId,
     required this.connectivity,
     required this.linkMetadataFunctionId,
-    required this.validateReactionFunctionId,
   }) {
     connectivity.onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
@@ -134,17 +132,13 @@ class FeedService {
     required int delta,
   }) async {
     try {
-      final doc = await databases.getDocument(
-        databaseId: databaseId,
-        collectionId: collectionId,
-        documentId: documentId,
-      );
-      final current = (doc.data[field] ?? 0) as int;
       await databases.updateDocument(
         databaseId: databaseId,
         collectionId: collectionId,
         documentId: documentId,
-        data: {field: current + delta},
+        data: {
+          r'$increment': {field: delta},
+        },
       );
     } catch (e, st) {
       logger.e('increment $field failed', error: e, stackTrace: st);
@@ -156,18 +150,36 @@ class FeedService {
     String itemId,
     String userId,
   ) async {
+    final cacheKey = '$type:$itemId:$userId';
+    if (reactionsBox.containsKey(cacheKey)) return true;
     try {
-      final result = await functions.createExecution(
-        functionId: validateReactionFunctionId,
-        body: jsonEncode({
-          'type': type,
-          'item_id': itemId,
-          'user_id': userId,
-        }),
+      String collectionId;
+      List<String> queries;
+      if (type == 'repost') {
+        collectionId = repostsCollectionId;
+        queries = [
+          Query.equal('post_id', itemId),
+          Query.equal('user_id', userId),
+        ];
+      } else if (type == 'bookmark') {
+        collectionId = bookmarksCollectionId;
+        queries = [
+          Query.equal('post_id', itemId),
+          Query.equal('user_id', userId),
+        ];
+      } else {
+        collectionId = likesCollectionId;
+        queries = [
+          Query.equal('item_id', itemId),
+          Query.equal('user_id', userId),
+        ];
+      }
+      final res = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        queries: queries,
       );
-      final data =
-          jsonDecode(result.responseBody) as Map<String, dynamic>? ?? {};
-      return data['duplicate'] == true;
+      return res.documents.isNotEmpty;
     } catch (e, st) {
       logger.e('validateReaction failed', error: e, stackTrace: st);
       return false;
