@@ -11,6 +11,8 @@ class PostComment {
   final int likeCount;
   final int replyCount;
   final bool isDeleted;
+  final bool isEdited;
+  final DateTime? editedAt;
 
   PostComment({
     required this.id,
@@ -25,6 +27,8 @@ class PostComment {
     this.likeCount = 0,
     this.replyCount = 0,
     this.isDeleted = false,
+    this.isEdited = false,
+    this.editedAt,
   });
 
   factory PostComment.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,10 @@ class PostComment {
       likeCount: json['like_count'] ?? 0,
       replyCount: json['reply_count'] ?? 0,
       isDeleted: json['is_deleted'] ?? false,
+      isEdited: json['is_edited'] ?? false,
+      editedAt: json['edited_at'] != null
+          ? DateTime.tryParse(json['edited_at'])
+          : null,
     );
   }
 
@@ -58,6 +66,8 @@ class PostComment {
       'like_count': likeCount,
       'reply_count': replyCount,
       'is_deleted': isDeleted,
+      'is_edited': isEdited,
+      'edited_at': editedAt?.toIso8601String(),
     };
   }
 }
