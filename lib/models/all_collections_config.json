@@ -1648,6 +1648,13 @@
           "type": "integer",
           "required": false,
           "array": false
+        },
+        {
+          "key": "displayname",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500
         }
       ],
       "indexes": [
@@ -1785,6 +1792,13 @@
           "type": "datetime",
           "required": false,
           "array": false
+        },
+        {
+          "key": "mentions",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 1000
         }
       ],
       "indexes": [
