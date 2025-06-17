@@ -38,7 +38,7 @@ class ChatRoomCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(DesignTokens.spacing(context, 10)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -46,28 +46,29 @@ class ChatRoomCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   room.name,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colorScheme.onPrimary,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: context.colorScheme.onPrimary,
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: DesignTokens.sm(context),
+                  vertical: DesignTokens.xs(context),
+                ),
                 decoration: BoxDecoration(
                   color: context.colorScheme.onPrimary.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${room.dailyMessages} today',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: context.colorScheme.onPrimary,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: context.colorScheme.onPrimary,
+                      ),
                 ),
               ),
             ],
