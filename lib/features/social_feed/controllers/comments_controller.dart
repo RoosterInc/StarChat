@@ -190,16 +190,14 @@ class CommentsController extends GetxController {
     _subscription?.close();
     _subscription = _realtime!.subscribe([
       'databases.${service.databaseId}.collections.${service.commentsCollectionId}.documents',
-      'databases.${service.databaseId}.collections.${service.likesCollectionId}.documents',
     ]);
     _subscription!.stream.listen((event) {
       final payload = event.payload;
 
-      // Comment events
       if (payload['post_id'] == postId) {
         final id = payload['\$id'] ?? payload['id'];
+        final comment = PostComment.fromJson(payload);
         if (event.events.any((e) => e.contains('.create'))) {
-          final comment = PostComment.fromJson(payload);
           if (!_comments.any((c) => c.id == id) && !comment.isDeleted) {
             _comments.add(comment);
             _likeCounts[id] = comment.likeCount;
@@ -209,34 +207,76 @@ class CommentsController extends GetxController {
             }
             if (comment.parentId != null) {
               incrementReplyCount(comment.parentId!);
+              for (final key in service.commentsBox.keys) {
+                if (!key.toString().startsWith('comments_')) continue;
+                final list = (service.commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+                final idx = list.indexWhere((c) => c['id'] == comment.parentId || c['\$id'] == comment.parentId);
+                if (idx != -1) {
+                  final count = (list[idx]['reply_count'] ?? 0) as int;
+                  list[idx] = {
+                    ...list[idx],
+                    'reply_count': count + 1,
+                  };
+                  service.commentsBox.put(key, list);
+                }
+              }
             }
+            final listKey = 'comments_${comment.postId}';
+            final list = (service.commentsBox.get(listKey, defaultValue: []) as List).cast<dynamic>();
+            list.add({...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()});
+            service.commentsBox.put(listKey, list);
           }
-        } else if ((event.events.any((e) => e.contains('.update')) &&
-                payload['is_deleted'] == true) ||
+        } else if ((event.events.any((e) => e.contains('.update')) && comment.isDeleted) ||
             event.events.any((e) => e.contains('.delete'))) {
           _comments.removeWhere((c) => c.id == id);
           _likedIds.remove(id);
           _likeCounts.remove(id);
           _replyCounts.remove(id);
           if (Get.isRegistered<FeedController>()) {
-            Get.find<FeedController>().decrementCommentCount(payload['post_id']);
+            Get.find<FeedController>().decrementCommentCount(comment.postId);
           }
-          final parentId = payload['parent_id'];
+          final parentId = comment.parentId;
           if (parentId != null) {
-            decrementReplyCount(parentId as String);
+            decrementReplyCount(parentId);
+            for (final key in service.commentsBox.keys) {
+              if (!key.toString().startsWith('comments_')) continue;
+              final list = (service.commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+              final pIdx = list.indexWhere((c) => c['id'] == parentId || c['\$id'] == parentId);
+              if (pIdx != -1) {
+                final count = (list[pIdx]['reply_count'] ?? 0) as int;
+                list[pIdx] = {
+                  ...list[pIdx],
+                  'reply_count': count > 0 ? count - 1 : 0,
+                };
+                service.commentsBox.put(key, list);
+              }
+            }
           }
-        }
-      }
-
-      // Like events
-      if (payload['item_type'] == 'comment') {
-        final commentId = payload['item_id'];
-        if (!_likeCounts.containsKey(commentId)) return;
-        if (event.events.any((e) => e.contains('.create'))) {
-          _likeCounts[commentId] = (_likeCounts[commentId] ?? 0) + 1;
-        } else if (event.events.any((e) => e.contains('.delete'))) {
-          _likeCounts[commentId] =
-              math.max(0, (_likeCounts[commentId] ?? 1) - 1);
+          for (final key in service.commentsBox.keys) {
+            if (!key.toString().startsWith('comments_')) continue;
+            final list = (service.commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+            final idx = list.indexWhere((c) => c['id'] == id || c['\$id'] == id);
+            if (idx != -1) {
+              list.removeAt(idx);
+              service.commentsBox.put(key, list);
+            }
+          }
+        } else if (event.events.any((e) => e.contains('.update'))) {
+          final index = _comments.indexWhere((c) => c.id == id);
+          if (index != -1) {
+            _comments[index] = comment;
+          }
+          _likeCounts[id] = comment.likeCount;
+          _replyCounts[id] = comment.replyCount;
+          for (final key in service.commentsBox.keys) {
+            if (!key.toString().startsWith('comments_')) continue;
+            final list = (service.commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+            final idx = list.indexWhere((c) => c['id'] == id || c['\$id'] == id);
+            if (idx != -1) {
+              list[idx] = {...comment.toJson(), '_cachedAt': DateTime.now().toIso8601String()};
+              service.commentsBox.put(key, list);
+            }
+          }
         }
       }
     });
