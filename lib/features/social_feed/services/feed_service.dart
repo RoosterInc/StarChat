@@ -993,19 +993,20 @@ class FeedService {
       );
 
       for (final key in postsBox.keys) {
-        final cached = postsBox.get(key, defaultValue: []) as List;
-        final index =
-            cached.indexWhere((p) => p['id'] == postId || p['\$id'] == postId);
+        final value = postsBox.get(key);
+        if (value is! List) continue;
+        final index = value
+            .indexWhere((p) => p['id'] == postId || p['\$id'] == postId);
         if (index != -1) {
-          cached[index] = {
-            ...cached[index],
+          value[index] = {
+            ...value[index],
             'content': content,
             'hashtags': limited,
             'mentions': limitedMentions,
             'is_edited': true,
             'edited_at': DateTime.now().toIso8601String(),
           };
-          await postsBox.put(key, cached);
+          await postsBox.put(key, value);
         }
       }
     } catch (e, st) {
@@ -1449,18 +1450,18 @@ class FeedService {
 
       for (final key in commentsBox.keys) {
         if (!key.toString().startsWith('comments_')) continue;
-        final list =
-            (commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+        final value = commentsBox.get(key);
+        if (value is! List) continue;
         final index =
-            list.indexWhere((c) => c['id'] == commentId || c['\$id'] == commentId);
+            value.indexWhere((c) => c['id'] == commentId || c['\$id'] == commentId);
         if (index != -1) {
-          list[index] = {
-            ...list[index],
+          value[index] = {
+            ...value[index],
             'content': content,
             'is_edited': true,
             'edited_at': DateTime.now().toIso8601String(),
           };
-          await commentsBox.put(key, list);
+          await commentsBox.put(key, value);
         }
       }
     } catch (e, st) {
