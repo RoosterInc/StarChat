@@ -7,14 +7,34 @@ Before implementing any feature, ensure you adhere to the following requirements
 
 The schema details for the Appwrite backend collections are located in `lib/models/all_collections_config.json`. Please consult this file when working on tasks that require backend collection information. If a task needs specific details, use this file to retrieve them. If the required details are missing, request users to implement them in the Appwrite backend and, if feasible, provide the JSON schema to help them update the database.
 
-Use the official Appwrite Flutter SDK (latest version) for all interactions with Appwrite services.
+Use a Content Delivery Network (CDN) Bunny CDN for reducing network bandwidth 
+
+Efficient real-time strategies can limit the number of concurrent connections.
+
+Use the Appwrite's Preview API for Image Optimization and to generate images in HEIC or AVIF formats, optimizing delivery based on user devices. For example, serve HEIC for iOS users
+
+Caching,  client-side  can reduce the number of API calls and data transfers, thereby saving bandwidth.For client-side caching, store data locally and check for cached data before making API requests
+
+Ensure that cached data is non-sensitive to avoid security risks, and monitor cache hit ratios to ensure effectiveness.
+
+Minimizing the number of API requests and the amount of data transferred in each request can help reduce bandwidth costs.
+
+Details:
+Use efficient querying methods like listDocuments with filters to fetch data in fewer requests. Optimize pagination by setting appropriate limits (e.g., Query.limit(20)) and offsets.
+Use WebSockets for real-time updates via Appwrite's Realtime API instead of polling, which reduces the frequency of API calls.
+Implementation: Review your app's API usage and refactor code to minimize unnecessary requests. For real-time features like reaction updates or chat rooms, integrate Appwrite's Realtime API, ensuring efficient subscription management.
+
+Minimize File Sizes Before Upload : Integrate file compression into your app's upload process. For example, in your Flutter app, use a package like image_picker with compression options before uploading to Appwrite.
+
+Review your app's code to ensure there are no unnecessary API calls, such as duplicate requests or requests for data that could be cached.
+
+make sure to take advantage of Appwrite's new feature as when the release with every new release , keep checking for latest version and use new or improved features where ever applicable.
 Regularly monitor the Appwrite Changelog for new features, deprecations, and updates to maintain app reliability.
 Leverage Appwrite’s real-time capabilities to enhance UI responsiveness for dynamic content.
 HEIC/AVIF Support New image formats for storage (introduced May 2025),Use for efficient image storage; generate previews directly in these formats
 Optimize Database Queries: Use indexing and pagination to minimize data transfer and improve load times for large datasets.
 Leverage Real-time Features: Implement Appwrite’s real-time subscriptions for features requiring live updates, such as chat or collaborative tools.
 Minimize Network Calls: Cache data locally where appropriate to reduce API requests.
-Monitor Usage Metrics: Use Appwrite’s improved usage metrics (updated in 2025) to track requests, identify bottlenecks, and optimize performance.
 Write unit and widget tests for components interacting with Appwrite, covering edge cases like network failures and invalid inputs.
 Use mocking libraries (e.g., mockito) to simulate Appwrite responses during unit testing.
 Aim for >90% code coverage for Appwrite-integrated features.
@@ -90,31 +110,6 @@ Container(
     'Hello',
     style: TextStyle(color: Colors.black, fontSize: 16),
   ),
-)
-
-Component Patterns
-Buttons - Always Use AnimatedButton
-// Required pattern
-AnimatedButton(
-  onPressed: () {
-    // Your logic here
-  },
-  enableHaptics: true,
-  child: Text('Submit'),
-)
-
-// Forbidden - Don't use basic buttons
-ElevatedButton(onPressed: () {}, child: Text('Submit'))
-
-Cards - Use Glassmorphic Design
-// Required pattern
-GlassmorphicCard(
-  padding: DesignTokens.lg(context).all,
-  onTap: () {
-    MicroInteractions.selectionHaptic();
-    // Your tap logic
-  },
-  child: YourContent(),
 )
 
 // Forbidden - Basic cards
@@ -370,7 +365,6 @@ Add micro-interactions where appropriate.
 Before Completion
 
 Test on multiple screen sizes.
-Test with screen reader enabled.
 Verify performance with profile mode.
 Add comprehensive documentation.
 Write unit and widget tests.
@@ -383,8 +377,6 @@ All spacing uses DesignTokens.
 All layouts are responsive using ResponsiveUtils.
 All colors come from context.colorScheme.
 All interactive elements have haptic feedback.
-All buttons use AnimatedButton.
-All cards use GlassmorphicCard.
 All lists use StaggeredListView or OptimizedListView.
 All loading states use SkeletonLoader.
 All async operations have error handling.
@@ -620,16 +612,6 @@ try {
   return Failure('Failed to load data');
 }
 
-Accessibility & UX
-Accessibility Requirements
-// Always add semantic labels
-Semantics(
-  label: 'Add to cart button',
-  child: IconButton(
-    icon: Icon(Icons.add_shopping_cart),
-    onPressed: addToCart,
-  ),
-)
 
 Performance Monitoring
 Key Metrics to Consider
@@ -652,5 +634,4 @@ ListView.builder used for dynamic lists.
 Images cached appropriately.
 Responsive design implemented.
 Error handling in place.
-Accessibility labels added.
 No dead code or unused imports.
