@@ -86,42 +86,10 @@ class _CountingService extends FeedService {
   }
 }
 
-class _RecordingFunctions extends Functions {
-  _RecordingFunctions() : super(Client());
-
-  final List<Map<String, String?>> calls = [];
-
-  @override
-  Future<Execution> createExecution({
-    required String functionId,
-    String? body,
-    Map<String, dynamic>? xHeaders,
-    String? path,
-  }) async {
-    calls.add({'id': functionId, 'body': body});
-    return Execution.fromMap({
-      '\$id': '1',
-      '\$createdAt': '',
-      '\$updatedAt': '',
-      '\$permissions': [],
-      'functionId': functionId,
-      'trigger': 'http',
-      'status': 'completed',
-      'requestMethod': 'GET',
-      'requestPath': '/',
-      'requestHeaders': [],
-      'responseStatusCode': 200,
-      'responseBody': '',
-      'responseHeaders': [],
-      'logs': '',
-      'errors': '',
-      'duration': 0.0,
-    });
-  }
-}
 
 class _FakeDatabases extends Databases {
   _FakeDatabases() : super(Client());
+  final List<Map<String, dynamic>> updates = [];
 
   @override
   Future<Document> createDocument({
@@ -139,6 +107,30 @@ class _FakeDatabases extends Databases {
       '\$updatedAt': '',
       '\$permissions': [],
       ...data,
+    });
+  }
+
+  @override
+  Future<Document> updateDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    Map<dynamic, dynamic>? data,
+    List<String>? permissions,
+  }) async {
+    updates.add({
+      'collectionId': collectionId,
+      'documentId': documentId,
+      'data': data,
+    });
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...?data,
     });
   }
 }
@@ -344,11 +336,11 @@ void main() {
         content: 'reply',
       ),
     );
-    final functions = _RecordingFunctions();
+    final dbOnline = _FakeDatabases();
     final onlineService = FeedService(
-      databases: _FakeDatabases(),
+      databases: dbOnline,
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -359,7 +351,10 @@ void main() {
       linkMetadataFunctionId: 'fetch_link_metadata',
     );
     await onlineService.syncQueuedActions();
-    expect(functions.calls.any((c) => c['id'] == 'increment_reply_count'), isTrue);
+    expect(
+        dbOnline.updates
+            .any((u) => u['data']?['reply_count']?['\$increment'] == 1),
+        isTrue);
     expect(Hive.box('action_queue').isEmpty, isTrue);
   });
 

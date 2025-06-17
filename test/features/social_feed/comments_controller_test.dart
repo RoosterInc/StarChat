@@ -325,11 +325,11 @@ void main() {
       await Hive.openBox(box);
     }
 
-    final functions = _RecordingFunctions();
+    final db = _FakeDatabases();
     final service = FeedService(
-      databases: _FakeDatabases(),
+      databases: db,
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -354,7 +354,8 @@ void main() {
     );
 
     await controller.replyToComment(reply);
-    expect(functions.calls.any((c) => c['id'] == 'increment_reply_count'), isTrue);
+    expect(db.updates.any((u) => u['data']?['reply_count']?['\$increment'] == 1),
+        isTrue);
 
     await Hive.deleteFromDisk();
     await dir.delete(recursive: true);
@@ -364,6 +365,7 @@ void main() {
 
 class _FakeDatabases extends Databases {
   _FakeDatabases() : super(Client());
+  final List<Map<String, dynamic>> updates = [];
 
   @override
   Future<Document> createDocument({
@@ -383,38 +385,28 @@ class _FakeDatabases extends Databases {
       ...data,
     });
   }
-}
-
-class _RecordingFunctions extends Functions {
-  _RecordingFunctions() : super(Client());
-
-  final List<Map<String, String?>> calls = [];
 
   @override
-  Future<Execution> createExecution({
-    required String functionId,
-    String? body,
-    Map<String, dynamic>? xHeaders,
-    String? path,
+  Future<Document> updateDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    Map<dynamic, dynamic>? data,
+    List<String>? permissions,
   }) async {
-    calls.add({'id': functionId, 'body': body});
-    return Execution.fromMap({
-      '\$id': '1',
+    updates.add({
+      'collectionId': collectionId,
+      'documentId': documentId,
+      'data': data,
+    });
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
       '\$createdAt': '',
       '\$updatedAt': '',
       '\$permissions': [],
-      'functionId': functionId,
-      'trigger': 'http',
-      'status': 'completed',
-      'requestMethod': 'GET',
-      'requestPath': '/',
-      'requestHeaders': [],
-      'responseStatusCode': 200,
-      'responseBody': '',
-      'responseHeaders': [],
-      'logs': '',
-      'errors': '',
-      'duration': 0.0,
+      ...?data,
     });
   }
 }

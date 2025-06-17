@@ -418,14 +418,22 @@ class FeedService {
         data: comment.toJson(includeId: false),
       );
       id = doc.data['\$id'] ?? doc.data['id'];
-      await functions.createExecution(
-        functionId: 'increment_comment_count',
-        body: jsonEncode({'post_id': comment.postId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: comment.postId,
+        data: {
+          'comment_count': {'\$increment': 1}
+        },
       );
       if (comment.parentId != null) {
-        await functions.createExecution(
-          functionId: 'increment_reply_count',
-          body: jsonEncode({'comment_id': comment.parentId}),
+        await databases.updateDocument(
+          databaseId: databaseId,
+          collectionId: commentsCollectionId,
+          documentId: comment.parentId!,
+          data: {
+            'reply_count': {'\$increment': 1}
+          },
         );
         if (Get.isRegistered<NotificationService>()) {
           try {
@@ -535,6 +543,9 @@ class FeedService {
 
   Future<void> createLike(Map<String, dynamic> like) async {
     try {
+      final existing =
+          await getUserLike(like['item_id'] as String, like['user_id'] as String);
+      if (existing != null) return;
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: likesCollectionId,
@@ -542,14 +553,22 @@ class FeedService {
         data: like,
       );
       if (like['item_type'] == 'comment') {
-        await functions.createExecution(
-          functionId: 'increment_comment_like_count',
-          body: jsonEncode({'comment_id': like['item_id']}),
+        await databases.updateDocument(
+          databaseId: databaseId,
+          collectionId: commentsCollectionId,
+          documentId: like['item_id'],
+          data: {
+            'like_count': {'\$increment': 1}
+          },
         );
       } else {
-        await functions.createExecution(
-          functionId: 'increment_like_count',
-          body: jsonEncode({'post_id': like['item_id']}),
+        await databases.updateDocument(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          documentId: like['item_id'],
+          data: {
+            'like_count': {'\$increment': 1}
+          },
         );
       }
       if (Get.isRegistered<NotificationService>()) {
@@ -602,15 +621,22 @@ class FeedService {
 
   Future<String?> createRepost(Map<String, dynamic> repost) async {
     try {
+      final existing =
+          await getUserRepost(repost['post_id'], repost['user_id']);
+      if (existing != null) return existing.id;
       final doc = await databases.createDocument(
         databaseId: databaseId,
         collectionId: repostsCollectionId,
         documentId: ID.unique(),
         data: repost,
       );
-      await functions.createExecution(
-        functionId: 'increment_repost_count',
-        body: jsonEncode({'post_id': repost['post_id']}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: repost['post_id'],
+        data: {
+          'repost_count': {'\$increment': 1}
+        },
       );
       try {
         final res = await databases.getDocument(
@@ -647,9 +673,13 @@ class FeedService {
         collectionId: repostsCollectionId,
         documentId: repostId,
       );
-      await functions.createExecution(
-        functionId: 'decrement_repost_count',
-        body: jsonEncode({'post_id': postId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {
+          'repost_count': {'\$increment': -1}
+        },
       );
     } catch (_) {
       await _addToBoxWithLimit(queueBox, {
@@ -759,14 +789,22 @@ class FeedService {
         documentId: likeId,
       );
       if (itemType == 'comment') {
-        await functions.createExecution(
-          functionId: 'decrement_comment_like_count',
-          body: jsonEncode({'comment_id': itemId}),
+        await databases.updateDocument(
+          databaseId: databaseId,
+          collectionId: commentsCollectionId,
+          documentId: itemId,
+          data: {
+            'like_count': {'\$increment': -1}
+          },
         );
       } else {
-        await functions.createExecution(
-          functionId: 'decrement_like_count',
-          body: jsonEncode({'post_id': itemId}),
+        await databases.updateDocument(
+          databaseId: databaseId,
+          collectionId: postsCollectionId,
+          documentId: itemId,
+          data: {
+            'like_count': {'\$increment': -1}
+          },
         );
       }
     } catch (_) {
@@ -1095,6 +1133,8 @@ class FeedService {
 
   Future<void> bookmarkPost(String userId, String postId) async {
     try {
+      final existing = await getUserBookmark(postId, userId);
+      if (existing != null) return;
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: bookmarksCollectionId,
@@ -1105,9 +1145,13 @@ class FeedService {
           'created_at': DateTime.now().toIso8601String(),
         },
       );
-      await functions.createExecution(
-        functionId: 'increment_bookmark_count',
-        body: jsonEncode({'post_id': postId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {
+          'bookmark_count': {'\$increment': 1}
+        },
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
@@ -1165,9 +1209,13 @@ class FeedService {
         collectionId: bookmarksCollectionId,
         documentId: bookmarkId,
       );
-      await functions.createExecution(
-        functionId: 'decrement_bookmark_count',
-        body: jsonEncode({'post_id': postId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {
+          'bookmark_count': {'\$increment': -1}
+        },
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
@@ -1224,13 +1272,18 @@ class FeedService {
         documentId: comment.id,
         data: {'is_deleted': true},
       );
-      await functions.createExecution(
-        functionId: comment.parentId == null
-            ? 'decrement_comment_count'
-            : 'decrement_reply_count',
-        body: jsonEncode(comment.parentId == null
-            ? {'post_id': comment.postId}
-            : {'comment_id': comment.parentId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId:
+            comment.parentId == null ? postsCollectionId : commentsCollectionId,
+        documentId:
+            comment.parentId == null ? comment.postId : comment.parentId!,
+        data: {
+          if (comment.parentId == null)
+            'comment_count': {'\$increment': -1}
+          else
+            'reply_count': {'\$increment': -1}
+        },
       );
       for (final key in commentsBox.keys) {
         final cached = commentsBox.get(key, defaultValue: []) as List;
@@ -1449,9 +1502,13 @@ class FeedService {
 
   Future<String> sharePost(String postId) async {
     try {
-      await functions.createExecution(
-        functionId: 'increment_share_count',
-        body: jsonEncode({'post_id': postId}),
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: postsCollectionId,
+        documentId: postId,
+        data: {
+          'share_count': {'\$increment': 1}
+        },
       );
       for (final key in postsBox.keys) {
         final cached = postsBox.get(key, defaultValue: []) as List;
