@@ -110,7 +110,7 @@ void main() {
     );
     await service.createComment(comment);
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'comment_count': {'\$increment': 1}});
+    expect(db.updates.last['data'], {'comment_count': {'$increment': 1}});
     final cached = Hive.box('posts').get('k') as List;
     expect(cached.first['comment_count'], 1);
   });
@@ -133,9 +133,9 @@ void main() {
     await service.createComment(reply);
     expect(db.updates.length, 2);
     expect(db.updates.first['collectionId'], 'posts');
-    expect(db.updates.first['data'], {'comment_count': {'\$increment': 1}});
+    expect(db.updates.first['data'], {'comment_count': {'$increment': 1}});
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'reply_count': {'\$increment': 1}});
+    expect(db.updates.last['data'], {'reply_count': {'$increment': 1}});
     final cachedComments = Hive.box('comments').get('c_post') as List;
     expect(cachedComments.first['reply_count'], 1);
     final cachedPosts = Hive.box('posts').get('k') as List;
@@ -158,7 +158,7 @@ void main() {
     );
     await service.deleteComment(comment);
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'comment_count': {'\$increment': -1}});
+    expect(db.updates.last['data'], {'comment_count': {'$increment': -1}});
     final post = Hive.box('posts').get('k') as List;
     expect(post.first['comment_count'], 1);
     final cached = Hive.box('comments').get('c_post') as List;
@@ -180,7 +180,7 @@ void main() {
     );
     await service.deleteComment(reply);
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'reply_count': {'\$increment': -1}});
+    expect(db.updates.last['data'], {'reply_count': {'$increment': -1}});
     final cached = Hive.box('comments').get('c_post') as List;
     expect(cached.first['reply_count'], 0);
   });

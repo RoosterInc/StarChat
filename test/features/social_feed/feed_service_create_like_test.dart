@@ -156,7 +156,7 @@ void main() {
     });
 
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'like_count': {'\$increment': 1}});
+    expect(db.updates.last['data'], {'like_count': {'$increment': 1}});
     expect(notification.calls, 1);
   });
 
@@ -168,7 +168,7 @@ void main() {
     });
 
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'like_count': {'\$increment': 1}});
+    expect(db.updates.last['data'], {'like_count': {'$increment': 1}});
     expect(notification.calls, 1);
   });
 }

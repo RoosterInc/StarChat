@@ -131,7 +131,7 @@ void main() {
       validateReactionFunctionId: 'validate',
     );
     await service.createRepost({'post_id': '1', 'user_id': 'u'});
-    expect(db.updates.last['data'], {'repost_count': {'\$increment': 1}});
+    expect(db.updates.last['data'], {'repost_count': {'$increment': 1}});
   });
 
   test('deleteRepost triggers decrement function', () async {
@@ -151,7 +151,7 @@ void main() {
       validateReactionFunctionId: 'validate',
     );
     await service.deleteRepost('r1', '1');
-    expect(db.updates.last['data'], {'repost_count': {'\$increment': -1}});
+    expect(db.updates.last['data'], {'repost_count': {'$increment': -1}});
   });
 
   test('queued repost executes function on sync', () async {
@@ -185,6 +185,6 @@ void main() {
       linkMetadataFunctionId: 'link',
     );
     await service.syncQueuedActions();
-    expect(onlineDb.updates.last['data'], {'repost_count': {'\$increment': 1}});
+    expect(onlineDb.updates.last['data'], {'repost_count': {'$increment': 1}});
   });
 }

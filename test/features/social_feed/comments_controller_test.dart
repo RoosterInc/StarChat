@@ -354,7 +354,7 @@ void main() {
     );
 
     await controller.replyToComment(reply);
-    expect(db.updates.any((u) => u['data']?['reply_count']?['\$increment'] == 1),
+    expect(db.updates.any((u) => u['data']?['reply_count']?['$increment'] == 1),
         isTrue);
 
     await Hive.deleteFromDisk();

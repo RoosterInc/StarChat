@@ -353,7 +353,7 @@ void main() {
     await onlineService.syncQueuedActions();
     expect(
         dbOnline.updates
-            .any((u) => u['data']?['reply_count']?['\$increment'] == 1),
+            .any((u) => u['data']?['reply_count']?['$increment'] == 1),
         isTrue);
     expect(Hive.box('action_queue').isEmpty, isTrue);
   });
