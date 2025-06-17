@@ -126,7 +126,10 @@ class CommentsController extends GetxController {
       _likeCounts[commentId] =
           math.max(0, (_likeCounts[commentId] ?? 1) - 1);
     } else {
-      await service.likeComment(commentId, uid);
+      final isDup = await service.validateReaction('like', commentId, uid);
+      if (!isDup) {
+        await service.likeComment(commentId, uid);
+      }
       try {
         final like = await service.getUserLike(commentId, uid);
         if (like != null) {
