@@ -192,6 +192,9 @@ void main() {
   });
 
   test('delete reply triggers decrement_reply_count', () async {
+       Hive.box('posts').put('k', [
+      {'id': 'p1', 'comment_count': 2}
+    ]); 
     Hive.box('comments').put('c_post', [
       {'id': 'c1', 'post_id': 'p1', 'reply_count': 1},
       {'id': 'c2', 'post_id': 'p1', 'parent_id': 'c1', 'is_deleted': false}
@@ -205,9 +208,16 @@ void main() {
       content: 'reply',
     );
     await service.deleteComment(reply);
+        expect(db.updates.length, 3);
+    expect(db.updates.any((u) =>
+        u['collectionId'] == 'posts' &&
+        u['data'] != null &&
+        u['data']['comment_count'] == -1), isTrue);
     expect(db.updates.last['collectionId'], 'comments');
     expect(db.updates.last['data'], {'reply_count': -1});
     final cached = Hive.box('comments').get('c_post') as List;
     expect(cached.first['reply_count'], 0);
+        final post = Hive.box('posts').get('k') as List;
+    expect(post.first['comment_count'], 1);
   });
 }

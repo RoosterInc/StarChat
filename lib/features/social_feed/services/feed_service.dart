@@ -1359,13 +1359,18 @@ class FeedService {
         data: {'is_deleted': true},
       );
       await _incrementField(
-        collectionId:
-            comment.parentId == null ? postsCollectionId : commentsCollectionId,
-        documentId:
-            comment.parentId == null ? comment.postId : comment.parentId!,
-        field: comment.parentId == null ? 'comment_count' : 'reply_count',
-        delta: -1,
+        collectionId: postsCollectionId,
+        documentId: comment.postId,
+        field: 'comment_count',        delta: -1,
       );
+            if (comment.parentId != null) {
+        await _incrementField(
+          collectionId: commentsCollectionId,
+          documentId: comment.parentId!,
+          field: 'reply_count',
+          delta: -1,
+        );
+      }
       for (final key in commentsBox.keys) {
         final cached = commentsBox.get(key, defaultValue: []) as List;
         final index = cached.indexWhere(
@@ -1389,21 +1394,18 @@ class FeedService {
           }
         }
       }
-      if (comment.parentId == null) {
-        for (final key in postsBox.keys) {
-          final cached = postsBox.get(key, defaultValue: []) as List;
-          final index = cached.indexWhere(
-            (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
-          );
-          if (index != -1) {
-            final count = (cached[index]['comment_count'] ?? 0) as int;
-            cached[index] = {
-              ...cached[index],
-              'comment_count': count > 0 ? count - 1 : 0,
-            };
-            await postsBox.put(key, cached);
-          }
-        }
+      for (final key in postsBox.keys) {
+        final cached = postsBox.get(key, defaultValue: []) as List;
+        final index = cached.indexWhere(
+          (p) => p['id'] == comment.postId || p['\$id'] == comment.postId,
+        );
+        if (index != -1) {
+          final count = (cached[index]['comment_count'] ?? 0) as int;
+          cached[index] = {
+            ...cached[index],
+            'comment_count': count > 0 ? count - 1 : 0,
+          };
+          await postsBox.put(key, cached);        }
       }
     } catch (e, st) {
       logger.e('deleteComment failed', error: e, stackTrace: st);
