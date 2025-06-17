@@ -14,6 +14,7 @@ import 'package:myapp/features/notifications/services/notification_service.dart'
 class _FakeDatabases extends Databases {
   _FakeDatabases() : super(Client());
   final List<Map<String, dynamic>> updates = [];
+  final Map<String, Map<String, dynamic>> docs = {};
 
   @override
   Future<Document> createDocument({
@@ -23,6 +24,7 @@ class _FakeDatabases extends Databases {
     required Map<dynamic, dynamic> data,
     List<String>? permissions,
   }) async {
+    docs[documentId] = Map<String, dynamic>.from(data);
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -42,6 +44,7 @@ class _FakeDatabases extends Databases {
     List<String>? queries,
   }) async {
     final owner = collectionId == 'comments' ? 'comment_owner' : 'post_owner';
+    final data = docs[documentId] ?? {};
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -50,6 +53,7 @@ class _FakeDatabases extends Databases {
       '\$updatedAt': '',
       '\$permissions': [],
       'user_id': owner,
+      ...data,
     });
   }
 
@@ -66,6 +70,11 @@ class _FakeDatabases extends Databases {
       'documentId': documentId,
       'data': data,
     });
+    final existing = docs[documentId] ?? {};
+    docs[documentId] = {
+      ...existing,
+      ...?data,
+    };
     return Document.fromMap({
       '\$id': documentId,
       '\$collectionId': collectionId,
@@ -73,7 +82,7 @@ class _FakeDatabases extends Databases {
       '\$createdAt': '',
       '\$updatedAt': '',
       '\$permissions': [],
-      ...?data,
+      ...docs[documentId]!,
     });
   }
 }
@@ -156,7 +165,7 @@ void main() {
     });
 
     expect(db.updates.last['collectionId'], 'posts');
-    expect(db.updates.last['data'], {'like_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'like_count': 1});
     expect(notification.calls, 1);
   });
 
@@ -168,7 +177,7 @@ void main() {
     });
 
     expect(db.updates.last['collectionId'], 'comments');
-    expect(db.updates.last['data'], {'like_count': {'$increment': 1}});
+    expect(db.updates.last['data'], {'like_count': 1});
     expect(notification.calls, 1);
   });
 }
