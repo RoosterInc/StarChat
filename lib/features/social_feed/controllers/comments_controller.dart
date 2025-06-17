@@ -150,6 +150,29 @@ class CommentsController extends GetxController {
     }
   }
 
+  Future<void> editComment(String commentId, String content) async {
+    final index = _comments.indexWhere((c) => c.id == commentId);
+    if (index == -1) return;
+    await service.editComment(commentId, content);
+    final existing = _comments[index];
+    _comments[index] = PostComment(
+      id: existing.id,
+      postId: existing.postId,
+      userId: existing.userId,
+      username: existing.username,
+      userAvatar: existing.userAvatar,
+      parentId: existing.parentId,
+      content: content,
+      mediaUrls: existing.mediaUrls,
+      mentions: existing.mentions,
+      likeCount: existing.likeCount,
+      replyCount: existing.replyCount,
+      isDeleted: existing.isDeleted,
+      isEdited: true,
+      editedAt: DateTime.now(),
+    );
+  }
+
   Future<void> deleteComment(String commentId) async {
     final comment = _comments.firstWhereOrNull((c) => c.id == commentId);
     if (comment != null) {

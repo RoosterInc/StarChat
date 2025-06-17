@@ -1400,6 +1400,62 @@ class FeedService {
     }
   }
 
+  Future<void> editComment(String commentId, String content) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: commentsCollectionId,
+        documentId: commentId,
+      );
+      final createdAtStr = doc.data['\$createdAt'] ?? doc.data['createdAt'];
+      final createdAt =
+          createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now();
+      if (DateTime.now().difference(createdAt).inMinutes > 30) {
+        throw Exception('Edit window expired');
+      }
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: commentsCollectionId,
+        documentId: commentId,
+        data: {
+          'content': content,
+          'is_edited': true,
+          'edited_at': DateTime.now().toIso8601String(),
+        },
+      );
+
+      final map = commentsBox.get(commentId);
+      if (map is Map) {
+        await commentsBox.put(commentId, {
+          ...map,
+          'content': content,
+          'is_edited': true,
+          'edited_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      for (final key in commentsBox.keys) {
+        if (!key.toString().startsWith('comments_')) continue;
+        final list =
+            (commentsBox.get(key, defaultValue: []) as List).cast<dynamic>();
+        final index =
+            list.indexWhere((c) => c['id'] == commentId || c['\$id'] == commentId);
+        if (index != -1) {
+          list[index] = {
+            ...list[index],
+            'content': content,
+            'is_edited': true,
+            'edited_at': DateTime.now().toIso8601String(),
+          };
+          await commentsBox.put(key, list);
+        }
+      }
+    } catch (e, st) {
+      logger.e('editComment failed', error: e, stackTrace: st);
+      throw Exception('Failed to edit comment: $e');
+    }
+  }
+
   Future<Bookmark?> getUserBookmark(String postId, String userId) async {
     final res = await databases.listDocuments(
       databaseId: databaseId,
