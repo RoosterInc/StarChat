@@ -1060,6 +1060,9 @@ class FeedService {
           case 'delete_repost':
             await deleteRepost(mapItem['id'], mapItem['post_id']);
             break;
+          case 'share':
+            await sharePost(mapItem['post_id']);
+            break;
           case 'post':
             final post =
                 FeedPost.fromJson(Map<String, dynamic>.from(mapItem['data']));
@@ -1561,7 +1564,12 @@ class FeedService {
       }
       return 'https://your-app.com/post/$postId';
     } catch (e) {
-      throw Exception('Failed to share post: $e');
+      await _addToBoxWithLimit(queueBox, {
+        'action': 'share',
+        'post_id': postId,
+        '_cachedAt': DateTime.now().toIso8601String(),
+      });
+      return 'https://your-app.com/post/$postId';
     }
   }
 }

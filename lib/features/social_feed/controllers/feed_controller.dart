@@ -51,6 +51,7 @@ class FeedController extends GetxController {
   final _repostCounts = <String, int>{}.obs; // postId -> repost count
   final _commentCounts = <String, int>{}.obs; // postId -> comment count
   final _bookmarkCount = <String, int>{}.obs; // postId -> bookmark count
+  final _shareCounts = <String, int>{}.obs; // postId -> share count
 
   final _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
@@ -90,6 +91,7 @@ class FeedController extends GetxController {
           _repostCounts[id] = post.repostCount;
           _commentCounts[id] = post.commentCount;
           _bookmarkCount[id] = post.bookmarkCount;
+          _shareCounts[id] = post.shareCount;
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             cached.insert(
@@ -118,6 +120,7 @@ class FeedController extends GetxController {
           _repostCounts.remove(id);
           _commentCounts.remove(id);
           _bookmarkCount.remove(id);
+          _shareCounts.remove(id);
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
@@ -136,6 +139,7 @@ class FeedController extends GetxController {
           _repostCounts[id] = post.repostCount;
           _commentCounts[id] = post.commentCount;
           _bookmarkCount[id] = post.bookmarkCount;
+          _shareCounts[id] = post.shareCount;
           for (final key in service.postsBox.keys) {
             final cached = service.postsBox.get(key, defaultValue: []) as List;
             final idx = cached.indexWhere((p) => p['id'] == id || p['\$id'] == id);
@@ -217,6 +221,7 @@ class FeedController extends GetxController {
       _repostCounts.assignAll({for (final p in enriched) p.id: p.repostCount});
       _commentCounts.assignAll({for (final p in enriched) p.id: p.commentCount});
       _bookmarkCount.assignAll({for (final p in enriched) p.id: p.bookmarkCount});
+      _shareCounts.assignAll({for (final p in enriched) p.id: p.shareCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null && enriched.isNotEmpty) {
@@ -301,6 +306,7 @@ class FeedController extends GetxController {
       _repostCounts.addAll({for (final p in enriched) p.id: p.repostCount});
       _commentCounts.addAll({for (final p in enriched) p.id: p.commentCount});
       _bookmarkCount.addAll({for (final p in enriched) p.id: p.bookmarkCount});
+      _shareCounts.addAll({for (final p in enriched) p.id: p.shareCount});
       final auth = Get.find<AuthController>();
       final uid = auth.userId;
       if (uid != null && enriched.isNotEmpty) {
@@ -328,6 +334,7 @@ class FeedController extends GetxController {
     _repostCounts.addAll({for (final p in _pendingPosts) p.id: p.repostCount});
     _commentCounts.addAll({for (final p in _pendingPosts) p.id: p.commentCount});
     _bookmarkCount.addAll({for (final p in _pendingPosts) p.id: p.bookmarkCount});
+    _shareCounts.addAll({for (final p in _pendingPosts) p.id: p.shareCount});
     _pendingPosts.clear();
     unseenCount.value = 0;
   }
@@ -386,6 +393,7 @@ class FeedController extends GetxController {
     _posts.insert(0, saved);
     _commentCounts[id] = saved.commentCount;
     _bookmarkCount[id] = saved.bookmarkCount;
+    _shareCounts[id] = saved.shareCount;
     return id;
   }
 
@@ -425,6 +433,7 @@ class FeedController extends GetxController {
       ),
     );
     _commentCounts[newId] = 0;
+    _shareCounts[newId] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
     return newId;
   }
@@ -467,6 +476,7 @@ class FeedController extends GetxController {
       ),
     );
     _commentCounts[newId] = 0;
+    _shareCounts[newId] = 0;
     await Get.find<ActivityService>().logActivity(userId, 'create_post', itemId: _posts.first.id, itemType: 'post');
     return newId;
   }
@@ -594,6 +604,40 @@ class FeedController extends GetxController {
     }
   }
 
+  Future<String> sharePost(String postId) async {
+    final link = await service.sharePost(postId);
+    incrementShareCount(postId);
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final post = _posts[index];
+      _posts[index] = FeedPost(
+        id: post.id,
+        roomId: post.roomId,
+        userId: post.userId,
+        username: post.username,
+        userAvatar: post.userAvatar,
+        displayName: post.displayName,
+        content: post.content,
+        mediaUrls: post.mediaUrls,
+        pollId: post.pollId,
+        linkUrl: post.linkUrl,
+        linkMetadata: post.linkMetadata,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount,
+        repostCount: post.repostCount,
+        shareCount: postShareCount(postId),
+        bookmarkCount: post.bookmarkCount,
+        hashtags: post.hashtags,
+        mentions: post.mentions,
+        isEdited: post.isEdited,
+        isDeleted: post.isDeleted,
+        editedAt: post.editedAt,
+        createdAt: post.createdAt,
+      );
+    }
+    return link;
+  }
+
   Future<void> editPost(
     String postId,
     String content,
@@ -643,6 +687,7 @@ class FeedController extends GetxController {
     _repostCounts.remove(postId);
     _commentCounts.remove(postId);
     _bookmarkCount.remove(postId);
+    _shareCounts.remove(postId);
   }
 
   bool isPostLiked(String postId) => _likedIds.containsKey(postId);
@@ -651,6 +696,7 @@ class FeedController extends GetxController {
   int postRepostCount(String postId) => _repostCounts[postId] ?? 0;
   int postCommentCount(String postId) => _commentCounts[postId] ?? 0;
   int postBookmarkCount(String postId) => _bookmarkCount[postId] ?? 0;
+  int postShareCount(String postId) => _shareCounts[postId] ?? 0;
 
   void incrementBookmarkCount(String postId) {
     _bookmarkCount[postId] = (_bookmarkCount[postId] ?? 0) + 1;
@@ -659,6 +705,10 @@ class FeedController extends GetxController {
   void decrementBookmarkCount(String postId) {
     _bookmarkCount[postId] =
         math.max(0, (_bookmarkCount[postId] ?? 1) - 1);
+  }
+
+  void incrementShareCount(String postId) {
+    _shareCounts[postId] = (_shareCounts[postId] ?? 0) + 1;
   }
 
   void incrementCommentCount(String postId) {
@@ -674,6 +724,7 @@ class FeedController extends GetxController {
     _repostCounts[post.id] = post.repostCount;
     _commentCounts[post.id] = post.commentCount;
     _bookmarkCount[post.id] = post.bookmarkCount;
+    _shareCounts[post.id] = post.shareCount;
     final index = _posts.indexWhere((p) => p.id == post.id);
     if (index != -1) {
       _posts[index] = post;

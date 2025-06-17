@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
+import '../controllers/feed_controller.dart';
 
 enum ReactionTarget { post, comment, repost }
 
@@ -126,7 +127,8 @@ class _ReactionBarState extends State<ReactionBar>
   Future<void> defaultShare() async {
     if (widget.postId == null) return;
     try {
-      final link = "https://example.com/post/${widget.postId}";
+      final controller = Get.find<FeedController>();
+      final link = await controller.sharePost(widget.postId!);
       await Share.share('Check out this post: $link');
     } catch (_) {
       Get.snackbar("Error", "Failed to share post");
