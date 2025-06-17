@@ -458,7 +458,7 @@ class FeedService {
         databaseId: databaseId,
         collectionId: commentsCollectionId,
         documentId: ID.unique(),
-        data: comment.toJson(includeId: false, includeMentions: false),
+        data: comment.toJson(includeId: false, includeMentions: true),
       );
       id = doc.data['\$id'] ?? doc.data['id'];
       await databases.updateDocument(
