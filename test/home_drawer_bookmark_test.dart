@@ -45,6 +45,7 @@ class FakeFeedService extends FeedService {
           bookmarksCollectionId: 'bookmarks',
           connectivity: Connectivity(),
           linkMetadataFunctionId: 'link',
+          validateReactionFunctionId: 'validate',
         );
 
   @override

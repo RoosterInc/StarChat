@@ -34,6 +34,7 @@ class FeedService {
   final String repostsCollectionId;
   final String bookmarksCollectionId;
   final String linkMetadataFunctionId;
+  final String validateReactionFunctionId;
   final Connectivity connectivity;
   final Box postsBox = Hive.box('posts');
   final Box commentsBox = Hive.box('comments');
@@ -101,6 +102,7 @@ class FeedService {
     required this.bookmarksCollectionId,
     required this.connectivity,
     required this.linkMetadataFunctionId,
+    required this.validateReactionFunctionId,
   }) {
     connectivity.onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
@@ -123,6 +125,28 @@ class FeedService {
 
   List<String> _limitMentions(List<String> names) =>
       names.length > 10 ? names.sublist(0, 10) : names;
+
+  Future<bool> validateReaction(
+    String type,
+    String itemId,
+    String userId,
+  ) async {
+    try {
+      final result = await functions.createExecution(
+        functionId: validateReactionFunctionId,
+        body: jsonEncode({
+          'type': type,
+          'item_id': itemId,
+          'user_id': userId,
+        }),
+      );
+      final data =
+          jsonDecode(result.responseBody) as Map<String, dynamic>? ?? {};
+      return data['duplicate'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<List<FeedPost>> getPosts(String roomId,
       {List<String> blockedIds = const []}) async {

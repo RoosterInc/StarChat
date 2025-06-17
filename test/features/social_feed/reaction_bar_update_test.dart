@@ -24,6 +24,7 @@ class _FakeService extends FeedService {
           repostsCollectionId: 'reposts',
           connectivity: Connectivity(),
           linkMetadataFunctionId: 'fetch_link_metadata',
+          validateReactionFunctionId: 'validate',
         );
 
   final List<FeedPost> posts = [];

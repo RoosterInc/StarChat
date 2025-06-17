@@ -493,6 +493,23 @@ class FeedController extends GetxController {
       _likeCounts[postId] =
           math.max(0, (_likeCounts[postId] ?? 1) - 1);
     } else {
+      final isDup =
+          await service.validateReaction('like', postId, uid);
+      if (isDup) {
+        try {
+          final like = await service.getUserLike(postId, uid);
+          if (like != null) {
+            _likedIds[postId] = like.id;
+            service.reactionsBox.put(cacheKey, {
+              'itemId': postId,
+              'itemType': 'post',
+              'userId': uid,
+              'likedAt': DateTime.now().toIso8601String(),
+            });
+          }
+        } catch (_) {}
+        return;
+      }
       await service.createLike({
         'item_id': postId,
         'item_type': 'post',
@@ -525,6 +542,22 @@ class FeedController extends GetxController {
     final cacheKey = 'repost:post_${postId}_$uid';
     if (_repostedIds.containsKey(postId) ||
         service.reactionsBox.containsKey(cacheKey)) return;
+    final isDup = await service.validateReaction('repost', postId, uid);
+    if (isDup) {
+      try {
+        final r = await service.getUserRepost(postId, uid);
+        if (r != null) {
+          _repostedIds[postId] = r.id;
+          service.reactionsBox.put(cacheKey, {
+            'itemId': postId,
+            'itemType': 'post',
+            'userId': uid,
+            'likedAt': DateTime.now().toIso8601String(),
+          });
+        }
+      } catch (_) {}
+      return;
+    }
     final id = await service.createRepost({
       'post_id': postId,
       'user_id': uid,

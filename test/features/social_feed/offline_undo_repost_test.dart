@@ -35,6 +35,7 @@ class _OfflineService extends FeedService {
           bookmarksCollectionId: 'bookmarks',
           connectivity: Connectivity(),
           linkMetadataFunctionId: 'fetch_link_metadata',
+          validateReactionFunctionId: 'validate',
         );
 
   final List<FeedPost> store = [];

@@ -66,6 +66,7 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
+      validateReactionFunctionId: 'validate',
     );
   });
 
