@@ -54,6 +54,7 @@ Future<void> main() async {
   await Hive.openBox('notification_queue');
   await Hive.openBox('follows');
   await Hive.openBox('bookmarks');
+  await Hive.openBox('reactions');
   await Hive.openBox('hashtags');
   await Hive.openBox('blocks');
   await Hive.openBox('preferences');

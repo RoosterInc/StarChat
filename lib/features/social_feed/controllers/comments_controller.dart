@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:collection/collection.dart';
+import 'package:hive/hive.dart';
 import '../../authentication/controllers/auth_controller.dart';
 import '../controllers/feed_controller.dart';
 import '../models/post_comment.dart';
@@ -111,10 +112,16 @@ class CommentsController extends GetxController {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
     if (uid == null) return;
+    final cacheKey = 'like:comment_${commentId}_$uid';
+    if (!_likedIds.containsKey(commentId) &&
+        service.reactionsBox.containsKey(cacheKey)) {
+      return;
+    }
     if (_likedIds.containsKey(commentId)) {
       final likeId = _likedIds.remove(commentId)!;
       try {
         await service.unlikeComment(likeId, commentId);
+        service.reactionsBox.delete(cacheKey);
       } catch (_) {}
       _likeCounts[commentId] =
           math.max(0, (_likeCounts[commentId] ?? 1) - 1);
@@ -131,6 +138,12 @@ class CommentsController extends GetxController {
         _likedIds[commentId] = 'offline';
       }
       _likeCounts[commentId] = (_likeCounts[commentId] ?? 0) + 1;
+      service.reactionsBox.put(cacheKey, {
+        'itemId': commentId,
+        'itemType': 'comment',
+        'userId': uid,
+        'likedAt': DateTime.now().toIso8601String(),
+      });
     }
   }
 

@@ -475,6 +475,11 @@ class FeedController extends GetxController {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
     if (uid == null) return;
+    final cacheKey = 'like:post_${postId}_$uid';
+    if (!_likedIds.containsKey(postId) &&
+        service.reactionsBox.containsKey(cacheKey)) {
+      return;
+    }
     if (_likedIds.containsKey(postId)) {
       final likeId = _likedIds.remove(postId)!;
       try {
@@ -483,6 +488,7 @@ class FeedController extends GetxController {
           itemId: postId,
           itemType: 'post',
         );
+        service.reactionsBox.delete(cacheKey);
       } catch (_) {}
       _likeCounts[postId] =
           math.max(0, (_likeCounts[postId] ?? 1) - 1);
@@ -503,13 +509,22 @@ class FeedController extends GetxController {
         _likedIds[postId] = 'offline';
       }
       _likeCounts[postId] = (_likeCounts[postId] ?? 0) + 1;
+      service.reactionsBox.put(cacheKey, {
+        'itemId': postId,
+        'itemType': 'post',
+        'userId': uid,
+        'likedAt': DateTime.now().toIso8601String(),
+      });
     }
   }
 
   Future<void> repostPost(String postId, [String? comment]) async {
     final auth = Get.find<AuthController>();
     final uid = auth.userId;
-    if (uid == null || _repostedIds.containsKey(postId)) return;
+    if (uid == null) return;
+    final cacheKey = 'repost:post_${postId}_$uid';
+    if (_repostedIds.containsKey(postId) ||
+        service.reactionsBox.containsKey(cacheKey)) return;
     final id = await service.createRepost({
       'post_id': postId,
       'user_id': uid,
@@ -522,6 +537,12 @@ class FeedController extends GetxController {
       if (repost != null) _repostedIds[postId] = repost.id;
     }
     _repostCounts[postId] = (_repostCounts[postId] ?? 0) + 1;
+    service.reactionsBox.put(cacheKey, {
+      'itemId': postId,
+      'itemType': 'post',
+      'userId': uid,
+      'likedAt': DateTime.now().toIso8601String(),
+    });
   }
 
   Future<void> undoRepost(String postId) async {
@@ -533,6 +554,8 @@ class FeedController extends GetxController {
       await service.deleteRepost(repostId, postId);
       _repostedIds.remove(postId);
       _repostCounts[postId] = (_repostCounts[postId] ?? 1) - 1;
+      final cacheKey = 'repost:post_${postId}_$uid';
+      service.reactionsBox.delete(cacheKey);
     } catch (_) {
       // keep id until synced
     }
