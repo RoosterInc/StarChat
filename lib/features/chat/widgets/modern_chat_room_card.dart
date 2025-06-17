@@ -78,8 +78,8 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
               onTap: widget.onTap,
               child: Container(
                 width: widget.width,
-                height: 110,
-                margin: const EdgeInsets.all(4),
+                height: DesignTokens.spacing(context, 110),
+                margin: DesignTokens.xs(context).all,
                 child: Stack(
                   children: [
                     // Background gradient
@@ -92,15 +92,22 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                             color.withOpacity(0.6)
                           ).toList(),
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.spacing(context, 20),
+                        ),
                       ),
                     ),
                     
                     // Glassmorphism effect
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.spacing(context, 20),
+                      ),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        filter: ImageFilter.blur(
+                          sigmaX: DesignTokens.spacing(context, 10),
+                          sigmaY: DesignTokens.spacing(context, 10),
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -111,15 +118,19 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                                 context.glassOverlayLow,
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.spacing(context, 20),
+                            ),
                             border: Border.all(
                               color: context.glassBorderColor,
-                              width: 1.5,
+                              width: DesignTokens.spacing(context, 1.5),
                             ),
                           ),
                           child: Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(
+                                DesignTokens.spacing(context, 20),
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: widget.room.gradientColors.first
@@ -143,8 +154,8 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                     
                     // Floating message count badge
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: DesignTokens.sm(context),
+                      right: DesignTokens.sm(context),
                       child: _buildMessageBadge(context, isDark),
                     ),
                   ],
@@ -167,20 +178,22 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: DesignTokens.spacing(context, 40),
+                height: DesignTokens.spacing(context, 40),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: widget.room.gradientColors,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                    DesignTokens.radiusMd(context),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: widget.room.gradientColors.first.withOpacity(0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      blurRadius: DesignTokens.spacing(context, 8),
+                      offset: Offset(0, DesignTokens.spacing(context, 2)),
                     ),
                   ],
                 ),
@@ -195,7 +208,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: DesignTokens.spacing(context, 12)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +224,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: DesignTokens.spacing(context, 2)),
                     Text(
                       'Rashi Discussion',
                       style: TextStyle(
@@ -233,21 +246,21 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
           Row(
             children: [
               Container(
-                width: 8,
-                height: 8,
+                width: DesignTokens.spacing(context, 8),
+                height: DesignTokens.spacing(context, 8),
                 decoration: BoxDecoration(
                   color: _getActivityColor(),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
                       color: _getActivityColor().withOpacity(0.6),
-                      blurRadius: 4,
-                      spreadRadius: 1,
+                      blurRadius: DesignTokens.spacing(context, 4),
+                      spreadRadius: DesignTokens.spacing(context, 1),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: DesignTokens.spacing(context, 8)),
               Text(
                 _getActivityText(),
                 style: TextStyle(
@@ -260,7 +273,7 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
               const Spacer(),
               Icon(
                 Icons.arrow_forward_ios,
-                size: 12,
+                size: DesignTokens.spacing(context, 12),
                 color: context.colorScheme.onSurfaceVariant,
               ),
             ],
@@ -275,7 +288,10 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
       scale: _isHovered ? 1.1 : 1.0,
       duration: const Duration(milliseconds: 200),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: EdgeInsets.symmetric(
+          horizontal: DesignTokens.sm(context),
+          vertical: DesignTokens.xs(context),
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -283,16 +299,18 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
               context.glassOverlayLow,
             ],
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(
+            DesignTokens.radiusMd(context),
+          ),
           border: Border.all(
             color: context.glassBorderColor,
-            width: 1,
+            width: DesignTokens.spacing(context, 1),
           ),
           boxShadow: [
             BoxShadow(
               color: context.colorScheme.shadow.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: DesignTokens.spacing(context, 4),
+              offset: Offset(0, DesignTokens.spacing(context, 2)),
             ),
           ],
         ),
@@ -310,9 +328,13 @@ class _ModernChatRoomCardState extends State<ModernChatRoomCard>
   }
 
   Color _getActivityColor() {
-    if (widget.room.dailyMessages > 150) return Colors.green;
-    if (widget.room.dailyMessages > 100) return Colors.orange;
-    return Colors.red;
+    if (widget.room.dailyMessages > 150) {
+      return context.colorScheme.primary;
+    }
+    if (widget.room.dailyMessages > 100) {
+      return context.colorScheme.tertiary;
+    }
+    return context.colorScheme.error;
   }
 
   String _getActivityText() {
