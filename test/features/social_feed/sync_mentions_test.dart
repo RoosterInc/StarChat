@@ -111,7 +111,6 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
-      validateReactionFunctionId: 'validate',
     );
     Get.testMode = true;
     Get.put<AuthController>(FakeAuthController());
@@ -151,7 +150,6 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
-      validateReactionFunctionId: 'validate',
     );
 
     await online.syncQueuedActions();
