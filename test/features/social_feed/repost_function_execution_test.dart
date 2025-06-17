@@ -6,45 +6,11 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:myapp/features/social_feed/services/feed_service.dart';
 
-class RecordingFunctions extends Functions {
-  RecordingFunctions() : super(Client());
-
-  String? lastFunctionId;
-  String? lastBody;
-
-  @override
-  Future<Execution> createExecution({
-    required String functionId,
-    String? body,
-    Map<String, dynamic>? xHeaders,
-    String? path,
-  }) async {
-    lastFunctionId = functionId;
-    lastBody = body;
-    return Execution.fromMap({
-      '\$id': '1',
-      '\$createdAt': '',
-      '\$updatedAt': '',
-      '\$permissions': [],
-      'functionId': functionId,
-      'trigger': 'http',
-      'status': 'completed',
-      'requestMethod': 'GET',
-      'requestPath': '/',
-      'requestHeaders': [],
-      'responseStatusCode': 200,
-      'responseBody': '',
-      'responseHeaders': [],
-      'logs': '',
-      'errors': '',
-      'duration': 0.0,
-    });
-  }
-}
-
 class FakeDatabases extends Databases {
   FakeDatabases() : super(Client());
+  final List<Map<String, dynamic>> updates = [];
 
+  @override
   @override
   Future<Document> createDocument({
     required String databaseId,
@@ -70,6 +36,30 @@ class FakeDatabases extends Databases {
     required String collectionId,
     required String documentId,
   }) async {}
+
+  @override
+  Future<Document> updateDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    Map<dynamic, dynamic>? data,
+    List<String>? permissions,
+  }) async {
+    updates.add({
+      'collectionId': collectionId,
+      'documentId': documentId,
+      'data': data,
+    });
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...?data,
+    });
+  }
 }
 
 class OfflineDatabases extends FakeDatabases {
@@ -87,7 +77,6 @@ class OfflineDatabases extends FakeDatabases {
 
 void main() {
   late Directory dir;
-  late RecordingFunctions functions;
   late FeedService service;
 
   setUp(() async {
@@ -104,11 +93,10 @@ void main() {
     ]) {
       await Hive.openBox(box);
     }
-    functions = RecordingFunctions();
     service = FeedService(
       databases: FakeDatabases(),
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -125,23 +113,49 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  test('createRepost triggers function execution', () async {
+  test('createRepost triggers database update', () async {
+    final db = FakeDatabases();
+    service = FeedService(
+      databases: db,
+      storage: Storage(Client()),
+      functions: Functions(Client()),
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'link',
+    );
     await service.createRepost({'post_id': '1', 'user_id': 'u'});
-    expect(functions.lastFunctionId, 'increment_repost_count');
-    expect(functions.lastBody, '{"post_id":"1"}');
+    expect(db.updates.last['data'], {'repost_count': {'\$increment': 1}});
   });
 
   test('deleteRepost triggers decrement function', () async {
+    final db = FakeDatabases();
+    service = FeedService(
+      databases: db,
+      storage: Storage(Client()),
+      functions: Functions(Client()),
+      databaseId: 'db',
+      postsCollectionId: 'posts',
+      commentsCollectionId: 'comments',
+      likesCollectionId: 'likes',
+      repostsCollectionId: 'reposts',
+      bookmarksCollectionId: 'bookmarks',
+      connectivity: Connectivity(),
+      linkMetadataFunctionId: 'link',
+    );
     await service.deleteRepost('r1', '1');
-    expect(functions.lastFunctionId, 'decrement_repost_count');
-    expect(functions.lastBody, '{"post_id":"1"}');
+    expect(db.updates.last['data'], {'repost_count': {'\$increment': -1}});
   });
 
   test('queued repost executes function on sync', () async {
     service = FeedService(
       databases: OfflineDatabases(),
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -152,11 +166,12 @@ void main() {
       linkMetadataFunctionId: 'link',
     );
     await service.createRepost({'post_id': '2', 'user_id': 'u'});
-    expect(functions.lastFunctionId, isNull);
+    final onlineDb = FakeDatabases();
+    expect(onlineDb.updates.isEmpty, isTrue);
     service = FeedService(
-      databases: FakeDatabases(),
+      databases: onlineDb,
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -167,7 +182,6 @@ void main() {
       linkMetadataFunctionId: 'link',
     );
     await service.syncQueuedActions();
-    expect(functions.lastFunctionId, 'increment_repost_count');
-    expect(functions.lastBody, '{"post_id":"2"}');
+    expect(onlineDb.updates.last['data'], {'repost_count': {'\$increment': 1}});
   });
 }

@@ -10,44 +10,12 @@ import 'package:myapp/features/social_feed/services/feed_service.dart';
 import 'package:myapp/features/social_feed/models/post_comment.dart';
 import 'package:myapp/features/notifications/services/notification_service.dart';
 
-class _RecordingFunctions extends Functions {
-  _RecordingFunctions() : super(Client());
-  String? lastFunctionId;
-  @override
-  Future<Execution> createExecution({
-    required String functionId,
-    String? body,
-    bool? xasync,
-    String? path,
-    enums.ExecutionMethod? method,
-    Map? headers,
-    String? scheduledAt,
-  }) async {
-    lastFunctionId = functionId;
-    return Execution.fromMap({
-      '\$id': '1',
-      '\$createdAt': '',
-      '\$updatedAt': '',
-      '\$permissions': [],
-      'functionId': functionId,
-      'trigger': 'http',
-      'status': 'completed',
-      'requestMethod': 'GET',
-      'requestPath': '/',
-      'requestHeaders': [],
-      'responseStatusCode': 200,
-      'responseBody': '',
-      'responseHeaders': [],
-      'logs': '',
-      'errors': '',
-      'duration': 0.0,
-    });
-  }
-}
+
 
 class _FakeDatabases extends Databases {
   _FakeDatabases() : super(Client());
   Map<dynamic, dynamic>? lastData;
+  final List<Map<String, dynamic>> updates = [];
 
   @override
   Future<Document> createDocument({
@@ -86,6 +54,30 @@ class _FakeDatabases extends Databases {
       'user_id': 'post_owner',
     });
   }
+
+  @override
+  Future<Document> updateDocument({
+    required String databaseId,
+    required String collectionId,
+    required String documentId,
+    Map<dynamic, dynamic>? data,
+    List<String>? permissions,
+  }) async {
+    updates.add({
+      'collectionId': collectionId,
+      'documentId': documentId,
+      'data': data,
+    });
+    return Document.fromMap({
+      '\$id': documentId,
+      '\$collectionId': collectionId,
+      '\$databaseId': databaseId,
+      '\$createdAt': '',
+      '\$updatedAt': '',
+      '\$permissions': [],
+      ...?data,
+    });
+  }
 }
 
 class _RecordingNotificationService extends NotificationService {
@@ -115,7 +107,6 @@ void main() {
   late Directory dir;
   late FeedService service;
   late _RecordingNotificationService notification;
-  late _RecordingFunctions functions;
   late _FakeDatabases db;
 
   setUp(() async {
@@ -134,14 +125,13 @@ void main() {
     ]) {
       await Hive.openBox(box);
     }
-    functions = _RecordingFunctions();
     notification = _RecordingNotificationService();
     db = _FakeDatabases();
     Get.put<NotificationService>(notification);
     service = FeedService(
       databases: db,
       storage: Storage(Client()),
-      functions: functions,
+      functions: Functions(Client()),
       databaseId: 'db',
       postsCollectionId: 'posts',
       commentsCollectionId: 'comments',
@@ -173,7 +163,8 @@ void main() {
 
     await service.createComment(comment);
 
-    expect(functions.lastFunctionId, 'increment_comment_count');
+    expect(db.updates.last['collectionId'], 'posts');
+    expect(db.updates.last['data'], {'comment_count': {'\$increment': 1}});
     final cached = Hive.box('posts').get('key') as List;
     expect(cached.first['comment_count'], 1);
     expect(notification.calls, 1);
