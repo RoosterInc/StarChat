@@ -39,12 +39,16 @@ class BookmarkController extends GetxController {
         _bookmarkIds[postId] = id;
       }
     } else {
-      try {
-        await service.bookmarkPost(userId, postId);
-        if (Get.isRegistered<FeedController>()) {
-          Get.find<FeedController>().incrementBookmarkCount(postId);
-        }
-      } catch (_) {}
+      final isDup =
+          await service.validateReaction('bookmark', postId, userId);
+      if (!isDup) {
+        try {
+          await service.bookmarkPost(userId, postId);
+          if (Get.isRegistered<FeedController>()) {
+            Get.find<FeedController>().incrementBookmarkCount(postId);
+          }
+        } catch (_) {}
+      }
 
       try {
         final bm = await service.getUserBookmark(postId, userId);

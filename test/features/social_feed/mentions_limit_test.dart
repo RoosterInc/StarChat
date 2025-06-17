@@ -24,6 +24,7 @@ class RecordingFeedService extends FeedService {
           bookmarksCollectionId: 'bookmarks',
           connectivity: Connectivity(),
           linkMetadataFunctionId: 'link',
+          validateReactionFunctionId: 'validate',
         );
 
   final List<FeedPost> store = [];

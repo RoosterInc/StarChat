@@ -105,6 +105,7 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
+      validateReactionFunctionId: 'validate',
     );
   });
 
@@ -127,6 +128,7 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
+      validateReactionFunctionId: 'validate',
     );
     await service.createRepost({'post_id': '1', 'user_id': 'u'});
     expect(db.updates.last['data'], {'repost_count': {'\$increment': 1}});
@@ -146,6 +148,7 @@ void main() {
       bookmarksCollectionId: 'bookmarks',
       connectivity: Connectivity(),
       linkMetadataFunctionId: 'link',
+      validateReactionFunctionId: 'validate',
     );
     await service.deleteRepost('r1', '1');
     expect(db.updates.last['data'], {'repost_count': {'\$increment': -1}});
