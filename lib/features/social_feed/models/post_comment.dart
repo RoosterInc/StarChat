@@ -44,7 +44,7 @@ class PostComment {
     );
   }
 
-  Map<String, dynamic> toJson({bool includeId = true}) {
+  Map<String, dynamic> toJson({bool includeId = true, bool includeMentions = true}) {
     return {
       if (includeId) 'id': id,
       'post_id': postId,
@@ -54,7 +54,7 @@ class PostComment {
       'parent_id': parentId,
       'content': content,
       'media_urls': mediaUrls,
-      'mentions': mentions,
+      if (includeMentions) 'mentions': mentions,
       'like_count': likeCount,
       'reply_count': replyCount,
       'is_deleted': isDeleted,
