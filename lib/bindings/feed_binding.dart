@@ -35,6 +35,8 @@ class FeedBinding extends Bindings {
         connectivity: Get.put(Connectivity()),
         linkMetadataFunctionId:
             dotenv.env['FETCH_LINK_METADATA_FUNCTION_ID'] ?? 'fetch_link_metadata',
+        validateReactionFunctionId:
+            dotenv.env['VALIDATE_REACTION_FUNCTION_ID'] ?? 'validate_reaction',
       );
       Get.put<FeedController>(FeedController(service: service));
       Get.put<BookmarkController>(BookmarkController(service: service));
