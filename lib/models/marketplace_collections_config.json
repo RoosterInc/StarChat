@@ -1,0 +1,1186 @@
+{
+  "marketplace_collections": [
+    {
+      "collection_id": "marketplace_stores",
+      "name": "Marketplace Stores",
+      "description": "Seller store profiles and settings",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"any\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "seller_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "ID of the user who owns this store"
+        },
+        {
+          "key": "store_name",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 200,
+          "description": "Display name of the store"
+        },
+        {
+          "key": "store_description",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 1000,
+          "description": "Store description and policies"
+        },
+        {
+          "key": "store_logo_url",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "URL to store logo image"
+        },
+        {
+          "key": "store_banner_url",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "URL to store banner image"
+        },
+        {
+          "key": "business_email",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Business contact email"
+        },
+        {
+          "key": "business_phone",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 20,
+          "description": "Business contact phone"
+        },
+        {
+          "key": "business_address",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Business physical address"
+        },
+        {
+          "key": "is_verified",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false,
+          "description": "Whether store is verified by admin"
+        },
+        {
+          "key": "is_active",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether store is currently active"
+        },
+        {
+          "key": "total_products",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Total number of products in store"
+        },
+        {
+          "key": "total_sales",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Total number of completed sales"
+        },
+        {
+          "key": "average_rating",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Average customer rating for store"
+        },
+        {
+          "key": "commission_rate",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.05,
+          "description": "Platform commission rate (e.g., 0.05 = 5%)"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "seller_unique",
+          "type": "unique",
+          "attributes": ["seller_id"]
+        },
+        {
+          "key": "store_search",
+          "type": "fulltext",
+          "attributes": ["store_name", "store_description"]
+        },
+        {
+          "key": "verified_active_stores",
+          "type": "key",
+          "attributes": ["is_verified", "is_active"]
+        }
+      ]
+    },
+    {
+      "collection_id": "product_categories",
+      "name": "Product Categories",
+      "description": "Product classification and hierarchy",
+      "permissions": [
+        "create(\"team:admins\")",
+        "read(\"any\")",
+        "update(\"team:admins\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 100,
+          "description": "Category name"
+        },
+        {
+          "key": "slug",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 100,
+          "description": "URL-friendly category identifier"
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Category description"
+        },
+        {
+          "key": "parent_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255,
+          "description": "Parent category ID for hierarchy"
+        },
+        {
+          "key": "icon_url",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Category icon URL"
+        },
+        {
+          "key": "display_order",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Order for displaying categories"
+        },
+        {
+          "key": "is_active",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether category is active"
+        },
+        {
+          "key": "product_count",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Number of products in category"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "slug_unique",
+          "type": "unique",
+          "attributes": ["slug"]
+        },
+        {
+          "key": "parent_hierarchy",
+          "type": "key",
+          "attributes": ["parent_id", "display_order"]
+        },
+        {
+          "key": "active_categories",
+          "type": "key",
+          "attributes": ["is_active", "display_order"]
+        }
+      ]
+    },
+    {
+      "collection_id": "products",
+      "name": "Products",
+      "description": "Product listings with details and inventory",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"any\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "seller_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "ID of the seller"
+        },
+        {
+          "key": "store_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "ID of the store"
+        },
+        {
+          "key": "category_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Primary category ID"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 200,
+          "description": "Product title"
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 2000,
+          "description": "Detailed product description"
+        },
+        {
+          "key": "short_description",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Brief product summary"
+        },
+        {
+          "key": "sku",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 50,
+          "description": "Stock keeping unit identifier"
+        },
+        {
+          "key": "price",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Product price"
+        },
+        {
+          "key": "compare_price",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "description": "Original price for discount display"
+        },
+        {
+          "key": "currency",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 3,
+          "default": "USD",
+          "description": "Currency code"
+        },
+        {
+          "key": "stock_quantity",
+          "type": "integer",
+          "required": true,
+          "array": false,
+          "default": 0,
+          "description": "Available stock quantity"
+        },
+        {
+          "key": "low_stock_threshold",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 5,
+          "description": "Alert when stock falls below this"
+        },
+        {
+          "key": "track_inventory",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether to track inventory"
+        },
+        {
+          "key": "weight",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "description": "Product weight for shipping"
+        },
+        {
+          "key": "dimensions",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 100,
+          "description": "Product dimensions (L x W x H)"
+        },
+        {
+          "key": "tags",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 50,
+          "description": "Product tags for search"
+        },
+        {
+          "key": "is_featured",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false,
+          "description": "Whether product is featured"
+        },
+        {
+          "key": "is_active",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether product is active"
+        },
+        {
+          "key": "view_count",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Number of product views"
+        },
+        {
+          "key": "sales_count",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Number of units sold"
+        },
+        {
+          "key": "average_rating",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Average customer rating"
+        },
+        {
+          "key": "review_count",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Total number of reviews"
+        },
+        {
+          "key": "requires_shipping",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether product requires shipping"
+        },
+        {
+          "key": "shipping_class",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 50,
+          "description": "Shipping class for rates"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "seller_products",
+          "type": "key",
+          "attributes": ["seller_id", "$createdAt"]
+        },
+        {
+          "key": "category_products",
+          "type": "key",
+          "attributes": ["category_id", "is_active"]
+        },
+        {
+          "key": "product_search",
+          "type": "fulltext",
+          "attributes": ["title", "description", "tags"]
+        },
+        {
+          "key": "featured_products",
+          "type": "key",
+          "attributes": ["is_featured", "is_active"]
+        },
+        {
+          "key": "price_range",
+          "type": "key",
+          "attributes": ["price", "is_active"]
+        },
+        {
+          "key": "best_selling",
+          "type": "key",
+          "attributes": ["sales_count", "is_active"]
+        },
+        {
+          "key": "top_rated",
+          "type": "key",
+          "attributes": ["average_rating", "review_count"]
+        }
+      ]
+    },
+    {
+      "collection_id": "product_images",
+      "name": "Product Images",
+      "description": "Product photo gallery management",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"any\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "product_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Associated product ID"
+        },
+        {
+          "key": "image_url",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 500,
+          "description": "Image URL"
+        },
+        {
+          "key": "alt_text",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 200,
+          "description": "Image alt text for accessibility"
+        },
+        {
+          "key": "display_order",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Order for displaying images"
+        },
+        {
+          "key": "is_primary",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false,
+          "description": "Whether this is the main product image"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "product_images",
+          "type": "key",
+          "attributes": ["product_id", "display_order"]
+        }
+      ]
+    },
+    {
+      "collection_id": "shopping_carts",
+      "name": "Shopping Carts",
+      "description": "User cart items and quantities",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "user_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Cart owner user ID"
+        },
+        {
+          "key": "session_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255,
+          "description": "Session ID for guest carts"
+        },
+        {
+          "key": "total_items",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Total number of items in cart"
+        },
+        {
+          "key": "total_amount",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Total cart value"
+        },
+        {
+          "key": "currency",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 3,
+          "default": "USD",
+          "description": "Cart currency"
+        },
+        {
+          "key": "expires_at",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "description": "Cart expiration time"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "user_cart",
+          "type": "unique",
+          "attributes": ["user_id"]
+        },
+        {
+          "key": "session_cart",
+          "type": "key",
+          "attributes": ["session_id"]
+        }
+      ]
+    },
+    {
+      "collection_id": "cart_items",
+      "name": "Cart Items",
+      "description": "Individual items in shopping carts",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "cart_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Shopping cart ID"
+        },
+        {
+          "key": "product_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Product ID"
+        },
+        {
+          "key": "variant_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255,
+          "description": "Product variant ID if applicable"
+        },
+        {
+          "key": "quantity",
+          "type": "integer",
+          "required": true,
+          "array": false,
+          "default": 1,
+          "description": "Item quantity"
+        },
+        {
+          "key": "unit_price",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Price per unit at time of adding"
+        },
+        {
+          "key": "total_price",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Total price for this line item"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "cart_items",
+          "type": "key",
+          "attributes": ["cart_id"]
+        },
+        {
+          "key": "cart_product_unique",
+          "type": "unique",
+          "attributes": ["cart_id", "product_id", "variant_id"]
+        }
+      ]
+    },
+    {
+      "collection_id": "orders",
+      "name": "Orders",
+      "description": "Order management and tracking",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"users\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {
+          "key": "order_number",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50,
+          "description": "Unique order identifier"
+        },
+        {
+          "key": "buyer_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Customer user ID"
+        },
+        {
+          "key": "seller_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Seller user ID"
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50,
+          "default": "pending",
+          "description": "Order status (pending, confirmed, shipped, delivered, cancelled)"
+        },
+        {
+          "key": "subtotal",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Order subtotal"
+        },
+        {
+          "key": "tax_amount",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Tax amount"
+        },
+        {
+          "key": "shipping_amount",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Shipping cost"
+        },
+        {
+          "key": "discount_amount",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": 0.0,
+          "description": "Total discount applied"
+        },
+        {
+          "key": "total_amount",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Final order total"
+        },
+        {
+          "key": "currency",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 3,
+          "default": "USD",
+          "description": "Order currency"
+        },
+        {
+          "key": "payment_status",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50,
+          "default": "pending",
+          "description": "Payment status (pending, paid, failed, refunded)"
+        },
+        {
+          "key": "shipping_address",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 1000,
+          "description": "Shipping address JSON"
+        },
+        {
+          "key": "billing_address",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 1000,
+          "description": "Billing address JSON"
+        },
+        {
+          "key": "tracking_number",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 100,
+          "description": "Shipping tracking number"
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Order notes or special instructions"
+        },
+        {
+          "key": "estimated_delivery",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "description": "Estimated delivery date"
+        },
+        {
+          "key": "shipped_at",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "description": "Shipping date"
+        },
+        {
+          "key": "delivered_at",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "description": "Delivery confirmation date"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "order_number_unique",
+          "type": "unique",
+          "attributes": ["order_number"]
+        },
+        {
+          "key": "buyer_orders",
+          "type": "key",
+          "attributes": ["buyer_id", "$createdAt"]
+        },
+        {
+          "key": "seller_orders",
+          "type": "key",
+          "attributes": ["seller_id", "status", "$createdAt"]
+        },
+        {
+          "key": "order_status",
+          "type": "key",
+          "attributes": ["status", "$createdAt"]
+        }
+      ]
+    },
+    {
+      "collection_id": "order_items",
+      "name": "Order Items",
+      "description": "Items within each order",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"users\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {
+          "key": "order_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Parent order ID"
+        },
+        {
+          "key": "product_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Product ID"
+        },
+        {
+          "key": "product_title",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 200,
+          "description": "Product title at time of order"
+        },
+        {
+          "key": "product_image",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Product image URL"
+        },
+        {
+          "key": "variant_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255,
+          "description": "Product variant ID"
+        },
+        {
+          "key": "variant_details",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "description": "Variant details JSON (size, color, etc.)"
+        },
+        {
+          "key": "quantity",
+          "type": "integer",
+          "required": true,
+          "array": false,
+          "description": "Quantity ordered"
+        },
+        {
+          "key": "unit_price",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Price per unit"
+        },
+        {
+          "key": "total_price",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Total price for this item"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "order_items",
+          "type": "key",
+          "attributes": ["order_id"]
+        }
+      ]
+    },
+    {
+      "collection_id": "product_reviews",
+      "name": "Product Reviews",
+      "description": "Customer reviews and ratings",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"any\")",
+        "update(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "product_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Reviewed product ID"
+        },
+        {
+          "key": "user_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Reviewer user ID"
+        },
+        {
+          "key": "order_id",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 255,
+          "description": "Associated order ID (verified purchase)"
+        },
+        {
+          "key": "rating",
+          "type": "integer",
+          "required": true,
+          "array": false,
+          "description": "Rating from 1-5 stars"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 200,
+          "description": "Review title"
+        },
+        {
+          "key": "content",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 2000,
+          "description": "Review content"
+        },
+        {
+          "key": "images",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 500,
+          "description": "Review image URLs"
+        },
+        {
+          "key": "is_verified_purchase",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": false,
+          "description": "Whether reviewer purchased the product"
+        },
+        {
+          "key": "helpful_count",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": 0,
+          "description": "Number of users who found review helpful"
+        },
+        {
+          "key": "is_approved",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true,
+          "description": "Whether review is approved for display"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "product_reviews",
+          "type": "key",
+          "attributes": ["product_id", "$createdAt"]
+        },
+        {
+          "key": "user_product_review",
+          "type": "unique",
+          "attributes": ["user_id", "product_id"]
+        },
+        {
+          "key": "approved_reviews",
+          "type": "key",
+          "attributes": ["product_id", "is_approved", "rating"]
+        }
+      ]
+    },
+    {
+      "collection_id": "wishlists",
+      "name": "Wishlists",
+      "description": "User saved products for later",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "delete(\"users\")"
+      ],
+      "attributes": [
+        {
+          "key": "user_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Wishlist owner user ID"
+        },
+        {
+          "key": "product_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Wishlisted product ID"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "user_product_wishlist",
+          "type": "unique",
+          "attributes": ["user_id", "product_id"]
+        },
+        {
+          "key": "user_wishlists",
+          "type": "key",
+          "attributes": ["user_id", "$createdAt"]
+        }
+      ]
+    },
+    {
+      "collection_id": "payments",
+      "name": "Payments",
+      "description": "Payment transaction records",
+      "permissions": [
+        "create(\"users\")",
+        "read(\"users\")",
+        "update(\"team:admins\")",
+        "delete(\"team:admins\")"
+      ],
+      "attributes": [
+        {
+          "key": "order_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Associated order ID"
+        },
+        {
+          "key": "payment_intent_id",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 255,
+          "description": "Payment gateway transaction ID"
+        },
+        {
+          "key": "amount",
+          "type": "double",
+          "required": true,
+          "array": false,
+          "description": "Payment amount"
+        },
+        {
+          "key": "currency",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 3,
+          "description": "Payment currency"
+        },
+        {
+          "key": "payment_method",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50,
+          "description": "Payment method (card, paypal, etc.)"
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 50,
+          "description": "Payment status"
+        },
+        {
+          "key": "gateway_response",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 2000,
+          "description": "Payment gateway response JSON"
+        },
+        {
+          "key": "processed_at",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "description": "Payment processing timestamp"
+        }
+      ],
+      "indexes": [
+        {
+          "key": "order_payments",
+          "type": "key",
+          "attributes": ["order_id"]
+        },
+        {
+          "key": "payment_intent_unique",
+          "type": "unique",
+          "attributes": ["payment_intent_id"]
+        }
+      ]
+    }
+  ]
+}
