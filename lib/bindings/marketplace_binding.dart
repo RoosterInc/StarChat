@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../features/marketplace/controllers/marketplace_controller.dart';
 import '../features/marketplace/controllers/cart_controller.dart';
+import '../features/marketplace/controllers/seller_dashboard_controller.dart';
 import '../features/marketplace/services/marketplace_service.dart';
 import '../features/marketplace/services/product_service.dart';
 import '../features/marketplace/services/cart_service.dart';
@@ -30,5 +31,6 @@ class MarketplaceBinding extends Bindings {
     // Controllers
     Get.lazyPut(() => MarketplaceController());
     Get.lazyPut(() => CartController());
+    Get.lazyPut(() => SellerDashboardController());
   }
 }
